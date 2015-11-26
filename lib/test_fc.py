@@ -32,6 +32,9 @@ fc = Flowchart(terminals={
     'dataIn': {'io': 'in'},
     'dataOut': {'io': 'out'}
 })
+
+
+print fc.library
 w = fc.widget()
 print type(w)
 ## Add flowchart control panel to the main window
