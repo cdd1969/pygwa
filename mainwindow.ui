@@ -35,7 +35,7 @@
          <x>0</x>
          <y>0</y>
          <width>300</width>
-         <height>458</height>
+         <height>444</height>
         </rect>
        </property>
        <property name="toolTip">
@@ -45,7 +45,7 @@
         <string>Library with available Modules for rocessing data</string>
        </property>
        <attribute name="label">
-        <string>Module Library</string>
+        <string>Node Library</string>
        </attribute>
       </widget>
       <widget class="QWidget" name="page_2">
@@ -54,7 +54,7 @@
          <x>0</x>
          <y>0</y>
          <width>300</width>
-         <height>458</height>
+         <height>444</height>
         </rect>
        </property>
        <property name="toolTip">
@@ -64,8 +64,13 @@
         <string>Properties of the selected item in the flowchart</string>
        </property>
        <attribute name="label">
-        <string>Modle Properties</string>
+        <string>Node Controls</string>
        </attribute>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
+         <widget class="QWidget" name="placeForNodeCtrlWidget" native="true"/>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>
@@ -82,11 +87,15 @@
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
-        <string>Tab 1</string>
+        <string>Flowchart.1</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="flowchartWidgetDefault" name="flowChartWidget" native="true"/>
+         <layout class="QVBoxLayout" name="layoutTab1">
+          <item>
+           <widget class="QWidget" name="flowChartWidget" native="true"/>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
@@ -115,8 +124,23 @@
     <property name="title">
      <string>Menu</string>
     </property>
-    <addaction name="actionNew_Worksheet"/>
-    <addaction name="actionAdd_item_to_library"/>
+    <widget class="QMenu" name="menuFlowchart">
+     <property name="title">
+      <string>Flowchart</string>
+     </property>
+     <addaction name="actionNew_fc"/>
+     <addaction name="actionSave_fc"/>
+     <addaction name="actionSave_As_fc"/>
+     <addaction name="actionLoad_fc"/>
+    </widget>
+    <widget class="QMenu" name="menuLibrary">
+     <property name="title">
+      <string>Library</string>
+     </property>
+     <addaction name="actionAdd_item_to_library"/>
+    </widget>
+    <addaction name="menuFlowchart"/>
+    <addaction name="menuLibrary"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -143,16 +167,18 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="separator"/>
+   <addaction name="actionLoad_fc"/>
+   <addaction name="actionSave_fc"/>
+   <addaction name="actionSave_As_fc"/>
   </widget>
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
    </property>
   </action>
-  <action name="actionNew_Worksheet">
+  <action name="actionNew_fc">
    <property name="text">
-    <string>New Worksheet</string>
+    <string>New</string>
    </property>
   </action>
   <action name="actionQuit">
@@ -162,18 +188,25 @@
   </action>
   <action name="actionAdd_item_to_library">
    <property name="text">
-    <string>Add module to library</string>
+    <string>Add new Node</string>
+   </property>
+  </action>
+  <action name="actionLoad_fc">
+   <property name="text">
+    <string>Load</string>
+   </property>
+  </action>
+  <action name="actionSave_fc">
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </action>
+  <action name="actionSave_As_fc">
+   <property name="text">
+    <string>Save As...</string>
    </property>
   </action>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>flowchartWidgetDefault</class>
-   <extends>QWidget</extends>
-   <header>flowchartWidget</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

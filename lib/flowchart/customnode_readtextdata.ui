@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>258</width>
+    <width>270</width>
     <height>322</height>
    </rect>
   </property>
@@ -238,6 +238,19 @@
       </widget>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QPushButton" name="pushButton_load">
+     <property name="toolTip">
+      <string>Actually load data</string>
+     </property>
+     <property name="statusTip">
+      <string>Actually load data</string>
+     </property>
+     <property name="text">
+      <string>Load</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

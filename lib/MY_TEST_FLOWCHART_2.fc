@@ -1,0 +1,41 @@
+pos: (0.0, 0.0)
+connects: [('readTextData.0', 'output', 'TakeColumn.0', 'Df'), ('readTextData.0', 'output', 'viewPandasDf.0', 'In'), ('GaussianFilter.0', 'Out', 'Output', 'dataOut'), ('Input', 'dataIn', 'GaussianFilter.0', 'In'), ('Input', 'dataIn', 'PlotWidget.0', 'In')]
+terminals:
+    dataOut:
+        multi: False
+        io: 'out'
+        renamable: False
+        multiable: False
+        removable: False
+        optional: False
+    dataIn:
+        multi: False
+        io: 'in'
+        renamable: False
+        multiable: False
+        removable: False
+        optional: False
+bypass: False
+inputNode:
+    terminals:
+        dataIn:
+            multi: False
+            io: 'out'
+            renamable: False
+            multiable: False
+            removable: False
+            optional: False
+    pos: (-74.47571307959356, 90.84805528106847)
+    bypass: False
+nodes: [{'state': {'pos': (186.07433009375478, 87.56439063235518), 'bypass': False, 'ctrl': {'sigma': 5.0}}, 'pos': (186.07433009375478, 87.56439063235518), 'class': 'GaussianFilter', 'name': 'GaussianFilter.0'}, {'state': {'pos': (-15.277787318570404, -208.0114087939353), 'bypass': False}, 'pos': (-15.277787318570404, -208.0114087939353), 'class': 'PlotWidget', 'name': 'PlotWidget.1'}, {'state': {'pos': (58.011408793935345, 157.56992209614765), 'bypass': False}, 'pos': (58.011408793935345, 157.56992209614765), 'class': 'PlotWidget', 'name': 'PlotWidget.0'}, {'state': {'pos': (-273.2929818820781, -77.27600566231504), 'bypass': False}, 'pos': (-273.2929818820781, -77.27600566231504), 'class': 'viewPandasDf', 'name': 'viewPandasDf.0'}, {'state': {'pos': (-271.1038721162692, -221.75725020570104), 'bypass': False}, 'pos': (-271.1038721162692, -221.75725020570104), 'class': 'TakeColumn', 'name': 'TakeColumn.0'}, {'state': {'crtlWidget': {'columnIndex': 0, 'delimiter': u';', 'combineCols': u'', 'fname': u'/home/nck/prj/master_thesis/Farge-ALL_10min.all', 'useCols': u'', 'radioButton_columnIndex_isToggled': True, 'dateParser': u'%d.%m.%Y %H:%M', 'decimal': u'.', 'skipRows': 1, 'datetime': True}, 'pos': (-419.96333619127284, -221.75725020570104), 'bypass': False}, 'pos': (-419.96333619127284, -221.75725020570104), 'class': 'readTextData', 'name': 'readTextData.0'}]
+outputNode:
+    terminals:
+        dataOut:
+            multi: False
+            io: 'in'
+            renamable: False
+            multiable: False
+            removable: False
+            optional: False
+    pos: (300.0, 0.0)
+    bypass: False

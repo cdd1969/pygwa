@@ -4,7 +4,48 @@
 import os, sys
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
 from collections import OrderedDict
+from pyqtgraph.flowchart.Node import Node
+import pandas as pd
+from datetime import datetime
 
+from package import Package
+
+
+
+class readTextDataNode(Node):
+    """Load column-based data from ASCII file"""
+    nodeName = "readTextData"
+
+
+    def __init__(self, name, parent=None):
+        super(readTextDataNode, self).__init__(name, terminals={'output': {'io': 'out'}})
+        self._ctrlWidget = readTextDataCtrlWidget(self)
+
+        
+    def process(self, display=True):
+        print 'process() is called'
+        state = self.ctrlWidget().saveState()
+        kwargs = self.ctrlWidget().evaluateState(state)
+        df = pd.read_csv(**kwargs)
+        print 'process() returning...'
+        return {'output': Package(df)}
+
+        
+    def ctrlWidget(self):
+        return self._ctrlWidget
+
+    def saveState(self):
+        """overriding stadart Node method to extend it with saving ctrlWidget state"""
+        state = Node.saveState(self)
+        # sacing additionaly state of the control widget
+        state['crtlWidget'] = self.ctrlWidget().saveState()
+        return state
+        
+    def restoreState(self, state):
+        """overriding stadart Node method to extend it with restoring ctrlWidget state"""
+        Node.restoreState(self, state)
+        # additionally restore state of the control widget
+        self.ctrlWidget().restoreState(state['crtlWidget'])
 
 
 
@@ -12,10 +53,10 @@ class readTextDataCtrlWidget(QtWidgets.QWidget):
     sigFileSelected = QtCore.pyqtSignal(unicode)
     
 
-    def __init__(self):
+    def __init__(self, parent=None):
         super(readTextDataCtrlWidget, self).__init__()
-        uic.loadUi('customnode_readtextdata.ui', self)
-
+        uic.loadUi('/home/nck/prj/master_thesis/code/lib/flowchart/customnode_readtextdata.ui', self)
+        self._parent = parent
         self._fileIsSelected = False
         self._fname = None
         self._labelPallete = QtGui.QPalette()
@@ -28,6 +69,7 @@ class readTextDataCtrlWidget(QtWidgets.QWidget):
     
 
     def initUI(self):
+        self.pushButton_load.setEnabled(False)
         self._labelPallete.setColor(QtGui.QPalette.Foreground, QtCore.Qt.red)
         self.label_selectFile.setPalette(self._labelPallete)
 
@@ -43,6 +85,14 @@ class readTextDataCtrlWidget(QtWidgets.QWidget):
         self.lineEdit_decimal.setText('.')
         self.lineEdit_delimiter.setText(';')
 
+    def parent(self):
+        return self._parent
+    
+
+    @QtCore.pyqtSlot()  #default signal
+    def on_pushButton_load_clicked(self):
+        self.parent().update()
+    
 
     @QtCore.pyqtSlot()  #default signal
     def on_pushButton_selectFile_clicked(self):
@@ -81,6 +131,7 @@ class readTextDataCtrlWidget(QtWidgets.QWidget):
             self.label_selectFile.setText('Select File')
             self.label_selectFile.setToolTip('')
             self.label_selectFile.setStatusTip('')
+        self.pushButton_load.setEnabled(self._fileIsSelected)
 
 
     def saveState(self):
@@ -95,11 +146,12 @@ class readTextDataCtrlWidget(QtWidgets.QWidget):
                  'decimal': self.lineEdit_decimal.text().strip(),
                  'delimiter': self.lineEdit_delimiter.text().strip(),
                  'skipRows': self.spinBox_skiprows.value(),
-                 'useCols': self.lineEdit_useCols.text().strip()
+                 'useCols': self.lineEdit_useCols.text().strip(),
+                 'loadButtonEnabled': self.pushButton_load.isEnabled()
                  }
         return state
     
-    def loadState(self, state):
+    def restoreState(self, state):
         """Load widget state from a dictionary"""
         self.sigFileSelected.emit(state['fname'])
         
@@ -115,8 +167,9 @@ class readTextDataCtrlWidget(QtWidgets.QWidget):
         self.comboBox_datetimeParser.setCurrentIndex(0)
         self.lineEdit_decimal.setText(state['decimal'])
         self.lineEdit_delimiter.setText(state['delimiter'])
-        self.spinBox_skiprows.setValue(state['columnIndex'])
+        self.spinBox_skiprows.setValue(state['skipRows'])
         self.lineEdit_useCols.setText(state['useCols'])
+        self.pushButton_load.setEnabled(state['loadButtonEnabled'])
 
     def evaluateState(self, state):
         """ Some of the parameters read from widget are not of desired type,
@@ -140,7 +193,7 @@ class readTextDataCtrlWidget(QtWidgets.QWidget):
         evParams['date_parser'] = None
 
         if state['datetime'] is True:
-            evParams['date_parser'] = state['dateParser']
+            evParams['date_parser'] = lambda x: datetime.strptime(x, state['dateParser'])
             
             if state['radioButton_columnIndex_isToggled']:
                 evParams['parse_dates'] = True
@@ -165,7 +218,7 @@ class readTextDataCtrlWidget(QtWidgets.QWidget):
 
 
 
-def main():
+def test():
     app = QtWidgets.QApplication(sys.argv)
     ex = readTextDataCtrlWidget()
     ex.show()
@@ -174,7 +227,7 @@ def main():
     state = ex.saveState()
     #raw_input('load')
 
-    ex.loadState(state)
+    ex.restoreState(state)
     print ex.saveState()
 
     print ex.evaluateState(state)
@@ -184,4 +237,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    test()

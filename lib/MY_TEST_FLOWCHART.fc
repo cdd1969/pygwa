@@ -1,0 +1,41 @@
+pos: (0.0, 0.0)
+connects: [('readTextData.0', 'output', 'selectDfColumn.1', 'Array'), ('readTextData.0', 'output', 'viewPandasDf.0', 'In'), ('selectDfColumn.0', 'Column', 'PlotCurve.0', 'x'), ('PlotCurve.0', 'plot', 'PlotWidget.0', 'In'), ('readTextData.0', 'output', 'selectDfColumn.0', 'Array'), ('selectDfColumn.1', 'Column', 'PlotCurve.0', 'y')]
+terminals:
+    dataOut:
+        multi: False
+        io: 'out'
+        renamable: False
+        multiable: False
+        removable: False
+        optional: False
+    dataIn:
+        multi: False
+        io: 'in'
+        renamable: False
+        multiable: False
+        removable: False
+        optional: False
+bypass: False
+inputNode:
+    terminals:
+        dataIn:
+            multi: False
+            io: 'out'
+            renamable: False
+            multiable: False
+            removable: False
+            optional: False
+    pos: (-150.0, 0.0)
+    bypass: False
+nodes: [{'state': {'crtlWidget': {'columnIndex': 0, 'delimiter': u';', 'combineCols': u'', 'fname': u'/home/nck/prj/master_thesis/Farge-ALL_10min.all', 'useCols': u'', 'radioButton_columnIndex_isToggled': True, 'dateParser': u'%d.%m.%Y %H:%M', 'decimal': u'.', 'skipRows': 1, 'datetime': False}, 'pos': (-228.05908356326177, -306.99753584877124), 'bypass': False}, 'pos': (-228.05908356326177, -306.99753584877124), 'class': 'readTextData', 'name': 'readTextData.0'}, {'state': {'pos': (302.6360180983725, -213.68845056759034), 'bypass': False, 'ctrl': {'color': (128, 128, 128, 255)}}, 'pos': (302.6360180983725, -213.68845056759034), 'class': 'PlotCurve', 'name': 'PlotCurve.0'}, {'state': {'pos': (72.7423243105863, -115.11215417127428), 'bypass': False}, 'pos': (72.7423243105863, -115.11215417127428), 'class': 'selectDfColumn', 'name': 'selectDfColumn.0'}, {'state': {'pos': (67.98467110073494, -394.21748017407117), 'bypass': False}, 'pos': (67.98467110073494, -394.21748017407117), 'class': 'viewPandasDf', 'name': 'viewPandasDf.0'}, {'state': {'pos': (79.37405970779133, -240.5550768145341), 'bypass': False}, 'pos': (79.37405970779133, -240.5550768145341), 'class': 'selectDfColumn', 'name': 'selectDfColumn.1'}, {'state': {'pos': (547.0930574851328, -218.35342246775826), 'bypass': False}, 'pos': (547.0930574851328, -218.35342246775826), 'class': 'PlotWidget', 'name': 'PlotWidget.0'}]
+outputNode:
+    terminals:
+        dataOut:
+            multi: False
+            io: 'in'
+            renamable: False
+            multiable: False
+            removable: False
+            optional: False
+    pos: (300.0, 0.0)
+    bypass: False

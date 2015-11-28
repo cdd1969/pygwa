@@ -15,8 +15,9 @@ class MainWindow(QtWidgets.QMainWindow):
         tableView = QtWidgets.QTableView()
         self.setCentralWidget(tableView)
 
-        d = process2pandas.read_hydrographs_into_pandas('Farge-ALL_10min.all', datetime_indexes=True)
-        myModel = PandasModel("dataAveraged")
+        d = process2pandas.read_hydrographs_into_pandas('../../../Farge-ALL_10min.all', datetime_indexes=False)
+        myModel = PandasModel(d)
+        #myModel = PandasModel("dataAveraged")
         tableView.setModel(myModel)
 
 
@@ -168,4 +169,17 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    #main()
+
+
+    class aaa (object):
+        def __init__(self):
+            self._a = 5
+            print 'self._a: id=', id(self._a)
+        def get(self):
+            return self._a
+
+    a = aaa()
+    b = a.get()
+    print 'return self._a: id=', id(b) 
+
