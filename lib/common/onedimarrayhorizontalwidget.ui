@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>375</width>
+    <height>53</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout">
+   <item>
+    <widget class="QCheckBox" name="checkBox_enabled">
+     <property name="toolTip">
+      <string>Enable processing this item</string>
+     </property>
+     <property name="statusTip">
+      <string>Enable processing this item</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="lineEdit_name">
+     <property name="toolTip">
+      <string>Item name to be displayed</string>
+     </property>
+     <property name="statusTip">
+      <string>Item name to be displayed</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="pushButton_resetName">
+     <property name="maximumSize">
+      <size>
+       <width>25</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="toolTip">
+      <string>Reset original item name</string>
+     </property>
+     <property name="statusTip">
+      <string>Reset original item name</string>
+     </property>
+     <property name="text">
+      <string>R</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QVBoxLayout" name="layout_colorButton"/>
+   </item>
+   <item>
+    <widget class="QDoubleSpinBox" name="spinBox_size">
+     <property name="toolTip">
+      <string>Width/size of the line/point to be drawn</string>
+     </property>
+     <property name="statusTip">
+      <string>Width/size of the line/point to be drawn</string>
+     </property>
+     <property name="singleStep">
+      <double>0.100000000000000</double>
+     </property>
+     <property name="value">
+      <double>1.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

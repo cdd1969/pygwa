@@ -118,7 +118,7 @@ class viewPandasDfCtrlWidget(QtWidgets.QWidget):
             
             self.pushButton_viewTable.setChecked(True)
         else:
-            if not self.pushButton_viewTable.isChecked():
+            if not self.pushButton_viewTable.isChecked():  # This is obviously a bug! Returns 
                 self.twWindow.hide()
                 self.pushButton_viewTable.setChecked(False)
             else:
@@ -157,11 +157,8 @@ class PandasModel(QtCore.QAbstractTableModel):
         if isinstance(data, pd.DataFrame):
             # set explicitly passed pandas dataframe
             self.setPandasDataframe(data)
-        elif isinstance(data, (str, unicode)):
-            # try to load data from file
-            self.loadData(data)
         else:
-            raise TypeError("Invalid type of argument <data> detected. Received: {0}. Must be [str, unicode, pd.DataFrame]".format(type(data)))
+            raise TypeError("Invalid type of argument <data> detected. Received: {0}. Must be [pd.DataFrame]".format(type(data)))
 
     def setPandasDataframe(self, data):
         try:

@@ -517,7 +517,7 @@ class NodeGraphicsItem(GraphicsObject):
         print 'NodeGraphicsItem() initing. flags.ok'
         #flags =  self.ItemIsFocusable |self.ItemSendsGeometryChanges
 
-        self.setFlags(flags)`
+        self.setFlags(flags)
         print 'NodeGraphicsItem() initing. set flags.ok'
         self.bounds   = QtCore.QRectF(0, 0, 100, 100)
         print self.node.name(), type(self.node.name())

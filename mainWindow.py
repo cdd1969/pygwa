@@ -3,7 +3,7 @@
 
 import os, sys
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
-from pyqtgraph.flowchart import Flowchart
+from pyqtgraph.flowchart import Flowchart, Node
 
 
 #pyfile = open('ui_mainwindow.py', 'w')
@@ -26,6 +26,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def initUI(self):
         self.center()
+
+
+        font = QtGui.QFont("Times", 11, QtGui.QFont.Bold, True)    
+        font.setUnderline(True)
+        self.label_nodeCtrlName.setFont(font)
+
+
         self.initFlowchart()
         pass
     
@@ -39,6 +46,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def connectFCSignals(self):
         self.fc.sigFileLoaded.connect(self.uiData.setCurrentFileName)
         self.fc.sigFileSaved.connect(self.uiData.setCurrentFileName)
+        self.fc.sigChartChanged.connect(self.on_sigChartChanged)
+        self.fc.scene.selectionChanged.connect(self.selectionChanged)
 
 
     def initFlowchart(self):
@@ -80,6 +89,48 @@ class MainWindow(QtWidgets.QMainWindow):
     def on_actionLoad_fc(self):
         self.fc.loadFile()
     
+    @QtCore.pyqtSlot()
+    def selectionChanged(self):
+        items = self.fc.scene.selectedItems()
+        if len(items) != 0:
+            item = items[0]
+            if hasattr(item, 'node') and isinstance(item.node, Node):
+                self.on_selectedNodeChanged(item.node)
+                
+
+    @QtCore.pyqtSlot(object, str, object)
+    def on_sigChartChanged(self, emitter, action, node):
+        print "on_sigChartChanged() is called"
+        print self, emitter, action, node
+        if action == 'add':
+            print 'on_sigChartChanged(): adding', node.ctrlWidget(), type(node.ctrlWidget())
+            self.stackNodeCtrlStackedWidget.addWidget(node.ctrlWidget())
+            self.on_selectedNodeChanged(node)
+
+
+        elif action == 'remove':
+            print 'on_sigChartChanged(): remove'
+            # widget is not removed but hidden! find a way to safely remove it
+            self.stackNodeCtrlStackedWidget.removeWidget(node.ctrlWidget())
+            node.close()
+            del node
+
+
+        elif action == 'rename':
+            print 'on_sigChartChanged(): rename'
+            if self.stackNodeCtrlStackedWidget.currentWidget() is node.ctrlWidget():
+                self.label_nodeCtrlName.setText(node.name())
+        else:
+            msg = 'on_sigChartChanged(): Undefined action recieved <{0}>'.format(action)
+            raise KeyError(msg)
+
+
+    @QtCore.pyqtSlot(Node)
+    def on_selectedNodeChanged(self, node):
+        self.stackNodeCtrlStackedWidget.setCurrentWidget(node.ctrlWidget())
+        self.label_nodeCtrlName.setText("Node: <"+node.name()+">")
+
+
     def center(self):
         qr = self.frameGeometry()
         cp = QtWidgets.QDesktopWidget().availableGeometry().center()
@@ -94,6 +145,7 @@ import pyqtgraph.flowchart.library as fclib
 from lib.flowchart.customnode_readtextdata import readTextDataNode
 from lib.flowchart.customnode_viewpandasdf import viewPandasDfNode
 from lib.flowchart.customnode_selectdfcolumn import selectDfColumnNode
+from lib.flowchart.customnode_plotarray import plotArrayNode
 
 class uiData(object):
     """ class to collect all our user-interface settings,
@@ -110,6 +162,7 @@ class uiData(object):
         self._flowchartLib.addNodeType(readTextDataNode, [('My',)])
         self._flowchartLib.addNodeType(viewPandasDfNode, [('My',)])
         self._flowchartLib.addNodeType(selectDfColumnNode, [('My',)])
+        self._flowchartLib.addNodeType(plotArrayNode, [('My',)])
 
 
     def currentFileName(self):
@@ -124,6 +177,7 @@ class uiData(object):
 
     def flowchartLib(self):
         return self._flowchartLib
+
 
 def main():
     app = QtWidgets.QApplication(sys.argv)

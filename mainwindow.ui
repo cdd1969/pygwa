@@ -67,8 +67,36 @@
         <string>Node Controls</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_2">
-        <item row="0" column="0">
-         <widget class="QWidget" name="placeForNodeCtrlWidget" native="true"/>
+        <item row="0" column="1">
+         <layout class="QVBoxLayout" name="layout_stackNodeCtrlWidget">
+          <item>
+           <widget class="QLabel" name="label_nodeCtrlName">
+            <property name="text">
+             <string>Select the Node</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QStackedWidget" name="stackNodeCtrlStackedWidget">
+            <widget class="QWidget" name="stackNodeCtrlStackedWidgetPage1" native="true">
+             <zorder>label_nodeCtrlName</zorder>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="1" column="1">
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
         </item>
        </layout>
       </widget>
