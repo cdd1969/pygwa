@@ -1,4 +1,4 @@
-# Node <readCSV\>
+# Node \<readCSV\>
 Node is able to read CSV datasets into the memory. The input ASCII file must contain column-based data separated wtih some specific symbol (usually with ';' or ','). This file also usually contains a header row, describing column names.
 
 ---
@@ -7,10 +7,10 @@ Internally the [pandas][url:pandas] module is used for processing, namely it's f
 
 
 ### Node Input
-*<emty\>  (no input)*
+*\<emty\>  (no input)*
 
 ### Node Output
-*<pandas.DataFrame\> object*
+*\<pandas.DataFrame\> object*
 
 ### UI description
 Since this node is a graphical interface to the available function, the description of the majority of ui-parameters can be omitted and referred to original function's documentation. Here we will describe only those parameters, which have been altered (*header*, *date_parser*) and newly introduced (all others). Table below summarizes the ui-elements of the node.
