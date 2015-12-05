@@ -32,7 +32,6 @@ def read_hydrographs_into_pandas(fname, datetime_indexes=False, log=False, decim
     return df
     #return df.ix[1100:, :]  # slicing of pandas DataFrame (example: df[30:50, :"GW_4"] will slice ROWS 30 to 50, and all COLUMNS up to GW_1)
 
-
 def read_mean_hydrographs_into_pandas(fname, datetime_indexes=False, log=False, decimal='.', delimiter=';', usecols=None, skiprows=4, names=None, na_values=None):
     """
         for reading ALL waterlevels

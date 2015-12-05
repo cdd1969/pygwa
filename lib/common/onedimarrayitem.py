@@ -13,16 +13,18 @@ import sys
 
 
 class OneDimArrayItem(object):
-    def __init__(self, array=None, name='unknown', parent=None, **kwargs):
+    def __init__(self, array=None, id='unknown', parent=None, **kwargs):
         self._parent = parent
         self._array = array
-        self._name = name
+        self._id = id
 
         color = kwargs.get('color', 'r')
         self.initUI(color=color)
     
     def initUI(self, **kwargs):
         self._ctrlWidget = OneDimArrayItemCtrlWidget(self, **kwargs)
+        self._QListWidget = QtWidgets.QListWidgetItem()
+        self._QListWidget.setSizeHint(self._ctrlWidget.sizeHint())
 
 
     def array(self):
@@ -41,11 +43,11 @@ class OneDimArrayItem(object):
                     self._array[ind] = oldData
 
 
-    def originalName(self):
-        return self._name
+    def id(self):
+        return self._id
     
     def currentName(self):
-        return self._ctrlWidget.lineEdit_name.currentText()
+        return self._ctrlWidget.lineEdit_name.text()
 
 
     def color(self, mode='qcolor'):
@@ -54,12 +56,12 @@ class OneDimArrayItem(object):
     def size(self):
         return self._ctrlWidget.spinBox_size.value()
 
-    def _setOriginalName(self, name):
-        self._name = name
+    def _setId(self, name):
+        self._id = name
 
-    def update(self, name=None, array=None):
-        if name is not None:
-            self._setOriginalName(name)
+    def update(self, id=None, array=None):
+        if id is not None:
+            self._setId(id)
         if array is not None:
             self._setArray(array)
 
@@ -73,9 +75,12 @@ class OneDimArrayItem(object):
     def ctrlWidget(self):
         return self._ctrlWidget
 
+    def QListWidget(self):
+        return self._QListWidget
+
     def saveState(self):
         state = {
-            'originalName': self._name,
+            'id': self._id,
             'enabled': self.isEnabled(),
             'currentName': self.currentName(),
             'color': self.color(mode='byte'),
@@ -84,7 +89,7 @@ class OneDimArrayItem(object):
         return state
 
     def restoreState(self, state):
-        self._name = state['originalName']
+        self._id = state['id']
         self._ctrlWidget.checkBox_enabled.setChecked(state['enabled'])
         self._ctrlWidget.lineEdit_name.setText(state['currentName'])
         self._ctrlWidget.pushButton_color.setColor(state['color'])
@@ -93,6 +98,7 @@ class OneDimArrayItem(object):
 
     def __del__(self):
         del self._ctrlWidget
+        del self._QListWidget
         object.__del__(self)
 
 
@@ -113,7 +119,7 @@ class OneDimArrayItemCtrlWidget(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot()
     def on_pushButton_resetName_clicked(self):
-        self.lineEdit_name.setText(self._parent.originalName())
+        self.lineEdit_name.setText(unicode(self._parent.id()))
 
     @QtCore.pyqtSlot(int)
     def on_checkBoxStateChanged(self, state):
@@ -134,6 +140,13 @@ def test():
     array = [2, 3, 4,]
     print id(array)
     print id(ex.array())
+
+
+    a = {'a': 1, 'b': 2}
+    print id(a), a
+    del a['a']
+    print id(a), a
+    
 
     sys.exit(app.exec_())
 

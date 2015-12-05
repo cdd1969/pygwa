@@ -1,77 +1,25 @@
-#!/usr/bin python
 # -*- coding: utf-8 -*-
+"""
+This example demonstrates the use of pyqtgraph's parametertree system. This provides
+a simple way to generate user interfaces that control sets of parameters. The example
+demonstrates a variety of different parameter types (int, float, list, etc.)
+as well as some customized parameter types
 
-import os, sys
+"""
+
+import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.flowchart.Node import Node
-import pandas as pd
-from package import Package
-from datetime import datetime
-import inspect
+import os
+
+
 from pyqtgraph.parametertree import Parameter, ParameterTree
-from ..functions import evaluateDict
-import webbrowser
 
 
-
-class readTextDataNode(Node):
-    """Load column-based data from ASCII file"""
-    nodeName = "readTextData"
-
-
-    def __init__(self, name, parent=None):
-        super(readTextDataNode, self).__init__(name, terminals={'output': {'io': 'out'}})
-        self._ctrlWidget = readTextDataNodeCtrlWidget(self)
-
-        
-    def process(self, display=True):
-        print 'process() is called'
-        kwargs = self.ctrlWidget().evaluateState()
-        try:
-            df = pd.read_csv(**kwargs)
-            print 'process() returning...'
-            return {'output': Package(df)}
-        except Exception, err:
-            print Exception, err
-            print 'Passed **kwargs = ', kwargs
-            print 'ERROR: file not loaded'
-
-        
-    def ctrlWidget(self):
-        return self._ctrlWidget
-
-    def saveState(self):
-        """overriding stadart Node method to extend it with saving ctrlWidget state"""
-        state = Node.saveState(self)
-        # sacing additionaly state of the control widget
-        state['crtlWidget'] = self.ctrlWidget().saveState()
-        return state
-        
-    def restoreState(self, state):
-        """overriding stadart Node method to extend it with restoring ctrlWidget state"""
-        Node.restoreState(self, state)
-        # additionally restore state of the control widget
-        self.ctrlWidget().restoreState(state['crtlWidget'])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class readTextDataNodeCtrlWidget(ParameterTree):
+class loadPandas_parameterTree(ParameterTree):
     
+
     def __init__(self, parent=None):
-        super(readTextDataNodeCtrlWidget, self).__init__()
+        super(loadPandas_parameterTree, self).__init__()
         self._parent = parent
 
         params = self.params()
@@ -81,29 +29,20 @@ class readTextDataNodeCtrlWidget(ParameterTree):
         ## set parameter tree to <self> (parameterTreeWidget)
         self.setParameters(self.p, showTop=False)
         self.initConnections()
-        # save default state
-        self._savedState = self.saveState()
 
     def initConnections(self):
         pass
-        self.p.child('Help').sigActivated.connect(self.on_help_clicked)
-        self.p.child('Load state').sigActivated.connect(self.on_loadstate_clicked)
-        self.p.child('Load File').sigActivated.connect(self.on_loadfile_clicked)
+        self.p.child('Open help').sigActivated.connect(self.on_openHelp_clicked)
         self.p.child('Select File').sigActivated.connect(self.on_selectFile_clicked)
         self.p.child('Select File').sigValueChanged.connect(self.on_selectFile_valueChanged)
         self.p.child('Load CSV parameters').child('Advanced parameters').child('Manually set parameters').sigValueChanged.connect(self.on_manuallySetParams_checked)
 
-    @QtCore.pyqtSlot()  #default signal
-    def on_loadfile_clicked(self):
-        self._parent.update()
+
 
     @QtCore.pyqtSlot()  #default signal
-    def on_help_clicked(self):
-        webbrowser.open('https://github.com/cdd1969/pygwa/blob/gh-pages/node_readCSV.md')
+    def on_openHelp_clicked(self):
+        self.performFunctionToChildren(self._printChild)
 
-    @QtCore.pyqtSlot()  #default signal
-    def on_loadstate_clicked(self):
-        self.restoreState(self._savedState)
 
     @QtCore.pyqtSlot()  #default signal
     def on_selectFile_clicked(self):
@@ -120,7 +59,7 @@ class readTextDataNodeCtrlWidget(ParameterTree):
         button  = self.p.child('Select File').items.items()[0][0].button
         fname = self.p.child('Select File').value()
 
-        if fname is not None and os.path.isfile(fname):
+        if os.path.isfile(fname):
             button.setFlat(True)
             button.setToolTip('File is selected: {0}'.format(fname))
             button.setStatusTip('File is selected: {0}'.format(fname))
@@ -131,18 +70,18 @@ class readTextDataNodeCtrlWidget(ParameterTree):
 
     @QtCore.pyqtSlot(bool)  #default signal
     def on_manuallySetParams_checked(self, state):
-        """ will disable all other widgets on this checkbox checked """
         state = state.value()
+        print 'STATE IS', state
         emmiterName = ['Manually set parameters']
         changeName = ['Manuall parameters']
         for child in self.p.child('Load CSV parameters').children():
             if child.name() not in emmiterName+changeName:
                 print child, child.name(), '>>>setting ipts', not state
                 try:
-                    ctrlWidget = child.items.items()[0][0].widget  # dont ask why,but this is the link to the widget
-                    ctrlWidget.setEnabled(not state)
+                    child.items.items()[0][0].widget.setEnabled(not state)  # dont ask why,but this is the link to the widget
                 except AttributeError:  #AttributeError: 'GroupParameterItem' object has no attribute 'widget'
                     pass
+                print '-----'
                 #child.setOpts(visible=not state)
         #self.p.child('Load CSV parameters').child('Advanced parameters').child(emmiterName).child(changeName).setOpts(visible=state)
 
@@ -162,6 +101,21 @@ class readTextDataNodeCtrlWidget(ParameterTree):
         for i in xrange(item.childCount()):
             self.visitAllChildren(lst, item.child(i))
     
+    def visitTreeDoAction(self, tree, do_something, **kwargs):
+        """ this is a recursion function to visit all children of passed QTreeWidget"""
+        for i in xrange(tree.topLevelItemCount()):
+            self.visitAllChildrenDoAction(do_something, tree.topLevelItem(i), **kwargs)
+
+    def visitAllChildrenDoAction(self, do_something, item, ignoreNames=[]):
+        try:
+            n = item.param.name()
+            if n not in ignoreNames:
+                do_something(item)
+        except AttributeError, err:  #AttributeError: 'GroupParameterItem' object has no attribute 'name'
+            print 'ERROR:', err, item
+            print '_______',
+        for i in xrange(item.childCount()):
+            self.visitAllChildrenDoAction(do_something, item.child(i), ignoreNames)
 
     def performFunctionToChildren(self, function, paramNames=[], treatNamesAsIgnoreNames=True):
         """ now perform <function> to all children (some children can be ignored by passing <paramNames>)
@@ -173,21 +127,6 @@ class readTextDataNodeCtrlWidget(ParameterTree):
         
 
         """
-        def visitTreeDoAction(tree, do_something, **kwargs):
-            """ this is a recursion function to visit all children of passed QTreeWidget"""
-            for i in xrange(tree.topLevelItemCount()):
-                visitAllChildrenDoAction(do_something, tree.topLevelItem(i), **kwargs)
-
-        def visitAllChildrenDoAction(do_something, item, ignoreNames=[]):
-            try:
-                n = item.param.name()
-                if n not in ignoreNames:
-                    do_something(item)
-            except AttributeError, err:  #AttributeError: 'GroupParameterItem' object has no attribute 'name'
-                print 'ERROR:', err, item
-                print '_______',
-            for i in xrange(item.childCount()):
-                visitAllChildrenDoAction(do_something, item.child(i), ignoreNames)
         
         if treatNamesAsIgnoreNames is True:
             ignoreNames = paramNames
@@ -197,7 +136,7 @@ class readTextDataNodeCtrlWidget(ParameterTree):
             allNames = self.visitTree(self)
             ignoreNames = [n for n in allNames if n not in paramNames]
 
-        visitTreeDoAction(self, function, ignoreNames=ignoreNames)
+        self.visitTreeDoAction(self, function, ignoreNames=ignoreNames)
 
     def _printChild(self, item):
         print item.param.name(), '>>>', item
@@ -208,8 +147,7 @@ class readTextDataNodeCtrlWidget(ParameterTree):
 
     def params(self):
         params = [
-            {'name': 'Help', 'type': 'action'},
-            {'name': 'Load state', 'type': 'action'},
+            {'name': 'Open help', 'type': 'action', 'tip': 'Open documentation in browser'},
             {'name': 'Select File', 'type': 'action', 'value': None},
             {'name': 'Load CSV parameters', 'type': 'group', 'children': [
                 {'name': 'decimal', 'type': 'str', 'value': '.', 'default': '.', 'tip': '<str>\nCharacter to recognize as decimal point. E.g. use ","" for European data'},
@@ -241,81 +179,32 @@ class readTextDataNodeCtrlWidget(ParameterTree):
         ]
         return params
 
-    def saveState(self):
-        return self.p.saveState()
-    
-    def restoreState(self, state):
-        self.p.restoreState(state)
-
-    def evaluateState(self, state=None):
-        """ function evaluates passed state , reading only necessary parameters,
-            those that can be passed to pandas.read_csv() as **kwargs
-
-            user should reimplement this function for each Node"""
-
-        function = pd.read_csv
-        # -------------------------------------------------------------
-        if not inspect.isfunction(function):
-            raise ValueError('Argument passed is not a function. Received type: {0}'.format(type(function)))
-        
-        if state is None:
-            state = self.saveState()
-
-        def evaluationFunction(dictionary):
-            nameArgFound = False
-            for name in ['name', u'name']:
-                if name in dictionary.keys():
-                    nameArgFound = True
-            if not nameArgFound:
-                return None
-
-            defaultArgNames = inspect.getargspec(function).args
-            stateArgs = None
-            # if passed argument name is in defauklt argument names
-            if dictionary['name'] in defaultArgNames:
-                stateArgs = dict()
-                # save value from passed state...
-                if dictionary['value'] in ['', u'']:  #if emty line
-                    val = dictionary['default']
-                else:
-                    try:
-                        val = eval(dictionary['value'])
-                    except Exception, err:
-                        print Exception, err, '. Received:', dictionary['name'], '=', dictionary['value'],  '>>> I will set value without evaluation'
-                        val = dictionary['value']
-
-
-                stateArgs[dictionary['name']] = val
-            return stateArgs
-        # ------------------------------------------------------
-        if state['children']['Load CSV parameters']['children']['Advanced parameters']['children']['Manually set parameters']['value'] is True:
-            # if we will use manually set params... then simply evaluate text-field
-            kwargs = eval(state['children']['Load CSV parameters']['children']['Advanced parameters']['children']['Manually set parameters']['children']['Manuall parameters']['value'])
-        else:
-            # if we wont use manually set params, then collect all params values
-            listWithDicts = evaluateDict(state['children'], functionToDicts=evaluationFunction, log=False)
-            kwargs = dict()
-            for d in listWithDicts:
-                # {'a': None}.items() => [('a', None)] => two times indexing
-                kwargs[d.items()[0][0]] = d.items()[0][1]
-            if kwargs['date_parser'] is not None:
-                dateParserStr = kwargs['date_parser']
-                kwargs['date_parser'] = lambda x: datetime.strptime(x, dateParserStr)
-        kwargs['filepath_or_buffer'] = state['children']['Select File']['value']
-
-        return kwargs
 
 
 
-def test():
+if __name__ == '__main__':
     app = QtGui.QApplication([])
     win = QtGui.QWidget()
     layout = QtGui.QGridLayout()
     win.setLayout(layout)
     layout.addWidget(QtGui.QLabel("These are two views of the same data. They should always display the same values."), 0,  0, 1, 2)
-    t = readTextDataNodeCtrlWidget()
+    t = loadPandas_parameterTree()
     layout.addWidget(t, 1, 0, 1, 1)
     win.show()
     win.resize(800, 800)
-    print t.evaluateState()
+
+    # Too lazy for recursion:
+    for child in t.p.children():
+        print child, 'is child of ', t
+        #for ch2 in child.children():
+        #    print '\t', ch2, 'is child of ', child
+        #    for ch3 in ch2.children():
+        #        print '\t\t', ch3, 'is child of ', ch2
+
+
+    s =  t.p.saveState()
+    t.p.restoreState(s)
+    print isinstance(t, QtGui.QTreeWidget)
+    print t.visitTree(t)
+
     QtGui.QApplication.instance().exec_()

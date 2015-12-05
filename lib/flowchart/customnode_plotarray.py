@@ -6,10 +6,12 @@ import pyqtgraph as pg
 from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from PyQt5.QtCore import Qt, qDebug
 from pyqtgraph.flowchart.Node import Node
+from pyqtgraph.functions import mkPen
+import pyqtgraph as pg
 from package import Package
 import sys
 from ..common.onedimarrayitem import OneDimArrayItem
-
+from ..common.DateAxisItem import DateAxisItem
 
 
 
@@ -17,37 +19,51 @@ class plotArrayNode(Node):
     """Plot number of 1D arrays as timeseries"""
     nodeName = "PlotArray"
 
+    sigItemReceived    = QtCore.Signal(object, object)  #(id(item), item)
+    sigRegItemReceived = QtCore.Signal(object)  #allready registered item received (id(item))
 
     def __init__(self, name, parent=None):
         super(plotArrayNode, self).__init__(name, terminals={'Array': {'io': 'in', 'multi': True}})
         self._ctrlWidget = plotArrayNodeCtrlWidget(self)
-            
+        #self.items = set()   #set to save incoming items
+        self._items = dict()
+        self.sigItemReceived.connect(self.on_sigItemReceived)
+
+
+    def disconnected(self, localTerm, remoteTerm):
+        if localTerm is self['Array'] and remoteTerm in self._items.keys():
+            self.removeItem(remoteTerm)
+
+    def connected(self, localTerm, remoteTerm):
+        """Called whenever one of this node's terminals is connected elsewhere."""
+        print 'TERMS CONNECTED'
+
+
+
     def process(self, Array):
-        print 'process() received Array of ', type(Array)
-        items = set()
-        for name, vals in Array.items():
+        for term, vals in Array.items():
+            print "???>>>", term
+            print "???>>>", vals
             if vals is None:
                 continue
-            if isinstance(vals, Package):
-                vals = vals.unpack()
             if type(vals) is not list:
                 vals = [vals]
             
             for val in vals:
-                vid = id(val)
-                if vid in self.items:
-                    items.add(vid)
-                else:
-                    self.canvas.addItem(val)
-                    item = val
-                    self.items[vid] = item
-                    items.add(vid)
-        for vid in list(self.items.keys()):
-            if vid not in items:
-                #print "remove", self.items[vid]
-                self.canvas.removeItem(self.items[vid])
-                del self.items[vid]
+                if term in self._items.keys():
+                    # if the data transmitted is different from the one saved...
+                    if id(val) == id(self._items[term]['arrayItem'].array()):
+                        continue
+                    else:
+                        self._items[term]['arrayItem'].update(array=val)
+                        self.redraw()
+                    print '>>>on_process(): removing ', term
+                    #self.removeItem(term.name())
+                self.sigItemReceived.emit(term, val)
+                
 
+    def items(self):
+        return self._items
         
     def ctrlWidget(self):
         return self._ctrlWidget
@@ -67,7 +83,84 @@ class plotArrayNode(Node):
 
 
 
+    def removeItem(self, id):
+        if id not in self._items.keys():
+            return
+        # first remove the widget from QListWidget
+        self._ctrlWidget.removeListWidgetItem(id)
 
+        # remove plotItems from canvas
+        self._ctrlWidget.p1.removeItem(self._items[id]['plotItems'][0])
+        self._ctrlWidget.p2.removeItem(self._items[id]['plotItems'][1])
+        
+        # delete plotItems
+        del self._items[id]['plotItems']
+
+        # Now disconnect signals
+        ctrlWidget = self._items[id]['arrayItem'].ctrlWidget()
+        ctrlWidget.pushButton_color.sigColorChanged.disconnect()
+        ctrlWidget.lineEdit_name.textChanged.disconnect()
+        ctrlWidget.spinBox_size.valueChanged.disconnect()
+
+        # delete arrayItem
+        del self._items[id]['arrayItem']
+
+        # delete the whole entry
+        del self._items[id]
+
+    def clear(self):
+        for iId in self._items.keys():
+            self.removeItem(iId)
+
+    def close(self):
+        self.clear()
+        print '---->>> CLOSE'
+        self._ctrlWidget.win.hide()
+        self._ctrlWidget.win.close()
+
+        Node.close(self)
+
+    @QtCore.pyqtSlot(object, object)
+    def on_sigItemReceived(self, id, array):
+        """ <id> is not <id(array)>, but it should be passed from parent widget
+        """
+        self._items[id] = dict()
+        if isinstance(array, (pg.PlotDataItem, pg.ScatterPlotItem)):
+            l1 = self._ctrlWidget.p1.addItem(array)
+            l2 = self._ctrlWidget.p2.addItem(array)
+            self._items[id]['plotItems'] = [l1, l2]
+            return
+        # create arrayItem...
+        arrayItem   = OneDimArrayItem(id=id, array=array)
+        self._items[id]['arrayItem'] = arrayItem
+        
+        # create QListWidget...
+        ctrlWidget  = arrayItem.ctrlWidget()
+        QListWidget = arrayItem.QListWidget()
+        
+        # register signals to redraw graphical items on ui-changes
+        ctrlWidget.pushButton_color.sigColorChanged.connect(self.redraw)
+        ctrlWidget.lineEdit_name.textChanged.connect(self.redraw)
+        ctrlWidget.spinBox_size.valueChanged.connect(self.redraw)
+
+        self._ctrlWidget.listWidget.addItem(QListWidget)
+        self._ctrlWidget.listWidget.setItemWidget(QListWidget, ctrlWidget)
+
+        # now create graphic objects
+        state = arrayItem.saveState()
+        pen = mkPen(color=state['color'], width=state['size'])
+        
+        l1 = self._ctrlWidget.p1.plot(array, pen=pen)
+        l2 = self._ctrlWidget.p2.plot(array, pen=pen)
+        self._items[id]['plotItems'] = [l1, l2]
+
+
+    def redraw(self):
+        for iId in self._items.keys():
+            state = self._items[iId]['arrayItem'].saveState()
+            pen = mkPen(color=state['color'], width=state['size'])
+            for plotItem in self._items[iId]['plotItems']:
+                plotItem.setPen(pen)
 
 
 
@@ -81,11 +174,13 @@ class plotArrayNodeCtrlWidget(QtWidgets.QWidget):
         self._listWidgetItems = set()  # registered items in ListWidget
         self.initUI()
         self.connectSignals()
+        self.items = dict()
 
 
     def initUI(self):
-        self.win = pg.GraphicsWindow()
+        self.win = pg.GraphicsWindow(title=u"Node: "+unicode(self.parent().nodeName))
         self.win.resize(1000, 600)
+        self.win.show()
         self.win.hide()
         #self.win.setWindowTitle(self.parent().nodeName)
 
@@ -93,10 +188,14 @@ class plotArrayNodeCtrlWidget(QtWidgets.QWidget):
         pg.setConfigOptions(antialias=True)
         self.coordLabel = pg.LabelItem(justify='right')
         self.win.addItem(self.coordLabel)
+        
+        #add custom datetime axis
+        axis1 = DateAxisItem(orientation='bottom')
+        axis2 = DateAxisItem(orientation='bottom')
 
-        self.p1 = self.win.addPlot(row=1, col=0)
+        self.p1 = self.win.addPlot(row=1, col=0, axisItems={'bottom': axis1})
         self.vb = self.p1.vb  # ViewBox
-        self.p2 = self.win.addPlot(row=2, col=0)
+        self.p2 = self.win.addPlot(row=2, col=0, axisItems={'bottom': axis2})
         
         self.zoomRegion = pg.LinearRegionItem()
         self.zoomRegion.setZValue(10)
@@ -109,6 +208,8 @@ class plotArrayNodeCtrlWidget(QtWidgets.QWidget):
         self.toggleCrosshair()
 
     def connectSignals(self):
+        #self.parent().sigItemReceived.connect(self.createListWidgetItem)
+
         self.zoomRegion.sigRegionChanged.connect(self.on_zoomRegion_changed)
         self.p1.sigRangeChanged.connect(self.updateZoomRegion)
         self.proxy = pg.SignalProxy(self.p1.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
@@ -132,12 +233,12 @@ class plotArrayNodeCtrlWidget(QtWidgets.QWidget):
             self.p1.removeItem(self.vLine)
             self.p1.removeItem(self.hLine)
 
-    def addListWidgetItem(self, name=None, array=None, state=None):
-        item = OneDimArrayItem(name=name, array=array)
-        if state is not None and name == state['originalName']:
-            item.restoreState(state)
-            self.listWidget.appendRow(item)
-            self._listWidgetItems.add(id(item))        
+
+    def removeListWidgetItem(self, id):
+        # remove item with given ID from the QListWidget
+        QListWidgetItem = self.parent().items()[id]['arrayItem'].QListWidget()
+        row = self.listWidget.row(QListWidgetItem)
+        self.listWidget.takeItem(row)
 
 
     @QtCore.pyqtSlot()

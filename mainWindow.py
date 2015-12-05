@@ -27,6 +27,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def initUI(self):
         self.center()
 
+        self.splitter.setSizes([300, 500])  #set horizontal sizes between splitter
 
         font = QtGui.QFont("Times", 11, QtGui.QFont.Bold, True)    
         font.setUnderline(True)
@@ -47,6 +48,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fc.sigFileLoaded.connect(self.uiData.setCurrentFileName)
         self.fc.sigFileSaved.connect(self.uiData.setCurrentFileName)
         self.fc.sigChartChanged.connect(self.on_sigChartChanged)
+        self.fc.sigChartLoaded.connect(self.on_sigChartLoaded)
         self.fc.scene.selectionChanged.connect(self.selectionChanged)
 
 
@@ -71,9 +73,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.flowChartWidget = self.fc.widget().chartWidget
         self.layoutTab1.addWidget(self.flowChartWidget)
     
+    def clearStackedWidget(self):
+        """ function deletes all items from QStackWidget"""
+        nItems = self.stackNodeCtrlStackedWidget.count()
+        for i in xrange(nItems):
+            widget = self.stackNodeCtrlStackedWidget.widget(i)
+            self.stackNodeCtrlStackedWidget.removeWidget(widget)
+            del widget
+
 
     @QtCore.pyqtSlot()
     def on_actionNew_fc(self):
+        self.clearStackedWidget()
         self.fc.loadFile(fileName=self.uiData.standardFileName())
         self.uiData.setCurrentFileName(None)
 
@@ -88,6 +99,7 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def on_actionLoad_fc(self):
         self.fc.loadFile()
+
     
     @QtCore.pyqtSlot()
     def selectionChanged(self):
@@ -97,6 +109,19 @@ class MainWindow(QtWidgets.QMainWindow):
             if hasattr(item, 'node') and isinstance(item.node, Node):
                 self.on_selectedNodeChanged(item.node)
                 
+    @QtCore.pyqtSlot()
+    def on_sigChartLoaded(self):
+        print "on_sigChartLoaded() is called"
+        # since during the fc.loadFile() all the sigChartChanged() is blocked, our method @on_sigChartChanged()
+        # will not be called, and thus the ctrlWidgets wont be added into the QStackWidget. Lets do it explicitly.
+        # We know, that after the File with flow chart has been loaded in pyqtgraph.flowchart class, it emits
+        # signal sigChartLoaded, we are using this feature
+        self.clearStackedWidget()
+        for name, node in self.fc.nodes().iteritems():
+            if node.ctrlWidget() is not None:
+                self.stackNodeCtrlStackedWidget.addWidget(node.ctrlWidget())
+            self.on_selectedNodeChanged(node)
+
 
     @QtCore.pyqtSlot(object, str, object)
     def on_sigChartChanged(self, emitter, action, node):
@@ -104,7 +129,8 @@ class MainWindow(QtWidgets.QMainWindow):
         print self, emitter, action, node
         if action == 'add':
             print 'on_sigChartChanged(): adding', node.ctrlWidget(), type(node.ctrlWidget())
-            self.stackNodeCtrlStackedWidget.addWidget(node.ctrlWidget())
+            if node.ctrlWidget() is not None:
+                self.stackNodeCtrlStackedWidget.addWidget(node.ctrlWidget())
             self.on_selectedNodeChanged(node)
 
 
@@ -112,6 +138,9 @@ class MainWindow(QtWidgets.QMainWindow):
             print 'on_sigChartChanged(): remove'
             # widget is not removed but hidden! find a way to safely remove it
             self.stackNodeCtrlStackedWidget.removeWidget(node.ctrlWidget())
+            #print self.stackNodeCtrlStackedWidget.currentWidget().parent()
+            #self.on_selectedNodeChanged(self.stackNodeCtrlStackedWidget.currentWidget().parent())
+            #self.label_nodeCtrlName.setText("Node: <"+node.name()+">")
             node.close()
             del node
 
@@ -119,7 +148,7 @@ class MainWindow(QtWidgets.QMainWindow):
         elif action == 'rename':
             print 'on_sigChartChanged(): rename'
             if self.stackNodeCtrlStackedWidget.currentWidget() is node.ctrlWidget():
-                self.label_nodeCtrlName.setText(node.name())
+                self.label_nodeCtrlName.setText("Node: <"+node.name()+">")
         else:
             msg = 'on_sigChartChanged(): Undefined action recieved <{0}>'.format(action)
             raise KeyError(msg)
@@ -147,6 +176,8 @@ from lib.flowchart.customnode_viewpandasdf import viewPandasDfNode
 from lib.flowchart.customnode_selectdfcolumn import selectDfColumnNode
 from lib.flowchart.customnode_plotarray import plotArrayNode
 
+
+
 class uiData(object):
     """ class to collect all our user-interface settings,
         and to seperate these params from MainWindow class"""
@@ -163,6 +194,7 @@ class uiData(object):
         self._flowchartLib.addNodeType(viewPandasDfNode, [('My',)])
         self._flowchartLib.addNodeType(selectDfColumnNode, [('My',)])
         self._flowchartLib.addNodeType(plotArrayNode, [('My',)])
+
 
 
     def currentFileName(self):

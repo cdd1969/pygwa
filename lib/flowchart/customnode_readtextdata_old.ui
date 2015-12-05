@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>270</width>
-    <height>322</height>
+    <width>203</width>
+    <height>355</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -56,7 +56,7 @@
          <string>Column to use as the row labels of the DataFrame (0-based)</string>
         </property>
         <property name="text">
-         <string>Column index</string>
+         <string>ind</string>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -82,7 +82,7 @@
          <string>If [1, 2, 3] -&gt; try parsing columns 1, 2, 3 each as a separate date column. If [[1, 3]] -&gt; combine columns 1 and 3 and parse as a single date column. {‘foo’ : [1, 3]} -&gt; parse columns 1, 3 as date and call result ‘foo’ A fast-path exists for iso8601-formatted dates.</string>
         </property>
         <property name="text">
-         <string>Combine cols</string>
+         <string>join</string>
         </property>
        </widget>
       </item>
@@ -102,12 +102,17 @@
       <item row="2" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>date_parser</string>
+         <string>fmt</string>
         </property>
        </widget>
       </item>
       <item row="2" column="1">
        <widget class="QComboBox" name="comboBox_datetimeParser">
+        <property name="font">
+         <font>
+          <pointsize>8</pointsize>
+         </font>
+        </property>
         <property name="toolTip">
          <string>Select format of the date-time column. This string will be forwarded to function &quot;datetime.strptime()&quot;</string>
         </property>
@@ -115,6 +120,15 @@
          <string>Select format of the date-time column. This string will be forwarded to function &quot;datetime.strptime()&quot;</string>
         </property>
         <property name="editable">
+         <bool>true</bool>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>10</width>
+          <height>10</height>
+         </size>
+        </property>
+        <property name="frame">
          <bool>true</bool>
         </property>
        </widget>

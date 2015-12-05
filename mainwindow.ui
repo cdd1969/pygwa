@@ -16,124 +16,130 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <widget class="QToolBox" name="toolBox">
-      <property name="maximumSize">
-       <size>
-        <width>300</width>
-        <height>16777215</height>
-       </size>
+     <widget class="QSplitter" name="splitter">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
       </property>
-      <property name="layoutDirection">
-       <enum>Qt::LeftToRight</enum>
-      </property>
-      <property name="currentIndex">
-       <number>1</number>
-      </property>
-      <widget class="QWidget" name="page">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>0</y>
-         <width>300</width>
-         <height>444</height>
-        </rect>
+      <widget class="QToolBox" name="toolBox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
-       <property name="toolTip">
-        <string/>
+       <property name="minimumSize">
+        <size>
+         <width>150</width>
+         <height>0</height>
+        </size>
        </property>
-       <property name="statusTip">
-        <string>Library with available Modules for rocessing data</string>
+       <property name="maximumSize">
+        <size>
+         <width>1000</width>
+         <height>16777215</height>
+        </size>
        </property>
-       <attribute name="label">
-        <string>Node Library</string>
-       </attribute>
-      </widget>
-      <widget class="QWidget" name="page_2">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>0</y>
-         <width>300</width>
-         <height>444</height>
-        </rect>
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
        </property>
-       <property name="toolTip">
-        <string/>
+       <property name="currentIndex">
+        <number>1</number>
        </property>
-       <property name="statusTip">
-        <string>Properties of the selected item in the flowchart</string>
-       </property>
-       <attribute name="label">
-        <string>Node Controls</string>
-       </attribute>
-       <layout class="QGridLayout" name="gridLayout_2">
-        <item row="0" column="1">
-         <layout class="QVBoxLayout" name="layout_stackNodeCtrlWidget">
-          <item>
-           <widget class="QLabel" name="label_nodeCtrlName">
-            <property name="text">
-             <string>Select the Node</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QStackedWidget" name="stackNodeCtrlStackedWidget">
-            <widget class="QWidget" name="stackNodeCtrlStackedWidgetPage1" native="true">
-             <zorder>label_nodeCtrlName</zorder>
+       <widget class="QWidget" name="page">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>361</width>
+          <height>444</height>
+         </rect>
+        </property>
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="statusTip">
+         <string>Library with available Modules for rocessing data</string>
+        </property>
+        <attribute name="label">
+         <string>Node Library</string>
+        </attribute>
+       </widget>
+       <widget class="QWidget" name="page_2">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>361</width>
+          <height>444</height>
+         </rect>
+        </property>
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="statusTip">
+         <string>Properties of the selected item in the flowchart</string>
+        </property>
+        <attribute name="label">
+         <string>Node Controls</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="1">
+          <layout class="QVBoxLayout" name="layout_stackNodeCtrlWidget">
+           <item>
+            <widget class="QLabel" name="label_nodeCtrlName">
+             <property name="text">
+              <string>Select the Node</string>
+             </property>
             </widget>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="1" column="1">
-         <spacer name="verticalSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
+           </item>
+           <item>
+            <widget class="QStackedWidget" name="stackNodeCtrlStackedWidget">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <widget class="QWidget" name="stackNodeCtrlStackedWidgetPage1"/>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
       </widget>
-     </widget>
-    </item>
-    <item row="0" column="1">
-     <widget class="QTabWidget" name="tabWidget">
-      <property name="toolTip">
-       <string/>
-      </property>
-      <property name="statusTip">
-       <string/>
-      </property>
-      <property name="currentIndex">
-       <number>0</number>
-      </property>
-      <widget class="QWidget" name="tab">
-       <attribute name="title">
-        <string>Flowchart.1</string>
-       </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <layout class="QVBoxLayout" name="layoutTab1">
-          <item>
-           <widget class="QWidget" name="flowChartWidget" native="true"/>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="tab_2">
-       <property name="statusTip">
-        <string>Create new flowchart</string>
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="toolTip">
+        <string/>
        </property>
-       <attribute name="title">
-        <string>+</string>
-       </attribute>
+       <property name="statusTip">
+        <string/>
+       </property>
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <widget class="QWidget" name="tab">
+        <attribute name="title">
+         <string>Flowchart.1</string>
+        </attribute>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <layout class="QVBoxLayout" name="layoutTab1">
+           <item>
+            <widget class="QWidget" name="flowChartWidget" native="true"/>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tab_2">
+        <property name="statusTip">
+         <string>Create new flowchart</string>
+        </property>
+        <attribute name="title">
+         <string>+</string>
+        </attribute>
+       </widget>
       </widget>
      </widget>
     </item>

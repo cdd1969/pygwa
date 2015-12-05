@@ -32,6 +32,11 @@
    </item>
    <item>
     <widget class="QLineEdit" name="lineEdit_name">
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
      <property name="toolTip">
       <string>Item name to be displayed</string>
      </property>
@@ -64,6 +69,11 @@
    </item>
    <item>
     <widget class="QDoubleSpinBox" name="spinBox_size">
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
      <property name="toolTip">
       <string>Width/size of the line/point to be drawn</string>
      </property>
