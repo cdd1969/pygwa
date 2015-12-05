@@ -175,6 +175,7 @@ from lib.flowchart.customnode_readtextdata import readTextDataNode
 from lib.flowchart.customnode_viewpandasdf import viewPandasDfNode
 from lib.flowchart.customnode_selectdfcolumn import selectDfColumnNode
 from lib.flowchart.customnode_plotarray import plotArrayNode
+from lib.flowchart.customnode_df2recarray import df2recArrayNode
 
 
 
@@ -194,6 +195,7 @@ class uiData(object):
         self._flowchartLib.addNodeType(viewPandasDfNode, [('My',)])
         self._flowchartLib.addNodeType(selectDfColumnNode, [('My',)])
         self._flowchartLib.addNodeType(plotArrayNode, [('My',)])
+        self._flowchartLib.addNodeType(df2recArrayNode, [('My',)])
 
 
 
