@@ -17,6 +17,7 @@ Afterwards, data corresponding to these indices is taken from input signal-array
 ###### Split=False: minima and maxima joined
 - Terminal ***val***: *\<numpy.ndarray\>* - values of all peaks
 - Terminal ***ind***: *\<numpy.ndarray\>* - indices of all peaks
+
 ###### Split=True: minima and maxima separately
 - Terminal ***val:min***: *\<numpy.ndarray\>* - values of minima peaks
 - Terminal ***ind:min***: *\<numpy.ndarray\>* - indices of minima peaks
