@@ -8,12 +8,12 @@ from PyQt5.QtCore import Qt, qDebug
 from pyqtgraph.flowchart.Node import Node
 from pyqtgraph.functions import mkPen
 import pyqtgraph as pg
-from package import Package
 import sys
 from ..common.onedimarrayitem import OneDimArrayItem
 from ..common.DateAxisItem import DateAxisItem
-
-
+from copy import copy, deepcopy
+import datetime
+import time
 
 class plotArrayNode(Node):
     """Plot number of 1D arrays as timeseries"""
@@ -29,38 +29,46 @@ class plotArrayNode(Node):
         self._items = dict()
         self.sigItemReceived.connect(self.on_sigItemReceived)
 
+    def items(self):
+        return self._items
 
     def disconnected(self, localTerm, remoteTerm):
         if localTerm is self['Array'] and remoteTerm in self._items.keys():
-            self.removeItem(remoteTerm)
+            print "localTerm <{0}> is diconnected from remoteTerm <{1}>".format(localTerm, remoteTerm)
+            if 'plotItems' in self._items[remoteTerm].keys():
+                item1, item2 = self._items[remoteTerm]['plotItems']
+                self.removeItem(item1)
+                self.removeItem(item2)
+            del self._items[remoteTerm]
 
-    def connected(self, localTerm, remoteTerm):
-        """Called whenever one of this node's terminals is connected elsewhere."""
-        print 'TERMS CONNECTED'
+
+    #def connected(self, localTerm, remoteTerm):
+    #    """Called whenever one of this node's terminals is connected elsewhere."""
+    #    print 'TERMS CONNECTED'
 
 
 
     def process(self, Array):
+        print '>>> plotArray: process() is called'
         for term, vals in Array.items():
-            print "???>>>", term
-            print "???>>>", vals
             if vals is None:
                 continue
             if type(vals) is not list:
                 vals = [vals]
             
             for val in vals:
-                if term in self._items.keys():
-                    # if the data transmitted is different from the one saved...
-                    if id(val) == id(self._items[term]['arrayItem'].array()):
-                        continue
-                    else:
-                        self._items[term]['arrayItem'].update(array=val)
-                        self.redraw()
-                    print '>>>on_process(): removing ', term
-                    #self.removeItem(term.name())
-                self.sigItemReceived.emit(term, val)
-                
+                # do not emit here a signal, because if that is done,
+                # <process> function is executed with OK status, and then
+                # the execution of <on_signal_received> takes place, WITHOUT
+                # gui-based handling of exeptions (will result in crash)
+                #
+                # Therefore we directly call <on_signal_received> here
+                self.on_sigItemReceived(term, val)
+    
+    def canvas(self):
+        c1 = self._ctrlWidget.p1
+        c2 = self._ctrlWidget.p2
+        return [c1, c2]
 
     def items(self):
         return self._items
@@ -80,33 +88,8 @@ class plotArrayNode(Node):
         Node.restoreState(self, state)
         # additionally restore state of the control widget
         #self.ctrlWidget().restoreState(state['crtlWidget'])
+        self.update()
 
-
-
-    def removeItem(self, id):
-        if id not in self._items.keys():
-            return
-        # first remove the widget from QListWidget
-        self._ctrlWidget.removeListWidgetItem(id)
-
-        # remove plotItems from canvas
-        self._ctrlWidget.p1.removeItem(self._items[id]['plotItems'][0])
-        self._ctrlWidget.p2.removeItem(self._items[id]['plotItems'][1])
-        
-        # delete plotItems
-        del self._items[id]['plotItems']
-
-        # Now disconnect signals
-        ctrlWidget = self._items[id]['arrayItem'].ctrlWidget()
-        ctrlWidget.pushButton_color.sigColorChanged.disconnect()
-        ctrlWidget.lineEdit_name.textChanged.disconnect()
-        ctrlWidget.spinBox_size.valueChanged.disconnect()
-
-        # delete arrayItem
-        del self._items[id]['arrayItem']
-
-        # delete the whole entry
-        del self._items[id]
 
     def clear(self):
         for iId in self._items.keys():
@@ -121,38 +104,33 @@ class plotArrayNode(Node):
         Node.close(self)
 
     @QtCore.pyqtSlot(object, object)
-    def on_sigItemReceived(self, id, array):
-        """ <id> is not <id(array)>, but it should be passed from parent widget
+    def on_sigItemReceived(self, term, item):
+        """ <term> is not <id(array)>, but it should be passed from parent widget
         """
-        self._items[id] = dict()
-        if isinstance(array, (pg.PlotDataItem, pg.ScatterPlotItem)):
-            l1 = self._ctrlWidget.p1.addItem(array)
-            l2 = self._ctrlWidget.p2.addItem(array)
-            self._items[id]['plotItems'] = [l1, l2]
+        # check if this item exists
+        if term in self._items.keys():  # if we have already something from this terminal
+            if 'plotItems' in self._items[term].keys():
+                if self._items[term]['plotItems'][0] is item:  # if the item is absolutely same
+                    #print '>>> on_sigItemReceived(): {0}: item is the same'.format(term)
+                    return
+        if isinstance(item, (pg.PlotDataItem, pg.ScatterPlotItem)):
+            self._items[term] = dict()
+            # init symbol pen and size
+            item.setSymbolPen(item.opts['pen'])
+            item.setSymbolSize(5)
+
+            self.canvas()[0].addItem(item)
+
+            # for some reason it is impossible to add same item to two subplots...
+            opts = item.opts
+            opts['clipToView'] = False  #  we need to change it to False, because for some reason it fails....
+            item2 = pg.PlotDataItem(item.xData, item.yData, **opts)
+            
+            self.canvas()[1].addItem(item2)
+
+            self._items[term]['plotItems'] = [item, item2]
+            #print 'adding items: (1) {0} {1} >>> (2) {2} {3}'.format(item, type(item), item2, type(item2))
             return
-        # create arrayItem...
-        arrayItem   = OneDimArrayItem(id=id, array=array)
-        self._items[id]['arrayItem'] = arrayItem
-        
-        # create QListWidget...
-        ctrlWidget  = arrayItem.ctrlWidget()
-        QListWidget = arrayItem.QListWidget()
-        
-        # register signals to redraw graphical items on ui-changes
-        ctrlWidget.pushButton_color.sigColorChanged.connect(self.redraw)
-        ctrlWidget.lineEdit_name.textChanged.connect(self.redraw)
-        ctrlWidget.spinBox_size.valueChanged.connect(self.redraw)
-
-        self._ctrlWidget.listWidget.addItem(QListWidget)
-        self._ctrlWidget.listWidget.setItemWidget(QListWidget, ctrlWidget)
-
-        # now create graphic objects
-        state = arrayItem.saveState()
-        pen = mkPen(color=state['color'], width=state['size'])
-        
-        l1 = self._ctrlWidget.p1.plot(array, pen=pen)
-        l2 = self._ctrlWidget.p2.plot(array, pen=pen)
-        self._items[id]['plotItems'] = [l1, l2]
 
 
     def redraw(self):
@@ -163,7 +141,13 @@ class plotArrayNode(Node):
                 plotItem.setPen(pen)
 
 
-
+    def removeItem(self, item):
+        try:
+            self.canvas()[0].removeItem(item)
+            self.canvas()[1].removeItem(item)
+        except RuntimeError:  # somtimes happens by loading new chart (RuntimeError: wrapped C/C++ object of type PlotDataItem has been deleted)
+            pass
+        del item
 
 
 class plotArrayNodeCtrlWidget(QtWidgets.QWidget):
@@ -178,43 +162,53 @@ class plotArrayNodeCtrlWidget(QtWidgets.QWidget):
 
 
     def initUI(self):
-        self.win = pg.GraphicsWindow(title=u"Node: "+unicode(self.parent().nodeName))
-        self.win.resize(1000, 600)
-        self.win.show()
-        self.win.hide()
-        #self.win.setWindowTitle(self.parent().nodeName)
+        win = pg.GraphicsLayoutWidget()
+        win.resize(1000, 600)
+        win.setWindowTitle(u"Node: "+unicode(self.parent().name()))
 
         # Enable antialiasing for prettier plots
         pg.setConfigOptions(antialias=True)
+        # Add Label where coords of current bouse position will be printed
         self.coordLabel = pg.LabelItem(justify='right')
-        self.win.addItem(self.coordLabel)
+        win.addItem(self.coordLabel)
         
         #add custom datetime axis
         axis1 = DateAxisItem(orientation='bottom')
         axis2 = DateAxisItem(orientation='bottom')
 
-        self.p1 = self.win.addPlot(row=1, col=0, axisItems={'bottom': axis1})
+        self.p1 = win.addPlot(row=1, col=0, axisItems={'bottom': axis1})
+        #self.p1 = win.addPlot(row=1, col=0)
+        self.p1.setClipToView(False)
+        self.p2 = win.addPlot(row=2, col=0, axisItems={'bottom': axis2})
+        #self.p2 = win.addPlot(row=2, col=0)
+        self.p1.setClipToView(False)
         self.vb = self.p1.vb  # ViewBox
-        self.p2 = self.win.addPlot(row=2, col=0, axisItems={'bottom': axis2})
         
         self.zoomRegion = pg.LinearRegionItem()
-        self.zoomRegion.setZValue(10)
+        self.zoomRegion.setZValue(-10)
         self.zoomRegion.setRegion([1000, 2000])
-        
         self.p2.addItem(self.zoomRegion, ignoreBounds=True)
+        #self.p2.addItem(self.zoomRegion)
+        
         self.p1.setAutoVisible(y=True)
 
         self.initCrosshair()
         self.toggleCrosshair()
+
+
+        self.win = win
+
 
     def connectSignals(self):
         #self.parent().sigItemReceived.connect(self.createListWidgetItem)
 
         self.zoomRegion.sigRegionChanged.connect(self.on_zoomRegion_changed)
         self.p1.sigRangeChanged.connect(self.updateZoomRegion)
+
         self.proxy = pg.SignalProxy(self.p1.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
 
         self.checkBox_toggleCrosshair.stateChanged.connect(self.toggleCrosshair)
+        self.checkBox_togglePoints.stateChanged.connect(self.togglePoints)
 
 
     def parent(self):
@@ -233,6 +227,16 @@ class plotArrayNodeCtrlWidget(QtWidgets.QWidget):
             self.p1.removeItem(self.vLine)
             self.p1.removeItem(self.hLine)
 
+    def togglePoints(self):
+        for item in self.parent().items().values():
+            # we want to toggle points only on upper subplot => index [0]
+            if self.checkBox_togglePoints.isChecked():
+                symbol = 'x'
+            else:
+                symbol = None
+            item['plotItems'][0].setSymbol(symbol)
+
+
 
     def removeListWidgetItem(self, id):
         # remove item with given ID from the QListWidget
@@ -243,7 +247,7 @@ class plotArrayNodeCtrlWidget(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot()
     def on_zoomRegion_changed(self):
-        self.zoomRegion.setZValue(10)
+        #self.zoomRegion.setZValue(-10)
         minX, maxX = self.zoomRegion.getRegion()
         self.p1.setXRange(minX, maxX, padding=0)
 
@@ -268,12 +272,15 @@ class plotArrayNodeCtrlWidget(QtWidgets.QWidget):
             index = int(mousePoint.x())
             #if index > 0 and index < len(data1):
             #    self.coordLabel.setText("<span style='font-size: 12pt'>x=%0.1f,   <span style='color: red'>y1=%0.1f</span>,   <span style='color: green'>y2=%0.1f</span>" % (mousePoint.x(), data1[index], data2[index]))
-            self.setCoordLabelText(mousePoint.x())
+            t = datetime.datetime.utcfromtimestamp(mousePoint.x()+60*60).strftime('%Y-%m-%d %H:%M')  # we add 1hour manually. This is probably due to the bug in DateTimeAxis
+            data_y = {}  # should be y-coordinates of the data lines
+            self.setCoordLabelText(t, **data_y)
             self.vLine.setPos(mousePoint.x())
             self.hLine.setPos(mousePoint.y())
 
-    def setCoordLabelText(self, x_coord):
-        self.coordLabel.setText("<span style='font-size: 12pt'>x=%0.1f" % x_coord)
+    def setCoordLabelText(self, x_coord, **kwargs):
+        text = "<span style='font-size: 12pt'>t={0}".format(x_coord)
+        self.coordLabel.setText(text)
 
 
 

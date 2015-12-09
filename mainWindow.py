@@ -6,10 +6,6 @@ from PyQt5 import QtWidgets, QtGui, uic, QtCore
 from pyqtgraph.flowchart import Flowchart, Node
 
 
-#pyfile = open('ui_mainwindow.py', 'w')
-#uic.compileUi('mainwindow.ui', pyfile)
-#pyfile.close()
-
 class MainWindow(QtWidgets.QMainWindow):
 #class MainWindow(QtWidgets.QMainWindow, ui.Ui_MainWindow):
     
@@ -29,7 +25,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.splitter.setSizes([300, 500])  #set horizontal sizes between splitter
 
-        font = QtGui.QFont("Times", 11, QtGui.QFont.Bold, True)    
+        font = QtGui.QFont("Times", 11, QtGui.QFont.Bold, True)
         font.setUnderline(True)
         self.label_nodeCtrlName.setFont(font)
 
@@ -42,7 +38,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionSave_fc.triggered.connect(self.on_actionSave_fc)
         self.actionSave_As_fc.triggered.connect(self.on_actionSave_As_fc)
         self.actionLoad_fc.triggered.connect(self.on_actionLoad_fc)
-        self.actionQuit.triggered.connect(QtWidgets.qApp.quit)
+        self.actionQuit.triggered.connect(self.closeEvent)
+
+        self.uiData.sigCurrentFilenameChanged.connect(self.renameFlowchartTab)
 
     def connectFCSignals(self):
         self.fc.sigFileLoaded.connect(self.uiData.setCurrentFileName)
@@ -51,6 +49,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fc.sigChartLoaded.connect(self.on_sigChartLoaded)
         self.fc.scene.selectionChanged.connect(self.selectionChanged)
 
+ 
+    def closeEvent(self, event):
+        QtWidgets.qApp.quit()  #quit application
 
     def initFlowchart(self):
         # removing dummyWidget created with QtDesigner
@@ -86,19 +87,30 @@ class MainWindow(QtWidgets.QMainWindow):
     def on_actionNew_fc(self):
         self.clearStackedWidget()
         self.fc.loadFile(fileName=self.uiData.standardFileName())
+        #fn = self.fc.ctrlWidget().currentFileName
         self.uiData.setCurrentFileName(None)
 
     @QtCore.pyqtSlot()
     def on_actionSave_fc(self,):
         self.fc.saveFile(fileName=self.uiData.currentFileName())
+        fn = self.fc.widget().currentFileName
+        if fn != self.uiData.standardFileName():
+            self.uiData.setCurrentFileName(fn)
 
     @QtCore.pyqtSlot()
     def on_actionSave_As_fc(self):
         self.fc.saveFile()
+        fn = self.fc.widget().currentFileName
+        if fn != self.uiData.standardFileName():
+            self.uiData.setCurrentFileName(fn)
     
     @QtCore.pyqtSlot()
     def on_actionLoad_fc(self):
         self.fc.loadFile()
+        fn = self.fc.widget().currentFileName
+        if fn != self.uiData.standardFileName():
+            self.uiData.setCurrentFileName(fn)
+
 
     
     @QtCore.pyqtSlot()
@@ -160,6 +172,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.label_nodeCtrlName.setText("Node: <"+node.name()+">")
 
 
+    @QtCore.pyqtSlot(unicode, unicode)
+    def renameFlowchartTab(self, oldName, newName):
+        currentTab = self.tabWidget.currentIndex()
+        #print '>>> renameFlowchartTab()', newName, type(newName)
+        if newName in [None, u'']:
+            newName = 'new_flowchart'
+        else:
+            newName = os.path.basename(newName)
+            #if newName in ['default.fc', u'default.fc']:
+            #    newName = 'new_flowchart'
+
+        self.tabWidget.setTabText(currentTab, newName)
+
+
     def center(self):
         qr = self.frameGeometry()
         cp = QtWidgets.QDesktopWidget().availableGeometry().center()
@@ -169,33 +195,40 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 
-
+# these imports are for creating custom Node-Library
 import pyqtgraph.flowchart.library as fclib
-from lib.flowchart.customnode_readtextdata import readTextDataNode
+from lib.flowchart.customnode_readcsv import readCSVNode
 from lib.flowchart.customnode_viewpandasdf import viewPandasDfNode
 from lib.flowchart.customnode_selectdfcolumn import selectDfColumnNode
 from lib.flowchart.customnode_plotarray import plotArrayNode
 from lib.flowchart.customnode_df2recarray import df2recArrayNode
+from lib.flowchart.customnode_detectpeaks import detectPeaksNode
 
 
 
-class uiData(object):
+class uiData(QtCore.QObject):
     """ class to collect all our user-interface settings,
         and to seperate these params from MainWindow class"""
+    
+    sigCurrentFilenameChanged = QtCore.Signal(unicode, unicode)
+
+
     def __init__(self, parent=None):
+        super(QtCore.QObject, self).__init__(parent=parent)
         self.parent = parent
         self.initLibrary()
         self._currentFileName  = None
-        self._standardFileName = 'lib/common/default.fc'
+        self._standardFileName = os.path.join(os.getcwd(), 'lib/common/default.fc')
 
 
     def initLibrary(self):
         self._flowchartLib = fclib.LIBRARY.copy()  # start with the default node set
-        self._flowchartLib.addNodeType(readTextDataNode, [('My',)])
+        self._flowchartLib.addNodeType(readCSVNode, [('My',)])
         self._flowchartLib.addNodeType(viewPandasDfNode, [('My',)])
         self._flowchartLib.addNodeType(selectDfColumnNode, [('My',)])
         self._flowchartLib.addNodeType(plotArrayNode, [('My',)])
         self._flowchartLib.addNodeType(df2recArrayNode, [('My',)])
+        self._flowchartLib.addNodeType(detectPeaksNode, [('My',)])
 
 
 
@@ -204,7 +237,9 @@ class uiData(object):
 
     @QtCore.pyqtSlot(str)
     def setCurrentFileName(self, name):
+        oldName = self._currentFileName
         self._currentFileName = name
+        self.sigCurrentFilenameChanged.emit(oldName, name)
 
     def standardFileName(self):
         return self._standardFileName
@@ -215,6 +250,7 @@ class uiData(object):
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
+    app.setWindowIcon(QtGui.QIcon('resources/theme_oceans_90.gif'))
     ex = MainWindow()
     ex.show()
 

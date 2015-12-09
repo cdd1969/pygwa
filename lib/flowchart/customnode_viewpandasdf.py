@@ -25,12 +25,16 @@ class viewPandasDfNode(Node):
 
     def __init__(self, name, parent=None):
         super(viewPandasDfNode, self).__init__(name, terminals={'In': {'io': 'in'}})
+        self._pandasModel = None
         self._ctrlWidget = viewPandasDfCtrlWidget(self)
-
         
     def process(self, In):
         print 'process() received In of ', type(In)
-        self._pandasModel = PandasModel(In.unpack())
+        if self._pandasModel is not None:
+            self._pandasModel.destroy()
+            self._pandasModel = None
+        if In is not None:
+            self._pandasModel = PandasModel(In.unpack(), parent=self)
         self.ctrlWidget().update()
         print 'process() returning...'
 
@@ -59,6 +63,9 @@ class viewPandasDfNode(Node):
 
 
 
+
+
+
 class viewPandasDfCtrlWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(viewPandasDfCtrlWidget, self).__init__()
@@ -73,33 +80,38 @@ class viewPandasDfCtrlWidget(QtWidgets.QWidget):
 
     def setModels(self):
         print "setModels()"
-        modelsAreSet = True
-        try:
-            self.listView.setModel(self.parent().getPandasModel().headerModel())
-        except Exception, err:
-            modelsAreSet = False
-            traceback.print_exc()
-            print "viewPandasDfCtrlWidget: Unnable to set listView model"
-        try:
-            self.tableView.setModel(self.parent().getPandasModel())
-        except Exception, err:
-            modelsAreSet = False
-            traceback.print_exc()
-            print "viewPandasDfCtrlWidget: Unnable to set tableView model"
+        modelsAreSet = False
+        if self.parent().getPandasModel() is not None:
+            try:
+                self.listView.setModel(self.parent().getPandasModel().headerModel())
+                modelOneIsSet = True
+            except Exception, err:
+                modelOneIsSet = False
+                traceback.print_exc()
+                print "viewPandasDfCtrlWidget: Unnable to set listView model"
+            try:
+                self.tableView.setModel(self.parent().getPandasModel())
+                modelTwoIsSet = True
+            except Exception, err:
+                modelTwoIsSet = False
+                traceback.print_exc()
+                print "viewPandasDfCtrlWidget: Unnable to set tableView model"
+            if modelOneIsSet and modelTwoIsSet:
+                modelsAreSet = True
+        self.updateButtons(modelsAreSet)
+
+    def updateButtons(self, modelsAreSet=False):
+        print 'updateButtons() is called with modelsAreSet=', modelsAreSet
         self.pushButton_viewTable.setEnabled(modelsAreSet)
         self.pushButton_viewPlot.setEnabled(modelsAreSet)
-
-            
-            
 
 
 
     def update(self):
         try:
-            del self.twWindow
+            self.twWindow.hide()
         except:
-            pass
-        self.twWindow = None
+            self.twWindow = None
         self.setModels()  # we enable and disable buttons also in this method
 
     @QtCore.pyqtSlot()  #default signal
@@ -113,7 +125,7 @@ class viewPandasDfCtrlWidget(QtWidgets.QWidget):
             self.twWindow.resize(1000, 800)
 
 
-            self.parent().getPandasModel().update()
+            #self.parent().getPandasModel().update()
             self.twWindow.show()
             
             self.pushButton_viewTable.setChecked(True)
@@ -122,7 +134,7 @@ class viewPandasDfCtrlWidget(QtWidgets.QWidget):
                 self.twWindow.hide()
                 self.pushButton_viewTable.setChecked(False)
             else:
-                self.parent().getPandasModel().update()
+                #self.parent().getPandasModel().update()
                 self.twWindow.show()
                 self.pushButton_viewTable.setChecked(True)
 
@@ -150,8 +162,9 @@ class PandasModel(QtCore.QAbstractTableModel):
     """
     def __init__(self, data, parent=None):
         QtCore.QAbstractTableModel.__init__(self, parent)
-        self._headerModel = QtGui.QStandardItemModel()  # this model will be used with QListView to display Dataframe header (and check them)
+        self._headerModel = QtGui.QStandardItemModel(parent=self)  # this model will be used with QListView to display Dataframe header (and check them)
         self._headerModel.itemChanged.connect(self.on_tv_itemChanged)
+        self._parent = parent
 
 
         if isinstance(data, pd.DataFrame):
@@ -161,6 +174,7 @@ class PandasModel(QtCore.QAbstractTableModel):
             raise TypeError("Invalid type of argument <data> detected. Received: {0}. Must be [pd.DataFrame]".format(type(data)))
 
     def setPandasDataframe(self, data):
+        print 'setPandasDataframe() is called'
         try:
             del self._dataPandas
             # no need to call garbage collector, since it will be executed via <update()>
@@ -176,6 +190,7 @@ class PandasModel(QtCore.QAbstractTableModel):
             item.setEditable(False)
             item.setCheckState(Qt.Checked)
             self._headerModel.appendRow(item)
+        self._headerModel.endResetModel()
         
         #finally call update method
         self.update()
@@ -222,6 +237,7 @@ class PandasModel(QtCore.QAbstractTableModel):
         self._data = self.createNumpyData()
         self.r, self.c = self._data.shape
         self.endResetModel()
+        self._parent.ctrlWidget().update()
 
 
     def selectColumns(self):
@@ -281,3 +297,26 @@ class PandasModel(QtCore.QAbstractTableModel):
             elif orientation == Qt.Vertical:
                 return section
         return QtCore.QVariant()
+
+    def clearAll(self):
+        self.clear()
+
+    def destroy(self):
+        print 'destroy() is called'
+        self._headerModel.clear()
+        del self._headerModel
+        try:
+            del self._dataPandas
+        except:
+            print 'self._dataPandas not deleted'
+        try:
+            del self._data
+        except:
+            print 'self._data not deleted'
+
+        #self.clear()
+        self.endResetModel()
+        del self
+        gc.collect()
+
+

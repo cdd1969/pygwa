@@ -9,34 +9,26 @@ from package import Package
 from datetime import datetime
 import inspect
 from pyqtgraph.parametertree import Parameter, ParameterTree
-from ..functions import evaluateDict
+from ..functions.evaluatedictionary import evaluateDict, evaluationFunction
 import webbrowser
 
 
 
-class readTextDataNode(Node):
+class readCSVNode(Node):
     """Load column-based data from ASCII file"""
-    nodeName = "readTextData"
+    nodeName = "readCSV"
 
 
     def __init__(self, name, parent=None):
-        super(readTextDataNode, self).__init__(name, terminals={'output': {'io': 'out'}})
-        self._ctrlWidget = readTextDataNodeCtrlWidget(self)
+        super(readCSVNode, self).__init__(name, terminals={'output': {'io': 'out'}})
+        self._ctrlWidget = readCSVNodeCtrlWidget(self)
 
         
     def process(self, display=True):
-        print 'process() is called'
         kwargs = self.ctrlWidget().evaluateState()
-        try:
-            df = pd.read_csv(**kwargs)
-            print 'process() returning...'
-            return {'output': Package(df)}
-        except Exception, err:
-            print Exception, err
-            print 'Passed **kwargs = ', kwargs
-            print 'ERROR: file not loaded'
+        df = pd.read_csv(**kwargs)
+        return {'output': Package(df)}
 
-        
     def ctrlWidget(self):
         return self._ctrlWidget
 
@@ -52,6 +44,7 @@ class readTextDataNode(Node):
         Node.restoreState(self, state)
         # additionally restore state of the control widget
         self.ctrlWidget().restoreState(state['crtlWidget'])
+        #self.update()  # we do not call update() since we want to process only on LoadButton clicked
 
 
 
@@ -68,10 +61,10 @@ class readTextDataNode(Node):
 
 
 
-class readTextDataNodeCtrlWidget(ParameterTree):
+class readCSVNodeCtrlWidget(ParameterTree):
     
     def __init__(self, parent=None):
-        super(readTextDataNodeCtrlWidget, self).__init__()
+        super(readCSVNodeCtrlWidget, self).__init__()
         self._parent = parent
 
         params = self.params()
@@ -85,7 +78,6 @@ class readTextDataNodeCtrlWidget(ParameterTree):
         self._savedState = self.saveState()
 
     def initConnections(self):
-        pass
         self.p.child('Help').sigActivated.connect(self.on_help_clicked)
         self.p.child('Load state').sigActivated.connect(self.on_loadstate_clicked)
         self.p.child('Load File').sigActivated.connect(self.on_loadfile_clicked)
@@ -217,7 +209,7 @@ class readTextDataNodeCtrlWidget(ParameterTree):
                 {'name': 'header', 'type': 'str', 'value': 0, 'default': 0, 'tip': '< int, list of ints, default ‘infer’>\nRow number(s) to use as the column names, and the start of the data.\nREAD HELP'},  #dependent on <names>
                 {'name': 'skiprows', 'type': 'str', 'value': 0, 'default': None, 'tip': '<list-like or integer, default None>\nLine numbers to skip (0-indexed) or number of lines to skip (int) at the start of the file'},
                 {'name': 'parse_dates', 'type': 'str', 'value': False, 'default': False, 'tip': '<boolean, list of ints or names, list of lists, or dict, default False>\nIf True -> try parsing the index. If [1, 2, 3] -> try parsing columns 1, 2, 3 each as a\nseparate date column. If [[1, 3]] -> combine columns 1 and 3 and parse as a single\ndate column. {‘foo’ : [1, 3]} -> parse columns 1, 3 as date and call result ‘foo’ A fast-\npath exists for iso8601-formatted dates.'},
-                {'name': 'date_parser', 'type': 'str', 'value': '%d.%m.%Y %H:%M', 'default': '%d.%m.%Y %H:%M:%S', 'tip': '<str>\nDatetime format of the data in CSV file.\nREAD HELP'},
+                {'name': 'date_parser', 'type': 'str', 'value': 'lambda x: datetime.strptime(x, "%d.%m.%Y %H:%M")', 'default': 'lambda x: datetime.strptime(x, "%d.%m.%Y %H:%M")', 'tip': '<str>\nDatetime format of the data in CSV file.\nREAD HELP'},
                 {'name': 'nrows', 'type': 'str', 'value': None, 'default': None, 'tip': '<int, default None>\nNumber of rows of file to read. Useful for reading pieces of large files'},
 
                 {'name': 'Advanced parameters', 'type': 'group', 'expanded': False, 'children': [
@@ -249,58 +241,29 @@ class readTextDataNodeCtrlWidget(ParameterTree):
 
     def evaluateState(self, state=None):
         """ function evaluates passed state , reading only necessary parameters,
-            those that can be passed to pandas.read_csv() as **kwargs
+            those that can be passed to pandas.read_csv() as **kwargs (see function4arguments)
 
             user should reimplement this function for each Node"""
 
-        function = pd.read_csv
-        # -------------------------------------------------------------
-        if not inspect.isfunction(function):
-            raise ValueError('Argument passed is not a function. Received type: {0}'.format(type(function)))
-        
         if state is None:
             state = self.saveState()
 
-        def evaluationFunction(dictionary):
-            nameArgFound = False
-            for name in ['name', u'name']:
-                if name in dictionary.keys():
-                    nameArgFound = True
-            if not nameArgFound:
-                return None
-
-            defaultArgNames = inspect.getargspec(function).args
-            stateArgs = None
-            # if passed argument name is in defauklt argument names
-            if dictionary['name'] in defaultArgNames:
-                stateArgs = dict()
-                # save value from passed state...
-                if dictionary['value'] in ['', u'']:  #if emty line
-                    val = dictionary['default']
-                else:
-                    try:
-                        val = eval(dictionary['value'])
-                    except Exception, err:
-                        print Exception, err, '. Received:', dictionary['name'], '=', dictionary['value'],  '>>> I will set value without evaluation'
-                        val = dictionary['value']
-
-
-                stateArgs[dictionary['name']] = val
-            return stateArgs
         # ------------------------------------------------------
         if state['children']['Load CSV parameters']['children']['Advanced parameters']['children']['Manually set parameters']['value'] is True:
             # if we will use manually set params... then simply evaluate text-field
             kwargs = eval(state['children']['Load CSV parameters']['children']['Advanced parameters']['children']['Manually set parameters']['children']['Manuall parameters']['value'])
         else:
             # if we wont use manually set params, then collect all params values
-            listWithDicts = evaluateDict(state['children'], functionToDicts=evaluationFunction, log=False)
+            listWithDicts = evaluateDict(state['children'], functionToDicts=evaluationFunction, log=False,
+                function4arguments=pd.read_csv)
             kwargs = dict()
             for d in listWithDicts:
                 # {'a': None}.items() => [('a', None)] => two times indexing
                 kwargs[d.items()[0][0]] = d.items()[0][1]
             if kwargs['date_parser'] is not None:
+                # convert our STR to lambda FUNCTION
                 dateParserStr = kwargs['date_parser']
-                kwargs['date_parser'] = lambda x: datetime.strptime(x, dateParserStr)
+                #kwargs['date_parser'] = lambda x: datetime.strptime(x, dateParserStr)
         kwargs['filepath_or_buffer'] = state['children']['Select File']['value']
 
         return kwargs
