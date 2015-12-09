@@ -4,6 +4,8 @@
 import os, sys
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
 from pyqtgraph.flowchart import Flowchart, Node
+from lib.functions.dictionary2qtreewidgetitem import fill_widget
+
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -31,6 +33,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
         self.initFlowchart()
+
+        #init node selector tab, set autocompletion etc
+        self._nodeNameCompleter = QtWidgets.QCompleter(self)
+        self._nodeNameCompleter.setModel(self.uiData.nodeNamesModel())
+        self._nodeNameCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        self.lineEdit_nodeSelect.setCompleter(self._nodeNameCompleter)
+
+        # set tree view of node library
+        fill_widget(self.treeWidget, self.uiData.nodeNamesTree())
         pass
     
     def connectActions(self):
@@ -49,6 +60,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fc.sigChartLoaded.connect(self.on_sigChartLoaded)
         self.fc.scene.selectionChanged.connect(self.selectionChanged)
 
+        self.lineEdit_nodeSelect.editingFinished.connect(self.on_lineEditNodeSelect_editingFinished)
  
     def closeEvent(self, event):
         QtWidgets.qApp.quit()  #quit application
@@ -186,6 +198,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabWidget.setTabText(currentTab, newName)
 
 
+    @QtCore.pyqtSlot()
+    def on_lineEditNodeSelect_editingFinished(self):
+        currentText = self.lineEdit_nodeSelect.text()
+        listFoundWidget = self.treeWidget.findItems(currentText, QtCore.Qt.MatchContains | QtCore.Qt.MatchRecursive)
+        if len(listFoundWidget) == 1:
+            self.treeWidget.setCurrentItem(listFoundWidget[0])
+
     def center(self):
         qr = self.frameGeometry()
         cp = QtWidgets.QDesktopWidget().availableGeometry().center()
@@ -218,7 +237,8 @@ class uiData(QtCore.QObject):
         self.parent = parent
         self.initLibrary()
         self._currentFileName  = None
-        self._standardFileName = os.path.join(os.getcwd(), 'lib/common/default.fc')
+        self._standardFileName = os.path.join(os.getcwd(), 'resources/defaultFlowchart.dfc')
+
 
 
     def initLibrary(self):
@@ -230,7 +250,19 @@ class uiData(QtCore.QObject):
         self._flowchartLib.addNodeType(df2recArrayNode, [('My',)])
         self._flowchartLib.addNodeType(detectPeaksNode, [('My',)])
 
+        # create a StringListModel of registered node names, it will be used for auto completion
+        self._nodeNamesModel = QtCore.QStringListModel(self)
+        self._nodeNamesModel.setStringList(self._flowchartLib.nodeList.keys())
+        
+        # create a TreeModel of registered node names, it will be used for auto completion
+        self._nodeNamesTree = self._flowchartLib.nodeTree
 
+
+    def nodeNamesModel(self):
+        return self._nodeNamesModel
+
+    def nodeNamesTree(self):
+        return self._nodeNamesTree
 
     def currentFileName(self):
         return self._currentFileName
