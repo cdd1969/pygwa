@@ -62,7 +62,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lineEdit_nodeSelect.editingFinished.connect(self.on_lineEditNodeSelect_editingFinished)
  
     def closeEvent(self, event):
-        QtWidgets.qApp.quit()  #quit application
+        if self.doActionIfUnsavedChanges(message='Are you sure to quit?'):
+            QtWidgets.qApp.quit()  #quit application
+        else:
+            event.ignore()
 
     def initFlowchart(self):
         # removing dummyWidget created with QtDesigner
@@ -79,7 +82,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.connectFCSignals()
 
         # load default scheme
-        self.on_actionNew_fc()
+        self.on_actionNew_fc(init=True)
 
         # placing the real widget on the place of a dummy
         self.flowChartWidget = self.fc.widget().chartWidget
@@ -88,7 +91,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
         # now set flowchart canvas able to accept drops from QTreeWidget and create nodes. To do that
-        # we will overwrite default drag and drop events
+        # we will overwrite default dragEnterEvent and dropEvent with custom methods
         def dragEnterEvent(ev):
             ev.accept()
 
@@ -101,7 +104,8 @@ class MainWindow(QtWidgets.QMainWindow):
             #print self.flowChartWidget.view.viewBox().mapToView(pos)
             #print self.flowChartWidget.view.viewBox().mapViewToScene(pos)
             mappedPos = self.flowChartWidget.view.viewBox().mapSceneToView(pos)
-            self.flowChartWidget.chart.createNode(nodeType, pos=mappedPos)
+            if nodeType in self.uiData.nodeNamesList():  # to avoid drag'n'dropping Group-names
+                self.flowChartWidget.chart.createNode(nodeType, pos=mappedPos)
 
 
         self.flowChartWidget.view.dragEnterEvent = dragEnterEvent
@@ -120,11 +124,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     @QtCore.pyqtSlot()
-    def on_actionNew_fc(self):
+    def on_actionNew_fc(self, init=False):
+        if not init:  #if we are not initing
+            if not self.doActionIfUnsavedChanges(message='Are you sure to start new Flowchart from scratch without saving this one?'):
+                return
         self.clearStackedWidget()
         self.fc.loadFile(fileName=self.uiData.standardFileName())
         #fn = self.fc.ctrlWidget().currentFileName
         self.uiData.setCurrentFileName(None)
+        self.uiData.setChangesUnsaved(False)
 
     @QtCore.pyqtSlot()
     def on_actionSave_fc(self,):
@@ -132,6 +140,7 @@ class MainWindow(QtWidgets.QMainWindow):
         fn = self.fc.widget().currentFileName
         if fn != self.uiData.standardFileName():
             self.uiData.setCurrentFileName(fn)
+            self.uiData.setChangesUnsaved(False)
 
     @QtCore.pyqtSlot()
     def on_actionSave_As_fc(self):
@@ -139,13 +148,16 @@ class MainWindow(QtWidgets.QMainWindow):
         fn = self.fc.widget().currentFileName
         if fn != self.uiData.standardFileName():
             self.uiData.setCurrentFileName(fn)
+            self.uiData.setChangesUnsaved(False)
     
     @QtCore.pyqtSlot()
     def on_actionLoad_fc(self):
-        self.fc.loadFile()
-        fn = self.fc.widget().currentFileName
-        if fn != self.uiData.standardFileName():
-            self.uiData.setCurrentFileName(fn)
+        if self.doActionIfUnsavedChanges(message='Are you sure to load another Flowchart without saving this one?'):
+            self.fc.loadFile()
+            fn = self.fc.widget().currentFileName
+            if fn != self.uiData.standardFileName():
+                self.uiData.setCurrentFileName(fn)
+                self.uiData.setChangesUnsaved(False)
 
 
     
@@ -174,7 +186,9 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot(object, str, object)
     def on_sigChartChanged(self, emitter, action, node):
         print "on_sigChartChanged() is called"
-        print self, emitter, action, node
+        #print self, emitter, action, node
+        self.uiData.setChangesUnsaved(True)
+
         if action == 'add':
             print 'on_sigChartChanged(): adding', node.ctrlWidget(), type(node.ctrlWidget())
             if node.ctrlWidget() is not None:
@@ -239,7 +253,18 @@ class MainWindow(QtWidgets.QMainWindow):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
+    def doActionIfUnsavedChanges(self, message=''):
+        if self.uiData.changesUnsaved():
+            reply = QtWidgets.QMessageBox.question(self, 'Message',
+                "You have unsaved changes in current Flowchart. " + message,
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
 
+            if reply == QtWidgets.QMessageBox.Yes:
+                return True
+            else:
+                return False
+        else:
+            return True
 
 
 # these imports are for creating custom Node-Library
@@ -265,6 +290,7 @@ class uiData(QtCore.QObject):
         self.parent = parent
         self.initLibrary()
         self._currentFileName  = None
+        self._changesUnsaved  = True
         self._standardFileName = os.path.join(os.getcwd(), 'resources/defaultFlowchart.dfc')
 
 
@@ -279,12 +305,15 @@ class uiData(QtCore.QObject):
         self._flowchartLib.addNodeType(detectPeaksNode, [('My',)])
 
         # create a StringListModel of registered node names, it will be used for auto completion
+        self._nodeNamesList  = self._flowchartLib.nodeList.keys()
         self._nodeNamesModel = QtCore.QStringListModel(self)
-        self._nodeNamesModel.setStringList(self._flowchartLib.nodeList.keys())
+        self._nodeNamesModel.setStringList(self._nodeNamesList)
         
         # create a TreeModel of registered node names, it will be used for auto completion
         self._nodeNamesTree = self._flowchartLib.nodeTree
 
+    def nodeNamesList(self):
+        return self._nodeNamesList
 
     def nodeNamesModel(self):
         return self._nodeNamesModel
@@ -294,6 +323,22 @@ class uiData(QtCore.QObject):
 
     def currentFileName(self):
         return self._currentFileName
+
+    def changesUnsaved(self):
+        return self._changesUnsaved
+
+    def setChangesUnsaved(self, state):
+        if isinstance(state, bool):
+            self._changesUnsaved = state
+            fn = self._currentFileName
+            if fn is not None:
+                # we are only emitting sigal simutaing the rename operation, without actually renaming
+                # the flowchart. This will cause TabWidget label to be renamed
+                if state is True:  # changes are unsaved >>> add asterix
+                    self.sigCurrentFilenameChanged.emit(fn, unicode(fn+'*'))
+                else:  # changes are saved, remove asterix
+                    self.sigCurrentFilenameChanged.emit(fn, unicode(fn[:-1]))
+
 
     @QtCore.pyqtSlot(str)
     def setCurrentFileName(self, name):
