@@ -28,7 +28,10 @@ class MainWindow(QtWidgets.QMainWindow):
         font.setUnderline(True)
         self.label_nodeCtrlName.setFont(font)
 
+        # create dummy widget (it will be selected if our node doesnot has ctrlWidget)
+        self._dummyWidget = QtWidgets.QWidget(self)
 
+        # init FlowChart
         self.initFlowchart()
 
         #init node selector tab, set autocompletion etc
@@ -112,6 +115,8 @@ class MainWindow(QtWidgets.QMainWindow):
             widget = self.stackNodeCtrlStackedWidget.widget(i)
             self.stackNodeCtrlStackedWidget.removeWidget(widget)
             del widget
+        # finally add dummy widget - to be selected with nodes that does not have any ctrlWidget()
+        self.stackNodeCtrlStackedWidget.addWidget(self._dummyWidget)
 
 
     @QtCore.pyqtSlot()
@@ -199,7 +204,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(Node)
     def on_selectedNodeChanged(self, node):
-        self.stackNodeCtrlStackedWidget.setCurrentWidget(node.ctrlWidget())
+        if node.ctrlWidget() is not None:
+            self.stackNodeCtrlStackedWidget.setCurrentWidget(node.ctrlWidget())
+        else:
+            self.stackNodeCtrlStackedWidget.setCurrentWidget(self._dummyWidget)
+
         self.label_nodeCtrlName.setText("Node: <"+node.name()+">")
 
 
