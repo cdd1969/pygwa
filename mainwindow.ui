@@ -50,7 +50,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>466</width>
+          <width>629</width>
           <height>618</height>
          </rect>
         </property>
@@ -72,8 +72,14 @@
            <property name="statusTip">
             <string>Quick Node selection. Type Node name</string>
            </property>
+           <property name="inputMask">
+            <string/>
+           </property>
            <property name="frame">
             <bool>true</bool>
+           </property>
+           <property name="dragEnabled">
+            <bool>false</bool>
            </property>
            <property name="clearButtonEnabled">
             <bool>true</bool>
@@ -82,14 +88,23 @@
          </item>
          <item>
           <widget class="QTreeWidget" name="treeWidget">
+           <property name="editTriggers">
+            <set>QAbstractItemView::NoEditTriggers</set>
+           </property>
            <property name="dragEnabled">
             <bool>true</bool>
            </property>
            <property name="dragDropMode">
             <enum>QAbstractItemView::DragOnly</enum>
            </property>
+           <property name="defaultDropAction">
+            <enum>Qt::IgnoreAction</enum>
+           </property>
            <property name="rootIsDecorated">
             <bool>true</bool>
+           </property>
+           <property name="sortingEnabled">
+            <bool>false</bool>
            </property>
            <attribute name="headerVisible">
             <bool>false</bool>
@@ -108,7 +123,7 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>466</width>
+          <width>629</width>
           <height>618</height>
          </rect>
         </property>
@@ -148,6 +163,9 @@
        </widget>
       </widget>
       <widget class="QTabWidget" name="tabWidget">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
        <property name="toolTip">
         <string/>
        </property>
@@ -172,6 +190,9 @@
         </layout>
        </widget>
        <widget class="QWidget" name="tab_2">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="statusTip">
          <string>Create new flowchart</string>
         </property>

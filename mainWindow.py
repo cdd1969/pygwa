@@ -7,10 +7,7 @@ from pyqtgraph.flowchart import Flowchart, Node
 from lib.functions.dictionary2qtreewidgetitem import fill_widget
 
 
-
 class MainWindow(QtWidgets.QMainWindow):
-#class MainWindow(QtWidgets.QMainWindow, ui.Ui_MainWindow):
-    
     def __init__(self):
         super(MainWindow, self).__init__()
         #self.setupUi(self)
@@ -42,7 +39,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # set tree view of node library
         fill_widget(self.treeWidget, self.uiData.nodeNamesTree())
-        pass
     
     def connectActions(self):
         self.actionNew_fc.triggered.connect(self.on_actionNew_fc)
@@ -73,8 +69,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # generating flowchart instance. Further we will work only with this instance,
         # simply saving/loading it's state.
         self.fc = Flowchart(terminals={
-        'dataIn': {'io': 'in'},
-        'dataOut': {'io': 'out'}}, library=self.uiData.flowchartLib())
+                            'dataIn': {'io': 'in'},
+                            'dataOut': {'io': 'out'}}, library=self.uiData.flowchartLib())
         
         # connecting standard signals of the flowchart
         self.connectFCSignals()
@@ -84,7 +80,30 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # placing the real widget on the place of a dummy
         self.flowChartWidget = self.fc.widget().chartWidget
+        #self.flowChartWidget = self.fc.widget_.chartWidget
         self.layoutTab1.addWidget(self.flowChartWidget)
+
+
+        # now set flowchart canvas able to accept drops from QTreeWidget and create nodes. To do that
+        # we will overwrite default drag and drop events
+        def dragEnterEvent(ev):
+            ev.accept()
+
+        def dropEvent(event):
+            pos = event.pos()
+            nodeType = event.source().currentItem().text(0)
+            #print "Got drop at fcWidget.view:", nodeType, '. At coords:', pos
+            #print self.flowChartWidget.view.viewBox().mapFromView(pos)
+            #print self.flowChartWidget.view.viewBox().mapSceneToView(pos)
+            #print self.flowChartWidget.view.viewBox().mapToView(pos)
+            #print self.flowChartWidget.view.viewBox().mapViewToScene(pos)
+            mappedPos = self.flowChartWidget.view.viewBox().mapSceneToView(pos)
+            self.flowChartWidget.chart.createNode(nodeType, pos=mappedPos)
+
+
+        self.flowChartWidget.view.dragEnterEvent = dragEnterEvent
+        self.flowChartWidget.view.viewBox().setAcceptDrops(True)
+        self.flowChartWidget.view.viewBox().dropEvent = dropEvent
     
     def clearStackedWidget(self):
         """ function deletes all items from QStackWidget"""

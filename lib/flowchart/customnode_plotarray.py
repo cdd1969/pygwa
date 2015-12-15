@@ -14,6 +14,8 @@ from ..common.DateAxisItem import DateAxisItem
 from copy import copy, deepcopy
 import datetime
 import time
+from pyqtgraph import BusyCursor
+
 
 class plotArrayNode(Node):
     """Plot number of 1D arrays as timeseries"""
@@ -228,13 +230,14 @@ class plotArrayNodeCtrlWidget(QtWidgets.QWidget):
             self.p1.removeItem(self.hLine)
 
     def togglePoints(self):
-        for item in self.parent().items().values():
-            # we want to toggle points only on upper subplot => index [0]
-            if self.checkBox_togglePoints.isChecked():
-                symbol = 'x'
-            else:
-                symbol = None
-            item['plotItems'][0].setSymbol(symbol)
+        with BusyCursor():
+            for item in self.parent().items().values():
+                # we want to toggle points only on upper subplot => index [0]
+                if self.checkBox_togglePoints.isChecked():
+                    symbol = 'x'
+                else:
+                    symbol = None
+                item['plotItems'][0].setSymbol(symbol)
 
 
 

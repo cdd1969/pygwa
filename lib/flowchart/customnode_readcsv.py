@@ -11,7 +11,7 @@ import inspect
 from pyqtgraph.parametertree import Parameter, ParameterTree
 from ..functions.evaluatedictionary import evaluateDict, evaluationFunction
 import webbrowser
-
+from pyqtgraph import BusyCursor
 
 
 class readCSVNode(Node):
@@ -26,7 +26,8 @@ class readCSVNode(Node):
         
     def process(self, display=True):
         kwargs = self.ctrlWidget().evaluateState()
-        df = pd.read_csv(**kwargs)
+        with BusyCursor():
+            df = pd.read_csv(**kwargs)
         return {'output': Package(df)}
 
     def ctrlWidget(self):

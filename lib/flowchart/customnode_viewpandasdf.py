@@ -12,6 +12,7 @@ import pandas as pd
 
 import os, sys
 import traceback
+from pyqtgraph import BusyCursor
 
 
 
@@ -29,14 +30,14 @@ class viewPandasDfNode(Node):
         self._ctrlWidget = viewPandasDfCtrlWidget(self)
         
     def process(self, In):
-        print 'process() received In of ', type(In)
-        if self._pandasModel is not None:
-            self._pandasModel.destroy()
-            self._pandasModel = None
-        if In is not None:
-            self._pandasModel = PandasModel(In.unpack(), parent=self)
-        self.ctrlWidget().update()
-        print 'process() returning...'
+        with BusyCursor():
+            if self._pandasModel is not None:
+                self._pandasModel.destroy()
+                self._pandasModel = None
+            if In is not None:
+                self._pandasModel = PandasModel(In.unpack(), parent=self)
+            self.ctrlWidget().update()
+
 
     def getPandasModel(self):
         return self._pandasModel
