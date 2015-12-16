@@ -20,7 +20,10 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="QToolBox" name="toolBox">
+      <widget class="QTabWidget" name="tabWidgetLeft">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
          <horstretch>0</horstretch>
@@ -42,25 +45,29 @@
        <property name="layoutDirection">
         <enum>Qt::LeftToRight</enum>
        </property>
-       <property name="currentIndex">
-        <number>0</number>
+       <property name="tabPosition">
+        <enum>QTabWidget::East</enum>
        </property>
-       <widget class="QWidget" name="page">
-        <property name="geometry">
-         <rect>
-          <x>0</x>
-          <y>0</y>
-          <width>629</width>
-          <height>618</height>
-         </rect>
-        </property>
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="statusTip">
-         <string>Library with available Modules for rocessing data</string>
-        </property>
-        <attribute name="label">
+       <property name="tabShape">
+        <enum>QTabWidget::Rounded</enum>
+       </property>
+       <property name="currentIndex">
+        <number>1</number>
+       </property>
+       <property name="elideMode">
+        <enum>Qt::ElideNone</enum>
+       </property>
+       <property name="documentMode">
+        <bool>false</bool>
+       </property>
+       <property name="movable">
+        <bool>true</bool>
+       </property>
+       <property name="tabBarAutoHide">
+        <bool>true</bool>
+       </property>
+       <widget class="QWidget" name="tabWidgetPage1">
+        <attribute name="title">
          <string>Node Library</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout">
@@ -118,23 +125,9 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="page_2">
-        <property name="geometry">
-         <rect>
-          <x>0</x>
-          <y>0</y>
-          <width>629</width>
-          <height>618</height>
-         </rect>
-        </property>
-        <property name="toolTip">
-         <string/>
-        </property>
-        <property name="statusTip">
-         <string>Properties of the selected item in the flowchart</string>
-        </property>
-        <attribute name="label">
-         <string>Node Controls</string>
+       <widget class="QWidget" name="tabWidgetPage2">
+        <attribute name="title">
+         <string>Node Options</string>
         </attribute>
         <layout class="QGridLayout" name="gridLayout_2">
          <item row="0" column="1">
@@ -242,6 +235,8 @@
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionHelp"/>
+    <addaction name="separator"/>
     <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuMenu"/>
@@ -310,6 +305,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="text">
+    <string>Help</string>
    </property>
   </action>
  </widget>

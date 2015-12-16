@@ -5,12 +5,13 @@ from datetime import datetime  #this is requred to use <readCSV_Node> parse_date
 
 
 
-def evaluationFunction(dictionary, function4arguments=None):
-    """ function will evaluate (apply python-native function <eval()>) passed dictionary,
-        taking only those etries, which have key that match passed function4arguments's argument names
+def evaluationFunction(dictionary, function4arguments=None, log=False):
+    """ function will evaluate (apply python-native function *eval()*) passed dictionary,
+        taking only those entries, which have key that match passed *function4arguments*'s
+        argument names or will take ALL dictionary entries if *function4arguments* is None
 
 
-        Dictionary must not be nested
+        NOTE !!!! Dictionary must not be nested
         
         example:
             Lets imagine we have three different dictionaries that we will feed to this function
@@ -40,7 +41,8 @@ def evaluationFunction(dictionary, function4arguments=None):
 
     """
     if not inspect.isfunction(function4arguments):
-        raise ValueError('Argument passed is not a function. Received type: {0}'.format(type(function4arguments)))
+        if function4arguments is not None:
+            raise ValueError('Argument passed is not a function or None. Received type: {0}'.format(type(function4arguments)))
         
     nameArgFound = False
     for name in ['name', u'name']:
@@ -49,10 +51,15 @@ def evaluationFunction(dictionary, function4arguments=None):
     if not nameArgFound:
         return None
 
-    defaultArgNames = inspect.getargspec(function4arguments).args
+
+    if function4arguments is not None:
+        defaultArgNames = inspect.getargspec(function4arguments).args
+    else:
+        defaultArgNames = list()
+    
     stateArgs = None
     # if passed argument name is in defauklt argument names
-    if dictionary['name'] in defaultArgNames:
+    if dictionary['name'] in defaultArgNames or function4arguments is None:
         stateArgs = dict()
         # save value from passed state...
         if dictionary['value'] in ['', u'']:  #if emty line
@@ -61,7 +68,7 @@ def evaluationFunction(dictionary, function4arguments=None):
             try:
                 val = eval(dictionary['value'])
             except Exception, err:
-                print Exception, err, '. Received:', dictionary['name'], '=', dictionary['value'],  '>>> I will set value without evaluation'
+                if log: print Exception, err, '. Received:', dictionary['name'], '=', dictionary['value'],  '>>> I will set value without evaluation'
                 val = dictionary['value']
 
 

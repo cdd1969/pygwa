@@ -135,12 +135,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.uiData.setChangesUnsaved(False)
 
     @QtCore.pyqtSlot()
-    def on_actionSave_fc(self,):
+    def on_actionSave_fc(self):
         self.fc.saveFile(fileName=self.uiData.currentFileName())
         fn = self.fc.widget().currentFileName
         if fn != self.uiData.standardFileName():
             self.uiData.setCurrentFileName(fn)
             self.uiData.setChangesUnsaved(False)
+            #self.statusBar().showMessage("File saved: "+fn, 10000)
+        return True
+
 
     @QtCore.pyqtSlot()
     def on_actionSave_As_fc(self):
@@ -149,6 +152,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if fn != self.uiData.standardFileName():
             self.uiData.setCurrentFileName(fn)
             self.uiData.setChangesUnsaved(False)
+            #self.statusBar().showMessage("File saved: "+fn, 10000)
+        return True
     
     @QtCore.pyqtSlot()
     def on_actionLoad_fc(self):
@@ -158,6 +163,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if fn != self.uiData.standardFileName():
                 self.uiData.setCurrentFileName(fn)
                 self.uiData.setChangesUnsaved(False)
+                #self.statusBar().showMessage("File loaded: "+fn)
 
 
     
@@ -257,10 +263,13 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.uiData.changesUnsaved():
             reply = QtWidgets.QMessageBox.question(self, 'Message',
                 "You have unsaved changes in current Flowchart. " + message,
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+                QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Save, QtWidgets.QMessageBox.Cancel)
 
-            if reply == QtWidgets.QMessageBox.Yes:
+            if reply == QtWidgets.QMessageBox.Discard:
                 return True
+            elif reply == QtWidgets.QMessageBox.Save:
+                if self.on_actionSave_fc():
+                    pass
             else:
                 return False
         else:
@@ -275,6 +284,7 @@ from lib.flowchart.customnode_selectdfcolumn import selectDfColumnNode
 from lib.flowchart.customnode_plotarray import plotArrayNode
 from lib.flowchart.customnode_df2recarray import df2recArrayNode
 from lib.flowchart.customnode_detectpeaks import detectPeaksNode
+from lib.flowchart.customnode_interpolateDf import interpolateDfNode
 
 
 
@@ -303,6 +313,7 @@ class uiData(QtCore.QObject):
         self._flowchartLib.addNodeType(plotArrayNode, [('My',)])
         self._flowchartLib.addNodeType(df2recArrayNode, [('My',)])
         self._flowchartLib.addNodeType(detectPeaksNode, [('My',)])
+        self._flowchartLib.addNodeType(interpolateDfNode, [('My',)])
 
         # create a StringListModel of registered node names, it will be used for auto completion
         self._nodeNamesList  = self._flowchartLib.nodeList.keys()
@@ -337,7 +348,7 @@ class uiData(QtCore.QObject):
                 if state is True:  # changes are unsaved >>> add asterix
                     self.sigCurrentFilenameChanged.emit(fn, unicode(fn+'*'))
                 else:  # changes are saved, remove asterix
-                    self.sigCurrentFilenameChanged.emit(fn, unicode(fn[:-1]))
+                    self.sigCurrentFilenameChanged.emit(fn, unicode(fn))
 
 
     @QtCore.pyqtSlot(str)

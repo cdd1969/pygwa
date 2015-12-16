@@ -15,6 +15,8 @@ from copy import copy, deepcopy
 import datetime
 import time
 from pyqtgraph import BusyCursor
+import gc
+
 
 
 class plotArrayNode(Node):
@@ -22,7 +24,7 @@ class plotArrayNode(Node):
     nodeName = "PlotArray"
 
     sigItemReceived    = QtCore.Signal(object, object)  #(id(item), item)
-    sigRegItemReceived = QtCore.Signal(object)  #allready registered item received (id(item))
+    sigRegItemReceived = QtCore.Signal(object)  #already registered item received (id(item))
 
     def __init__(self, name, parent=None):
         super(plotArrayNode, self).__init__(name, terminals={'Array': {'io': 'in', 'multi': True}})
@@ -36,12 +38,10 @@ class plotArrayNode(Node):
 
     def disconnected(self, localTerm, remoteTerm):
         if localTerm is self['Array'] and remoteTerm in self._items.keys():
-            print "localTerm <{0}> is diconnected from remoteTerm <{1}>".format(localTerm, remoteTerm)
+            print "localTerm <{0}> is disconnected from remoteTerm <{1}>".format(localTerm, remoteTerm)
             if 'plotItems' in self._items[remoteTerm].keys():
-                item1, item2 = self._items[remoteTerm]['plotItems']
-                self.removeItem(item1)
-                self.removeItem(item2)
-            del self._items[remoteTerm]
+                self.removeItem(self._items[remoteTerm])
+                del self._items[remoteTerm]
 
 
     #def connected(self, localTerm, remoteTerm):
@@ -62,7 +62,7 @@ class plotArrayNode(Node):
                 # do not emit here a signal, because if that is done,
                 # <process> function is executed with OK status, and then
                 # the execution of <on_signal_received> takes place, WITHOUT
-                # gui-based handling of exeptions (will result in crash)
+                # GUI-based handling of exceptions (will result in crash)
                 #
                 # Therefore we directly call <on_signal_received> here
                 self.on_sigItemReceived(term, val)
@@ -79,14 +79,14 @@ class plotArrayNode(Node):
         return self._ctrlWidget
 
     def saveState(self):
-        """overriding stadart Node method to extend it with saving ctrlWidget state"""
+        """overriding standard Node method to extend it with saving ctrlWidget state"""
         state = Node.saveState(self)
-        # sacing additionaly state of the control widget
+        # saving additionally state of the control widget
         #state['crtlWidget'] = self.ctrlWidget().saveState()
         return state
         
     def restoreState(self, state):
-        """overriding stadart Node method to extend it with restoring ctrlWidget state"""
+        """overriding standard Node method to extend it with restoring ctrlWidget state"""
         Node.restoreState(self, state)
         # additionally restore state of the control widget
         #self.ctrlWidget().restoreState(state['crtlWidget'])
@@ -94,8 +94,8 @@ class plotArrayNode(Node):
 
 
     def clear(self):
-        for iId in self._items.keys():
-            self.removeItem(iId)
+        for item in self._items.values():
+            self.removeItem(item)
 
     def close(self):
         self.clear()
@@ -113,27 +113,47 @@ class plotArrayNode(Node):
         if term in self._items.keys():  # if we have already something from this terminal
             if 'plotItems' in self._items[term].keys():
                 if self._items[term]['plotItems'][0] is item:  # if the item is absolutely same
-                    #print '>>> on_sigItemReceived(): {0}: item is the same'.format(term)
+                    print '>>> on_sigItemReceived(): already have something from term <{0}>: item <{1}> is the same'.format(term, item)
+                    
+                    # in this case item on the upper subplot will be updated automatically, but the bottom subplot will stay same...
+                    # When the item is receive, we are manually creating a COPY of incoming item and are adding this copy to the
+                    # bottom subplot. Lets do same trick! Keep original item, but recreate the COPY
+                    item2 = self.copyItem(item)
+                    self.canvas()[1].removeItem(self._items[term]['plotItems'][1])
+                    del self._items[term]['plotItems'][1]
+                    
+                    self.canvas()[1].addItem(item2)
+                    self._items[term]['plotItems'].append(item2)
                     return
+                else:
+                    print '>>> on_sigItemReceived(): already have something from term <{0}>: item <{1}> is different'.format(term, item)
+                    self.removeItems(self._items[term])
+
         if isinstance(item, (pg.PlotDataItem, pg.ScatterPlotItem)):
+            print '>>> on_sigItemReceived(): registering incoming item'
             self._items[term] = dict()
             # init symbol pen and size
             item.setSymbolPen(item.opts['pen'])
             item.setSymbolSize(5)
 
+            print '>>> on_sigItemReceived(): adding item to upper subplot'
             self.canvas()[0].addItem(item)
 
             # for some reason it is impossible to add same item to two subplots...
-            opts = item.opts
-            opts['clipToView'] = False  #  we need to change it to False, because for some reason it fails....
-            item2 = pg.PlotDataItem(item.xData, item.yData, **opts)
+            print '>>> on_sigItemReceived(): creating item-copy for bottom subplot'
+            item2 = self.copyItem(item)
             
+            #print '>>> on_sigItemReceived(): adding item-copy to bottom subplot'
             self.canvas()[1].addItem(item2)
 
             self._items[term]['plotItems'] = [item, item2]
-            #print 'adding items: (1) {0} {1} >>> (2) {2} {3}'.format(item, type(item), item2, type(item2))
+            print 'adding items: (1) {0} {1} >>> (2) {2} {3}'.format(item, type(item), item2, type(item2))
             return
 
+    def copyItem(self, sampleItem):
+        opts = sampleItem.opts
+        opts['clipToView'] = False  #  we need to change it to False, because for some reason it fails....
+        return pg.PlotDataItem(sampleItem.xData, sampleItem.yData, **opts)
 
     def redraw(self):
         for iId in self._items.keys():
@@ -143,13 +163,26 @@ class plotArrayNode(Node):
                 plotItem.setPen(pen)
 
 
-    def removeItem(self, item):
+    def removeGraphicItem(self, item):
         try:
             self.canvas()[0].removeItem(item)
             self.canvas()[1].removeItem(item)
-        except RuntimeError:  # somtimes happens by loading new chart (RuntimeError: wrapped C/C++ object of type PlotDataItem has been deleted)
+        except RuntimeError:  # sometimes happens by loading new chart (RuntimeError: wrapped C/C++ object of type PlotDataItem has been deleted)
             pass
         del item
+
+    def removeItem(self, item):
+        print '>>> plotArray: removeItem is called'
+        try:
+            if 'plotItems' in item.keys() and isinstance(item['plotItems'], list) and len(item['plotItems']) == 2:
+                print '>>> plotArray: actually removing items'
+                self.canvas()[0].removeItem(item['plotItems'][0])
+                self.canvas()[1].removeItem(item['plotItems'][1])
+        except RuntimeError:  # sometimes happens by loading new chart (RuntimeError: wrapped C/C++ object of type PlotDataItem has been deleted)
+            #print '>>> plotArray: item not deleted'
+            pass
+        del item
+        gc.collect()
 
 
 class plotArrayNodeCtrlWidget(QtWidgets.QWidget):
@@ -168,9 +201,9 @@ class plotArrayNodeCtrlWidget(QtWidgets.QWidget):
         win.resize(1000, 600)
         win.setWindowTitle(u"Node: "+unicode(self.parent().name()))
 
-        # Enable antialiasing for prettier plots
+        # Enable anti-aliasing for prettier plots
         pg.setConfigOptions(antialias=True)
-        # Add Label where coords of current bouse position will be printed
+        # Add Label where coords of current mouse position will be printed
         self.coordLabel = pg.LabelItem(justify='right')
         win.addItem(self.coordLabel)
         

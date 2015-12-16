@@ -80,7 +80,7 @@ class viewPandasDfCtrlWidget(QtWidgets.QWidget):
         self.update()
 
     def setModels(self):
-        print "setModels()"
+        #print "setModels()"
         modelsAreSet = False
         if self.parent().getPandasModel() is not None:
             try:
@@ -102,7 +102,7 @@ class viewPandasDfCtrlWidget(QtWidgets.QWidget):
         self.updateButtons(modelsAreSet)
 
     def updateButtons(self, modelsAreSet=False):
-        print 'updateButtons() is called with modelsAreSet=', modelsAreSet
+        #print 'updateButtons() is called with modelsAreSet=', modelsAreSet
         self.pushButton_viewTable.setEnabled(modelsAreSet)
         self.pushButton_viewPlot.setEnabled(modelsAreSet)
 
@@ -118,7 +118,7 @@ class viewPandasDfCtrlWidget(QtWidgets.QWidget):
     @QtCore.pyqtSlot()  #default signal
     def on_pushButton_viewTable_clicked(self):
         """ open our data in a tableView"""
-        print "on_pushButton_viewTable_clicked() is called"
+        #print "on_pushButton_viewTable_clicked() is called"
         if self.twWindow is None:
             self.twWindow = QtWidgets.QMainWindow()
             self.twWindow.setWindowTitle(self.parent().nodeName+': Table View')
@@ -168,14 +168,14 @@ class PandasModel(QtCore.QAbstractTableModel):
         self._parent = parent
 
 
-        if isinstance(data, pd.DataFrame):
+        if isinstance(data, (pd.DataFrame, pd.Series)):
             # set explicitly passed pandas dataframe
             self.setPandasDataframe(data)
         else:
-            raise TypeError("Invalid type of argument <data> detected. Received: {0}. Must be [pd.DataFrame]".format(type(data)))
+            raise TypeError("Invalid type of argument <data> detected. Received: {0}. Must be [pd.DataFrame, pd.Series]".format(type(data)))
 
     def setPandasDataframe(self, data):
-        print 'setPandasDataframe() is called'
+        #print 'setPandasDataframe() is called'
         try:
             del self._dataPandas
             # no need to call garbage collector, since it will be executed via <update()>
@@ -256,7 +256,7 @@ class PandasModel(QtCore.QAbstractTableModel):
         if len(columns) == self._headerModel.rowCount():
             columns = None
 
-        print "selectColumns() returning", columns
+        #print "selectColumns() returning", columns
         return columns
 
     def createNumpyData(self):
@@ -303,7 +303,7 @@ class PandasModel(QtCore.QAbstractTableModel):
         self.clear()
 
     def destroy(self):
-        print 'destroy() is called'
+        #print 'destroy() is called'
         self._headerModel.clear()
         del self._headerModel
         try:

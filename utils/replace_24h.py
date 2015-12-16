@@ -8,11 +8,12 @@ import datetime
 
 def replace_and_standardize_date(fname, inplace=0):
     """ Function is able to treat <date 24:00:00> and convert it to <date+1day 00:00:00>,
-        
         i.e.
         01/10/2014  24:00:00 >>> 02/10/2014 00:00:00
         31/12/2014  24:00:00 >>> 01/01/2015 00:00:00
-        
+        -----------------------------------------------------------------
+        NOTE: it is highly reccomended to use <inplace=0> as a first step
+        -----------------------------------------------------------------
 
         Note that the format of the passed string is HARDCODED by the regex pattern <p>:
             p = re.compile(r'''
@@ -27,7 +28,7 @@ def replace_and_standardize_date(fname, inplace=0):
             "01/10/2014  00:55:00    345,000000  Ued 41913,038194    -1,56   "
 
         If you would like to cahnge <p>, do not forget to change also <newline> definition:
-            newline = p.sub(r'\g<space1>'+newDateStr+r'\g<space2>'+newTimeStr+r'\g<else>', line)
+            newline = p.sub(r'\g<space1>'+newDateStr+r'\g<space2>'+newTimeStr+r'\g<rests>', line)
 
 
 
@@ -36,7 +37,6 @@ def replace_and_standardize_date(fname, inplace=0):
             <inplace=0> - only SHOW replacement
             <inplace=1> - create backupfile and DO replacement
 
-            NOTE: it is highly reccomended to use <inplace=0> as a first step
     """
     i = 0
     for line in fileinput.input(fname, inplace=inplace, backup='.bak'):
@@ -49,7 +49,7 @@ def replace_and_standardize_date(fname, inplace=0):
                 (?P<date>\d\d/\d\d/\d\d\d\d)   # date
                 (?P<space2>\s*)                # Whitespace
                 (?P<time>\d\d:\d\d:\d\d)       # time
-                (?P<else>.*?)\n                # everything else to end-of-line
+                (?P<rests>.*?)\n                # everything else to end-of-line
                 ''', re.VERBOSE)
             m = p.search(line)
             oldDatetimeStr = m.group('date')+' '+m.group('time')
@@ -58,7 +58,7 @@ def replace_and_standardize_date(fname, inplace=0):
             newDateStr  = datetime.datetime.strftime(newDatetime, '%d/%m/%Y')
             newTimeStr  = datetime.datetime.strftime(newDatetime, '%H:%M:%S')
             newDatetimeStr = newDateStr+' '+newTimeStr
-            newline = p.sub(r'\g<space1>'+newDateStr+r'\g<space2>'+newTimeStr+r'\g<else>', line)
+            newline = p.sub(r'\g<space1>'+newDateStr+r'\g<space2>'+newTimeStr+r'\g<rests>', line)
 
             if inplace == 0:
                 print "\t I have performed datetime conversion:", oldDatetimeStr, '>>>', newDatetimeStr
@@ -76,5 +76,5 @@ def replace_and_standardize_date(fname, inplace=0):
 
 
 if __name__ == '__main__':
-    fname = '/home/nck/prj/FARGE_project_work/data/farge_GW_data_ORIGINAL/Farge-GW1_HB-20_10min_081014_130415.all'
-    replace_and_standardize_date(fname, inplace=1)
+    fname = '/home/nck/prj/FARGE_project_work/data/farge_GW_data_ORIGINAL/Farge-GW6_HB-25_10min_071014_130415.all'
+    replace_and_standardize_date(fname, inplace=0)
