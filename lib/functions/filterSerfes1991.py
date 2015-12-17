@@ -53,81 +53,52 @@ def filter_wl_71h_serfes1991(data, datetime=None, verbose=False, log=False):
 
     
     if log: print ('Now I will apply Serfes Filter to numeric-columns')
-    st = time.time()
     overallProgress = len(numeric_columns)*3  # three averagings...
     progress = 0
+    df['ind'] = np.arange(len(df), dtype=np.int32)  # dummy row with row indeces as integer. will be deleted
+
+    # for displaying progress, since this is a very long operation
+    overallProgress = len(numeric_columns)*3  # three averagings...
+    progress = 0
+
+
+    # function that will be applied row-wise
+    def averaging(row):
+        currentIndex = int(row['ind'])
+        val = df.ix[currentIndex-halfN:currentIndex+halfN, col4averaging].mean()
+        return val
+
+    st = time.time()
     for col_name in numeric_columns:
-        if log: print ("working with numeric column:", col_name)
+        if log: print ("Working with numeric column:", col_name)
         data[col_name+'_averaging1'] = np.nan
         data[col_name+'_averaging2'] = np.nan
         data[col_name+'_timeAverage'] = np.nan
+
         
-        print ("[{0}/{1}]\t Calculating first mean: {2}".format(progress, overallProgress, col_name))
-        for i in xrange(halfN, nEntries-halfN):  # cycle trough correct indexes
-            data.ix[i, col_name+'_averaging1'] = data.ix[i-halfN:i+halfN, col_name].mean()
-        
+        if log: print ("[{0}/{1}]\t Calculating first mean: {2}".format(progress, overallProgress, col_name))
+        col4averaging = col_name
+        data.loc[halfN:nEntries-halfN, col_name+'_averaging1'] = data.apply(averaging, axis=1)
         progress += 1
-        print ("[{0}/{1}]\t Calculating second mean: {2}".format(progress, overallProgress, col_name))
-        for i in xrange(N, nEntries-N):  # cycle trough correct indexes
-            data.ix[i, col_name+'_averaging2'] = data.ix[i-halfN:i+halfN, col_name+'_averaging1'].mean()
         
+        if log: print ("[{0}/{1}]\t Calculating second mean: {2}".format(progress, overallProgress, col_name))
+        col4averaging = col_name+'_averaging1'
+        data.loc[N:nEntries-N, col_name+'_averaging2'] = data.apply(averaging, axis=1)
         progress += 1
-        print ("[{0}/{1}]\t Calculating third mean: {2}".format(progress, overallProgress, col_name))
-        for i in xrange(N+halfN, nEntries-N-halfN):  # cycle trough correct indexes
-            data.ix[i, col_name+'_timeAverage'] = data.ix[i-halfN:i+halfN, col_name+'_averaging2'].mean()
         
+
+        if log: print ("[{0}/{1}]\t Calculating third mean: {2}".format(progress, overallProgress, col_name))
+        col4averaging = col_name+'_averaging2'
+        data.loc[N+halfN:nEntries-N-halfN, col_name+'_timeAverage'] = data.apply(averaging, axis=1)
         progress += 1
+
         if not verbose: del data[col_name+'_averaging1']
         if not verbose: del data[col_name+'_averaging2']
-    fn = time.time()
-
-    if log: print ('Time averaging took {0} seconds'.format(int(fn-st)))
-    
-
-    if log: print ('\n\n\n METHOD 2')
-    st = time.time()
-    df['ind'] = np.arange(len(df), dtype=np.int32)
-
-    overallProgress = len(numeric_columns)*3  # three averagings...
-    progress = 0
-    for col_name in numeric_columns:
-        if log: print ("working with numeric column:", col_name)
-        data[col_name+'_averaging1_2'] = np.nan
-        data[col_name+'_averaging2_2'] = np.nan
-        data[col_name+'_timeAverage_2'] = np.nan
-
-        def averaging(row):
-            currentIndex = int(row['ind'])
-            val = df.loc[currentIndex-halfN:currentIndex+halfN, col4averaging].mean()
-            return val
-        
-        print ("[{0}/{1}]\t Calculating first mean: {2}".format(progress, overallProgress, col_name))
-        col4averaging = col_name
-        data.loc[halfN:nEntries-halfN, col_name+'_averaging1_2'] = data.apply(averaging, axis=1)
-        progress += 1
-        
-        print ("[{0}/{1}]\t Calculating second mean: {2}".format(progress, overallProgress, col_name))
-        col4averaging = col_name+'_averaging1_2'
-        data.loc[N:nEntries-N, col_name+'_averaging2_2'] = data.apply(averaging, axis=1)
-        progress += 1
-        
-
-        print ("[{0}/{1}]\t Calculating third mean: {2}".format(progress, overallProgress, col_name))
-        col4averaging = col_name+'_averaging2_2'
-        data.loc[N+halfN:nEntries-N-halfN, col_name+'_timeAverage_2'] = data.apply(averaging, axis=1)
-        progress += 1
-
-        if not verbose: del data[col_name+'_averaging1_2']
-        if not verbose: del data[col_name+'_averaging2_2']
     del data['ind']
-    print ("[{0}/{1}]\t Finished".format(progress, overallProgress))
+    if log: print ("[{0}/{1}]\t Finished".format(progress, overallProgress))
     fn = time.time()
 
     if log: print ('Time averaging took {0} seconds'.format(int(fn-st)))
-
-
-
-
 
     return data
 
@@ -138,22 +109,3 @@ if __name__ == '__main__':
     df = process2pandas.read_hydrographs_into_pandas('/home/nck/prj/FARGE_project_work/data/SLICED_171020141500_130420150600/hydrographs/Farge-ALL_10min.all', datetime_indexes=True, usecols=[0, 1], nrows=None)
     da = filter_wl_71h_serfes1991(df, log=True)
     print (da)
-    print ((da['GW_1_timeAverage']-da['GW_1_timeAverage_2']).sum())
-    print (da['GW_1_timeAverage'].equals(da['GW_1_timeAverage_2']))
-
-
-
-
-    #df['ind'] = np.arange(len(df), dtype=np.int32)
-    #df['test'] = df['ind']*2
-    #dataColumnName = 'test'
-    #offset = 1
-    #
-    #def rowIndex(row):
-    #    print (row['ind'], type(row['ind']), '>>>', df.ix[int(row['ind']), 'test'])
-    #    currentIndex = int(row['ind'])
-    #    val = df.ix[currentIndex-offset:currentIndex+offset+1, dataColumnName].sum()
-    #    return val
-    #
-    #df.loc[2:8, 'rowIndex'] = df.apply(rowIndex, axis=1)
-    #print (df)
