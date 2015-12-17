@@ -16,7 +16,7 @@ def read_hydrographs_into_pandas(fname, datetime_indexes=False, log=False, decim
     dateparser = lambda x: datetime.strptime(x, '%d.%m.%Y %H:%M')
 
     if datetime_indexes:
-        df = pd.read_csv(fname, sep=delimiter, usecols=usecols, header=0, skiprows=skiprows, index_col=0,
+        df = pd.read_csv(fname, sep=delimiter, usecols=usecols, header=0, skiprows=skiprows,
                         parse_dates=['Datetime'], date_parser=dateparser, decimal=decimal, **kwargs)
     else:
         df = pd.read_csv(fname, sep=delimiter, usecols=usecols, header=0, skiprows=skiprows, decimal=decimal, **kwargs)
