@@ -3,13 +3,17 @@
 from __future__ import print_function
 import numpy as np
 import time
+import gc
+
 
 
 #@profile
-def filter_wl_71h_serfes1991(data, datetime=None, verbose=False, log=False):
-    ''' Calculate mean water-level according to Serfes1991
+def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, verbose=False, log=False):
+    ''' Calculate mean water-level according to Serfes1991.
 
-    Perform a column-wise time averaging in three iterations.
+    Perform a column-wise time averaging in three iterations. This function is
+    a modified version of original Serfes filter: it is not limited to hourly
+    measurements.
 
     Args:
         data (pd.DataFrame): input data, where indexes are Datetime objects,
@@ -17,9 +21,21 @@ def filter_wl_71h_serfes1991(data, datetime=None, verbose=False, log=False):
 
         datetime (Optional[str]): Location of the datetime objects.
             By default is `None`, meaning that datetime objects are
-            loacated within `pd.DataFrame.index`. If not `None` - pass the
+            located within `pd.DataFrame.index`. If not `None` - pass the
             column-name of dataframe where datetime objects are located.
+            This is needed to determine number of measurements per day.
+            Note: this argument is ignored if `N` is not `None` !!!
         
+        N (Optional[int]): explicit number of measurements in 24 hours. By
+            default `N=None`, meaning that script will try to determine
+            number of measurements per 24 hours based on real datetime
+            information provided with `datetime` argument.
+
+        usecols (Optional[List[str]]): explicitly pass the name of the columns
+            that will be evaluated. These columns must have numerical dtype
+            (i.e. int32, int64, float32, float64). Default value is `None`
+            meaning that all numerical columns will be processed.
+
         verbose (Optional[bool]): if `True` - will keep all three iterations
             in the output. If `False` - will save only final (3rd) iteration.
             This may useful for debugging, or checking this filter.
@@ -27,35 +43,57 @@ def filter_wl_71h_serfes1991(data, datetime=None, verbose=False, log=False):
         log (Optional[bool]): flag to show some prints in console
 
     Returns:
-        data (pd.DataFrame): input dataframe with appended timeavaraged values.
+        data (pd.DataFrame): input dataframe with appended time-averaged values.
             these values are appended into new columns
 
     '''
-    if log: print ("Passed data has shape:", data.shape)
-    
-    # select only numeric columns...
-    numeric_columns = list()
-    for col_name in data.columns:  # cycle through each column...
-        if data[col_name].dtype in (np.float64 , np.int64, np.float32, np.int32):
-            numeric_columns.append(col_name)
-    if log: print ('All columns:', list(data.columns))
-    if log: print ('Numeric colums:', numeric_columns)
-    
-    #print number of items per day
-    #print(data.groupby(data.index.date).count())
-    # ok, we see, that we have 144 measurements per day....
+
+    # if convert all columns...
+    if usecols is None:
+        # select only numeric columns...
+        numeric_columns = list()
+        for col_name in data.columns:  # cycle through each column...
+            if data[col_name].dtype in (np.float64 , np.int64, np.float32, np.int32):
+                numeric_columns.append(col_name)
+    # or covert only user defined columns....
+    else:
+        # select only numeric columns...
+        numeric_columns = list()
+        for col_name in usecols:  # cycle through each column...
+            if data[col_name].dtype in (np.float64 , np.int64, np.float32, np.int32):
+                numeric_columns.append(col_name)
+
+    #if user has not explicitly passed number of measurements in a day, find it out!
+    if N is None:
+        if datetime is None:
+            entriesPerDay = data.groupby(data.index.date).count()  # series for all the timespan
+        else:
+            if datetime in data.columns:
+                try:
+                    dfts = data.set_index(datetime)  # we need to aply group method only to timeseries (index=datetime). Thus we will create a fake one
+                    entriesPerDay = data.groupby(dfts.index.date).count()  # series for all the timespan
+                except:
+                    raise ValueError('Passed column <{0}> is not of type <datetime64>. Received type : {1}'.format(datetime, data[datetime].dtype))
+            else:
+                raise KeyError('Passed column name <{0}> not found in dataframe. DataFrame has following columns: {1}'.format(datetime, list(data.columns)))
+        del dfts
+        N = entriesPerDay.ix[1, 0]  # pick one value from series
+        if log: print (entriesPerDay)
+
     nEntries = len(data.index)
-    entriesPerDay = data.groupby(data.index.date).count()  # series for all the timespan
-    N = entriesPerDay.ix[1, 0]  # pick one value from series
     halfN = int(N/2)
-    if log: print (entriesPerDay)
-    if log: print ('i will use following number of entries per day: ', N)
+
+
+    if log:
+        print ('All column names:', list(data.columns))
+        print ('Numeric colums:', numeric_columns)
+        print ('i will use following number of entries per day: ', N)
 
     
-    if log: print ('Now I will apply Serfes Filter to numeric-columns')
+
     overallProgress = len(numeric_columns)*3  # three averagings...
     progress = 0
-    df['ind'] = np.arange(len(df), dtype=np.int32)  # dummy row with row indeces as integer. will be deleted
+    df['ind'] = np.arange(len(df), dtype=np.int32)  # dummy row with row indexes as integer. will be deleted
 
     # for displaying progress, since this is a very long operation
     overallProgress = len(numeric_columns)*3  # three averagings...
@@ -76,18 +114,18 @@ def filter_wl_71h_serfes1991(data, datetime=None, verbose=False, log=False):
         data[col_name+'_timeAverage'] = np.nan
 
         
-        if log: print ("[{0}/{1}]\t Calculating first mean: {2}".format(progress, overallProgress, col_name))
+        if log: print ("[{0}/{1}]\t Calculating first mean".format(progress, overallProgress))
         col4averaging = col_name
         data.loc[halfN:nEntries-halfN, col_name+'_averaging1'] = data.apply(averaging, axis=1)
         progress += 1
         
-        if log: print ("[{0}/{1}]\t Calculating second mean: {2}".format(progress, overallProgress, col_name))
+        if log: print ("[{0}/{1}]\t Calculating second mean".format(progress, overallProgress))
         col4averaging = col_name+'_averaging1'
         data.loc[N:nEntries-N, col_name+'_averaging2'] = data.apply(averaging, axis=1)
         progress += 1
         
 
-        if log: print ("[{0}/{1}]\t Calculating third mean: {2}".format(progress, overallProgress, col_name))
+        if log: print ("[{0}/{1}]\t Calculating third mean".format(progress, overallProgress))
         col4averaging = col_name+'_averaging2'
         data.loc[N+halfN:nEntries-N-halfN, col_name+'_timeAverage'] = data.apply(averaging, axis=1)
         progress += 1
@@ -100,12 +138,15 @@ def filter_wl_71h_serfes1991(data, datetime=None, verbose=False, log=False):
 
     if log: print ('Time averaging took {0} seconds'.format(int(fn-st)))
 
+    gc.collect()
     return data
 
 
 if __name__ == '__main__':
     import process2pandas
 
-    df = process2pandas.read_hydrographs_into_pandas('/home/nck/prj/FARGE_project_work/data/SLICED_171020141500_130420150600/hydrographs/Farge-ALL_10min.all', datetime_indexes=True, usecols=[0, 1], nrows=None)
-    da = filter_wl_71h_serfes1991(df, log=True)
-    print (da)
+    df = process2pandas.read_hydrographs_into_pandas('/home/nck/prj/FARGE_project_work/data/SLICED_171020141500_130420150600/hydrographs/Farge-ALL_10min.all', datetime_indexes=True, usecols=[0, 1, 2, 3], nrows=None)
+
+    da = filter_wl_71h_serfes1991(df, datetime='Datetime', N=144, usecols=['GW_2'], log=True)
+    print (da[0:30])
+    print (da[700:710])
