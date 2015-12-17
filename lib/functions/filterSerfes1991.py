@@ -72,11 +72,11 @@ def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, verbose=
                 try:
                     dfts = data.set_index(datetime)  # we need to aply group method only to timeseries (index=datetime). Thus we will create a fake one
                     entriesPerDay = data.groupby(dfts.index.date).count()  # series for all the timespan
+                    del dfts
                 except:
                     raise ValueError('Passed column <{0}> is not of type <datetime64>. Received type : {1}'.format(datetime, data[datetime].dtype))
             else:
                 raise KeyError('Passed column name <{0}> not found in dataframe. DataFrame has following columns: {1}'.format(datetime, list(data.columns)))
-        del dfts
         N = entriesPerDay.ix[1, 0]  # pick one value from series
         if log: print (entriesPerDay)
 
@@ -93,7 +93,7 @@ def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, verbose=
 
     overallProgress = len(numeric_columns)*3  # three averagings...
     progress = 0
-    df['ind'] = np.arange(len(df), dtype=np.int32)  # dummy row with row indexes as integer. will be deleted
+    data['ind'] = np.arange(nEntries, dtype=np.int32)  # dummy row with row indexes as integer. will be deleted
 
     # for displaying progress, since this is a very long operation
     overallProgress = len(numeric_columns)*3  # three averagings...
@@ -103,7 +103,7 @@ def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, verbose=
     # function that will be applied row-wise
     def averaging(row):
         currentIndex = int(row['ind'])
-        val = df.ix[currentIndex-halfN:currentIndex+halfN, col4averaging].mean()
+        val = data.ix[currentIndex-halfN:currentIndex+halfN, col4averaging].mean()
         return val
 
     st = time.time()
@@ -144,9 +144,49 @@ def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, verbose=
 
 if __name__ == '__main__':
     import process2pandas
+    import pyqtgraph as pg
+    app = pg.mkQApp()
+
+
 
     df = process2pandas.read_hydrographs_into_pandas('/home/nck/prj/FARGE_project_work/data/SLICED_171020141500_130420150600/hydrographs/Farge-ALL_10min.all', datetime_indexes=True, usecols=[0, 1, 2, 3], nrows=None)
 
-    da = filter_wl_71h_serfes1991(df, datetime='Datetime', N=144, usecols=['GW_2'], log=True)
-    print (da[0:30])
-    print (da[700:710])
+    #da = filter_wl_71h_serfes1991(df, datetime='Datetime', N=144, usecols=['GW_2'], log=True)
+    #print (da[0:30])
+    #print (da[700:710])
+    
+    with pg.ProgressDialog("Processing..", 0, 5, busyCursor=False) as dlg:
+        dlg += 1
+        dlg.show()
+        result = filter_wl_71h_serfes1991(df,
+            datetime=None,
+            N=None,
+            usecols=['GW_1'],
+            log=True)
+        dlg += 1
+        if dlg.wasCanceled():
+            raise Exception("Processing canceled by user")
+    
+    """
+    import pyqtgraph.multiprocess as mp
+    proc = mp.QtProcess()  # Start a remote process with its own QApplication
+    rqt = proc._import('PyQt5.QtGui')   
+
+    # create a QProgressDialog in the remote process
+    dlg = rqt.QProgressDialog("Processing...", "Cancel", 0, 100)  
+
+    # calling methods on this object causes the same method to be called in the remote process
+    dlg.show()    
+
+    # set the value on the remote dialog, but do not wait for the process to send back a return value
+    # (since waiting for a return value can be very slow)
+    dlg.setValue(5, _callSync='off')
+
+    # Ask asynchronously whether 'cancel' was clicked.
+    # We could just wait for the response, but again this takes a long time.
+    canceled = dlg.wasCanceled(_callSync='async') 
+
+    # Some time later, check to see if the return value has arrived:
+    if canceled.hasResult() and canceled.result() is True:
+        raise Exception('user cancelled processing')
+    """
