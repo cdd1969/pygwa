@@ -305,17 +305,20 @@ class plotArrayNodeCtrlWidget(QtWidgets.QWidget):
         pos = evt[0]  ## using signal proxy turns original arguments into a tuple
         if self.p1.sceneBoundingRect().contains(pos):
             mousePoint = self.vb.mapSceneToView(pos)
-            index = int(mousePoint.x())
+            #index = int(mousePoint.x())
             #if index > 0 and index < len(data1):
             #    self.coordLabel.setText("<span style='font-size: 12pt'>x=%0.1f,   <span style='color: red'>y1=%0.1f</span>,   <span style='color: green'>y2=%0.1f</span>" % (mousePoint.x(), data1[index], data2[index]))
-            t = datetime.datetime.utcfromtimestamp(mousePoint.x()+60*60).strftime('%Y-%m-%d %H:%M')  # we add 1hour manually. This is probably due to the bug in DateTimeAxis
+            
+            # we add 1-hour manually (mouse.x+60*60). This is probably due to the TimeZone definition(???) in DateTimeAxis
+            t = datetime.datetime.utcfromtimestamp(mousePoint.x()+60*60).strftime('%Y-%m-%d %H:%M')
+            
             data_y = {}  # should be y-coordinates of the data lines
-            self.setCoordLabelText(t, **data_y)
+            self.setCoordLabelText(t, mousePoint.y(), **data_y)
             self.vLine.setPos(mousePoint.x())
             self.hLine.setPos(mousePoint.y())
 
-    def setCoordLabelText(self, x_coord, **kwargs):
-        text = "<span style='font-size: 12pt'>t={0}".format(x_coord)
+    def setCoordLabelText(self, x_coord, y_coord, **kwargs):
+        text = "<span style='font-size: 12pt'>t={0} | y={1:2.2f}".format(x_coord, y_coord)
         self.coordLabel.setText(text)
 
 
