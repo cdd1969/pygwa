@@ -34,7 +34,7 @@ class columnInterpolateGroupParameter(pTypes.GroupParameter):
         self.addChild({'name': 'NaNs after', 'type': 'int', 'value': -1, 'readonly': True, 'tip': 'number of NaNs in current column after interpolation'})
         
         self.addChild({'name': 'interpolateMargin', 'type': 'int', 'value': 100, 'step': 1, 'limits': (1, int(1000)), 'default': 100, 'tip': 'number of data-points to consider left and\nright from NaN value during interpolation'})
-        self.addChild({'name': 'method', 'type': 'list', 'value': 'polynomial', 'values': ['linear', 'time', 'index', 'values', 'nearest', 'zero', 'slinear', 'quadratic', 'cubic', 'barycentric', 'krogh', 'polynomial', 'spline', 'piecewise_polynomial', 'pchip'], 'default': 'polynomial', 'tip': 'Method of interpolation. See docs'})
+        self.addChild({'name': 'method', 'type': 'list', 'value': 'linear', 'values': ['linear', 'time', 'index', 'values', 'nearest', 'zero', 'slinear', 'quadratic', 'cubic', 'barycentric', 'krogh', 'polynomial', 'spline', 'piecewise_polynomial', 'pchip'], 'default': 'polynomial', 'tip': 'Method of interpolation. See docs'})
         self.addChild({'name': 'order', 'type': 'int', 'value': 15, 'default': 15, 'step': 1, 'limits': (1, int(1000)), 'tip': 'Both ‘polynomial’ and ‘spline’ require that you\n also specify an order (int), e.g. df.interpolate \n(method=’polynomial’, order=4). See docs'})
         self.addChild({'name': '**kwargs', 'type': 'text', 'value': '#Example:\n#{"axis": 1, "limit": 20, "limit_direction": "both"}', 'tip': 'these <**kwargs> will be passed to DataFrame.interpolate()\nin addition to defined above "method" and "order".\nLines may be commented with "#"', 'default': '#Example:\n#{"axis": 1, "limit": 20, "limit_direction": "both"}', "expanded": False})
         self.addChild({'name': 'Plot', 'type': 'action', 'tip': 'Visualize performed interpolation with matplotlib'})
@@ -229,7 +229,7 @@ class interpolateDfNodeCtrlWidget(ParameterTree):
 
     @QtCore.pyqtSlot()  #default signal
     def on_help_clicked(self):
-        webbrowser.open('https://github.com/cdd1969/pygwa/blob/gh-pages/node_detectPeaks.md')
+        webbrowser.open('https://github.com/cdd1969/pygwa/blob/gh-pages/node_interpolateDf.md')
 
     
     def params(self):

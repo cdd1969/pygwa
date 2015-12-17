@@ -27,7 +27,7 @@ class MainWindow(QtWidgets.QMainWindow):
         font = QtGui.QFont("Times", 11, QtGui.QFont.Bold, True)
         font.setUnderline(True)
         self.label_nodeCtrlName.setFont(font)
-
+        
         # create dummy widget (it will be selected if our node doesnot has ctrlWidget)
         self._dummyWidget = QtWidgets.QWidget(self)
 
