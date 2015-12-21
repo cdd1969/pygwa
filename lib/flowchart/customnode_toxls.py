@@ -9,6 +9,7 @@ from package import Package
 
 from pyqtgraph.parametertree import Parameter, ParameterTree
 from ..functions.evaluatedictionary import evaluateDict, evaluationFunction
+from ..functions.general import returnPandasDf
 import webbrowser
 from pyqtgraph import BusyCursor
 
@@ -27,13 +28,8 @@ class toXLSNode(Node):
         if self._ctrlWidget.saveAllowed():
             kwargs = self.ctrlWidget().evaluateState()
             with BusyCursor():
-                if isinstance(In, (pd.DataFrame, pd.Series)):
-                    In.to_excel(**kwargs)
-                elif isinstance(In, Package):
-                    In.unpack().to_excel(**kwargs)
-
-                else:
-                    raise TypeError('Unsupported data received. Expected pandas.DataFrame or Package, received:', type(In))
+                df = returnPandasDf(In)
+                df.to_excel(**kwargs)
             #show message box...
             msg = QtGui.QMessageBox()
             msg.setIcon(QtGui.QMessageBox.Information)
@@ -44,12 +40,8 @@ class toXLSNode(Node):
 
         if self._ctrlWidget.toClipbord():
             with BusyCursor():
-                if isinstance(In, (pd.DataFrame, pd.Series)):
-                    In.to_clipboard(excel=True)
-                elif isinstance(In, Package):
-                    In.unpack().to_clipboard(excel=True)
-                else:
-                    raise TypeError('Unsupported data received. Expected pandas.DataFrame or Package, received:', type(In))
+                df = returnPandasDf(In)
+                df.to_clipboard(excel=True)
         return
 
     def ctrlWidget(self):

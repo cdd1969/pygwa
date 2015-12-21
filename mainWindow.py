@@ -281,12 +281,13 @@ import pyqtgraph.flowchart.library as fclib
 from lib.flowchart.customnode_readcsv import readCSVNode
 from lib.flowchart.customnode_viewpandasdf import viewPandasDfNode
 from lib.flowchart.customnode_selectdfcolumn import selectDfColumnNode
-from lib.flowchart.customnode_plotarray import plotArrayNode
+from lib.flowchart.customnode_plottimeseries import plotTimeseriesNode
 from lib.flowchart.customnode_df2recarray import df2recArrayNode
 from lib.flowchart.customnode_detectpeaks import detectPeaksNode
 from lib.flowchart.customnode_interpolateDf import interpolateDfNode
 from lib.flowchart.customnode_readxls import readXLSNode
 from lib.flowchart.customnode_toxls import toXLSNode
+from lib.flowchart.customnode_plot_overheadvsriverwl import plotGWLvsWLNode
 
 
 
@@ -309,15 +310,16 @@ class uiData(QtCore.QObject):
 
     def initLibrary(self):
         self._flowchartLib = fclib.LIBRARY.copy()  # start with the default node set
-        self._flowchartLib.addNodeType(readCSVNode, [('My',)])
-        self._flowchartLib.addNodeType(readXLSNode, [('My',)])
-        self._flowchartLib.addNodeType(toXLSNode, [('My',)])
-        self._flowchartLib.addNodeType(viewPandasDfNode, [('My',)])
+        self._flowchartLib.addNodeType(readCSVNode, [('Input/Output',)])
+        self._flowchartLib.addNodeType(readXLSNode, [('Input/Output',)])
+        self._flowchartLib.addNodeType(toXLSNode, [('Input/Output',)])
+        self._flowchartLib.addNodeType(viewPandasDfNode, [('Display',)])
         self._flowchartLib.addNodeType(selectDfColumnNode, [('My',)])
-        self._flowchartLib.addNodeType(plotArrayNode, [('My',)])
+        self._flowchartLib.addNodeType(plotTimeseriesNode, [('Display',)])
+        self._flowchartLib.addNodeType(plotGWLvsWLNode, [('Display',)])
         self._flowchartLib.addNodeType(df2recArrayNode, [('My',)])
-        self._flowchartLib.addNodeType(detectPeaksNode, [('My',)])
-        self._flowchartLib.addNodeType(interpolateDfNode, [('My',)])
+        self._flowchartLib.addNodeType(detectPeaksNode, [('Processing',)])
+        self._flowchartLib.addNodeType(interpolateDfNode, [('Processing',)])
 
         # create a StringListModel of registered node names, it will be used for auto completion
         self._nodeNamesList  = self._flowchartLib.nodeList.keys()

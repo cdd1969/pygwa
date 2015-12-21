@@ -1,0 +1,19 @@
+-------------------------------------------------------------------------
+In this file i will store known TODOs
+-------------------------------------------------------------------------
+
+1)
+    Create
+    Create Node to determine Tidal Efficiency based on diff. methods
+
+2)
+    Create
+    Create Node to plot OVERHEAD vs RIVER water-level
+
+3)
+    Add
+    Add DOCs for two Nodes: 'readXLS' , 'toXLS'
+
+4)
+    Fix
+    Fix the Node-Library (reorganise nodes into different groups)

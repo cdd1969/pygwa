@@ -7,18 +7,18 @@ KNOWN BUGS AND ISSUES
     when loading Flowchart, the State is not fully restore. Children are not added.
     Probably this is comming from method *process* where all columns are deleted at first
 
-2) (FIXED)
-    Node: plotArray
+2) (DONE)
+    Node: plotTimeseries
     When dataIn is changed, it is onl updated on the upper subplot. To update it at the bottom, you need to
     reconnect the input terminal
 
 3)
-    Node: plotArray
-    PlotArray currently works only with curves in which X-axes has been built with *datetime* objects
+    Node: plotTimeseries
+    PlotTimeseries currently works only with curves in which X-axes has been built with *datetime* objects
 
 4)
-    Node: plotArray
-    PlotArray doe not update te colors of the points when a color of a curve is changed after it has been added
+    Node: plotTimeseries
+    PlotTimeseries does not update te colors of the points when a color of a curve is changed after it has been added
     the canvas
 
 5)
@@ -30,3 +30,7 @@ KNOWN BUGS AND ISSUES
     General, Flowchart
     The changes in the Node-parameters doesnt provoke the *unsavedChanges* status. Currently it it toggled
     only when : a) node is added b) node is removed c) node is renamed
+
+7)
+    Function, Statistical Analysis
+    Sometimes bugs appear when NaNs are passed. Check that out 

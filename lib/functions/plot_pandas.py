@@ -146,12 +146,12 @@ def plot_pandas_scatter(df, x=[0], y=[1], saveName=None, xlabel=None, ylabel=Non
                     #ERRORS.plot(x=X, y=Y, ax=ax, marker="x", markersize=16., color='red', style='.', markeredgecolor='black', markeredgewidth=0.2, legend=False)
                     
                     # calc the trendline (it is simply a linear fitting)
-                    z1 = np.polyfit(ERRORS[X], ERRORS[Y], 1)
-                    p1 = np.poly1d(z1)
+                    z = np.polyfit(ERRORS[X], ERRORS[Y], 1)
+                    p = np.poly1d(z)
                     
-                    trendline_equation1 = 'y=%.3fx+(%.3f)' % (z1[0], z1[1])
-                    #ax.plot([minx, maxx], p1([minx, maxx]), '-', lw=0.8, color=c, label='trendline of {1} maximum \ndeviations above mean trendline\n{0}'.format(trendline_equation1, N_DEVIATIONS))
-                    ax.plot([minx, maxx], p1([minx, maxx]), '-', lw=0.8, color=c)
+                    trendline_equation1 = 'y=%.3fx+(%.3f)' % (z[0], z[1])
+                    #ax.plot([minx, maxx], p([minx, maxx]), '-', lw=0.8, color=c, label='trendline of {1} maximum \ndeviations above mean trendline\n{0}'.format(trendline_equation1, N_DEVIATIONS))
+                    ax.plot([minx, maxx], p([minx, maxx]), '-', lw=0.8, color=c)
 
                 elif trendlinemode == 3:  # shifted trendlines
                     # now find one maximum deviation...
@@ -172,13 +172,13 @@ def plot_pandas_scatter(df, x=[0], y=[1], saveName=None, xlabel=None, ylabel=Non
                     y_trendline = z[0]*XERRORS.iat[0] + z[1]
                     y_deviation = YERRORS.iat[0]
                     dy = y_deviation - y_trendline
-                    z1 = np.array([z[0], z[1]+dy])  # shifting trendline by dy
+                    z = np.array([z[0], z[1]+dy])  # shifting trendline by dy
                     
-                    p1 = np.poly1d(z1)  # shifted trendline
-                    trendline_equation = 'y=%.3fx+(%.3f)' % (z1[0], z1[1])
+                    p = np.poly1d(z)  # shifted trendline
+                    trendline_equation = 'y=%.3fx+(%.3f)' % (z[0], z[1])
 
-                    #ax.plot([minx, maxx], p1([minx, maxx]), '-', lw=0.8, color=c, label='Shifted trendline\n{0}'.format(trendline_equation))
-                    ax.plot([minx, maxx], p1([minx, maxx]), '-', lw=0.8, color=c)
+                    #ax.plot([minx, maxx], p([minx, maxx]), '-', lw=0.8, color=c, label='Shifted trendline\n{0}'.format(trendline_equation))
+                    ax.plot([minx, maxx], p([minx, maxx]), '-', lw=0.8, color=c)
 
     if not _ax: figManager = plt.get_current_fig_manager()
     if not _ax: figManager.window.showMaximized()
@@ -204,9 +204,9 @@ def plot_pandas_scatter(df, x=[0], y=[1], saveName=None, xlabel=None, ylabel=Non
     ax.legend(handles, labels, fontsize=legend_fontsize, loc=legend_location)
     ax.xaxis.grid(True, which='both')
     ax.yaxis.grid(True, which='both')
-    ax.set_xlabel(xlabel, fontsize=axeslabel_fontsize)
-    ax.set_ylabel(ylabel, fontsize=axeslabel_fontsize)
-    ax.set_title(title, fontsize=title_fontsize)
+    if xlabel: ax.set_xlabel(xlabel, fontsize=axeslabel_fontsize)
+    if ylabel: ax.set_ylabel(ylabel, fontsize=axeslabel_fontsize)
+    if title: ax.set_title(title, fontsize=title_fontsize)
     ax.tick_params(axis='both', labelsize=axesvalues_fontsize)
 
 
@@ -357,11 +357,11 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
                 #ERRORS.plot(x=X, y=Y, ax=ax, marker="x", markersize=16., color='red', style='.', markeredgecolor='black', markeredgewidth=0.2, legend=False)
                 
                 # calc the trendline (it is simply a linear fitting)
-                z1 = np.polyfit(ERRORS[X], ERRORS[Y], 1)
-                p1 = np.poly1d(z1)
+                z = np.polyfit(ERRORS[X], ERRORS[Y], 1)
+                p = np.poly1d(z)
                 
-                trendline_equation1 = 'y=%.3fx+(%.3f)'%(z1[0], z1[1])
-                ax.plot([minx, maxx], p1([minx, maxx]), '-', lw=0.8, color=c, label='trendline of {1} maximum \ndeviations above mean trendline\n{0}'.format(trendline_equation1, N_DEVIATIONS))
+                trendline_equation1 = 'y=%.3fx+(%.3f)'%(z[0], z[1])
+                ax.plot([minx, maxx], p([minx, maxx]), '-', lw=0.8, color=c, label='trendline of {1} maximum \ndeviations above mean trendline\n{0}'.format(trendline_equation1, N_DEVIATIONS))
 
     elif trendlinemode == 3:
         '''
@@ -396,6 +396,7 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
                     deviation_from_trendline.append(deviation_from_trendline_i)
                     deviation_from_trendline_index.append(index)
 
+            # overwriting N_DEVIATIONS to one single point
             N_DEVIATIONS = 1  # create lines based on N_DEVIATIONS points
             # now find 1 maximum deviation...
 
@@ -414,73 +415,23 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
             y_trendline = z[0]*XERRORS.iat[0] + z[1]
             y_deviation = YERRORS.iat[0]
             dy = y_deviation - y_trendline
-            z1 = np.array([z[0], z[1]+dy])  # shifting trendline by dy
+            z = np.array([z[0], z[1]+dy])  # shifting trendline by dy
             
-            p1 = np.poly1d(z1)  # shifted trendline
-            trendline_equation = 'y=%.3fx+(%.3f)' % (z1[0], z1[1])
+            p = np.poly1d(z)  # shifted trendline
+            trendline_equation = 'y=%.3fx+(%.3f)' % (z[0], z[1])
+            ax.plot([minx, maxx], p([minx, maxx]), '--', lw=0.8, color=c, label='Shifted Trendline\n{0}'.format(trendline_equation))
 
 
 
-            if HYDR_VALS:
-                # -----------------------------------------
-                # hydrological values
-                # -----------------------------------------
-                MThw   = HYDR_VALS['MThw']
-                MTnw   = HYDR_VALS['MTnw']
-                NNTnw  = HYDR_VALS['NNTnw']
-                HThw   = HYDR_VALS['HThw']
-                MspTnw = HYDR_VALS['MspTnw']
-                plot_data_values = True
-
-                if i == 0:
-                    ax.plot([minx, 1.], p1([minx, 1.]), '--', lw=0.8, color=c, label='Shifted Trendline\n{0}'.format(trendline_equation))
-                    if plot_data_values:
-                        # NNTnw
-                        NNTnw_overhead = z1[0]*NNTnw + z1[1]
-                        ax.plot([NNTnw, NNTnw], [miny, NNTnw_overhead], '--', color='gray')
-                        ax.annotate('LLW = {0:.2f} [mAMSL]'.format(NNTnw), xy=(NNTnw, miny), xytext=(-7, 10), textcoords='offset points', va='bottom', ha='center',
-                                    size=annotation_fontsize, rotation=90.)
-                        ax.annotate('{0:.2f} m'.format(NNTnw_overhead), xy=(NNTnw, NNTnw_overhead), xytext=(10, 50),
-                                    textcoords='offset points', va='bottom', arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.5', color='k'), size=annotation_fontsize)
-                        
-                        # MspTnw
-                        MspTnw_overhead = z1[0]*MspTnw + z1[1]
-                        ax.plot([MspTnw, MspTnw], [miny, MspTnw_overhead], '--', color='gray')
-                        ax.annotate('MLWS = {0:.2f} [mAMSL]'.format(MspTnw), xy=(MspTnw, miny), xytext=(-7, 10), textcoords='offset points', va='bottom', ha='center',
-                                    size=annotation_fontsize, rotation=90.)
-                        ax.annotate('{0:.2f} m'.format(MspTnw_overhead), xy=(MspTnw, MspTnw_overhead), xytext=(10, 60),
-                                    textcoords='offset points', va='bottom', arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.5', color='k'), size=annotation_fontsize)
-
-                        # MTnw
-                        MTnw_overhead = z1[0]*MTnw + z1[1]
-                        ax.plot([MTnw, MTnw], [miny, MTnw_overhead], '--', color='gray')
-                        ax.annotate('MLW = {0:.2f} [mAMSL]'.format(MTnw), xy=(MTnw, miny), xytext=(10, 10), textcoords='offset points', va='bottom', ha='center',
-                                    size=annotation_fontsize, rotation=90.)
-                        ax.annotate('{0:.2f} m'.format(MTnw_overhead), xy=(MTnw, MTnw_overhead), xytext=(10, 50),
-                                    textcoords='offset points', va='bottom', arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.5', color='k'), size=annotation_fontsize)
-                
-                elif i == 1 :
-                    ax.plot([1., maxx], p1([1., maxx]), '--', lw=0.8, color=c, label='Shifted Trendline\n{0}'.format(trendline_equation))
-
-                    """
-                    if plot_data_values:
-
-                        # MThw
-                        MThw_overhead = z1[0]*MThw + z1[1]
-                        ax.plot([MThw, MThw], [miny, MThw_overhead], '--', color='k')
-                        ax.annotate('MThw\n{0:.2f}\nmAMSL'.format(MThw), xy=(MThw, miny), xytext=(0, -5), textcoords='offset points', va='top', ha='center', size=10)
-                        ax.annotate('{0:.2f} m'.format(MThw_overhead), xy=(MThw, MThw_overhead), xytext=(10, 50),
-                            textcoords='offset points', va='bottom', arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.5', color='k'), size=annotation_fontsize)
-
-                        # HThw
-                        HThw_overhead = z1[0]*HThw + z1[1]
-                        ax.plot([HThw, HThw], [miny, HThw_overhead], '--', color='k')
-                        ax.annotate('HThw\n{0:.2f}\nmAMSL'.format(HThw), xy=(HThw, miny), xytext=(0, -5), textcoords='offset points', va='top', ha='center', size=10)
-                        ax.annotate('{0:.2f} m'.format(HThw_overhead), xy=(HThw, HThw_overhead), xytext=(10, 50),
-                            textcoords='offset points', va='bottom', arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.5', color='k'), size=annotation_fontsize)
-                    """
-
-
+    if HYDR_VALS and trendlinemode:
+        for key, val in HYDR_VALS.iteritems():
+            overhead = z[0]*val + z[1]
+            ax.plot([val, val], [miny, overhead], '--', color='gray')
+            ax.annotate('{0} = {1:.2f}'.format(key, val), xy=(val, miny), xytext=(-7, 10), textcoords='offset points', va='bottom', ha='center',
+                        size=annotation_fontsize, rotation=90.)
+            ax.annotate('{0:.2f}'.format(overhead), xy=(val, overhead), xytext=(10, 50),
+                        textcoords='offset points', va='bottom', arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.5', color='k'), size=annotation_fontsize)
+               
     figManager = plt.get_current_fig_manager()
     figManager.window.showMaximized()
 
@@ -502,9 +453,9 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
 
     ax.xaxis.grid(True, which='both')
     ax.yaxis.grid(True, which='both')
-    ax.set_xlabel(xlabel, fontsize=axeslabel_fontsize)
-    ax.set_ylabel(ylabel, fontsize=axeslabel_fontsize)
-    ax.set_title(title, fontsize=title_fontsize)
+    if xlabel: ax.set_xlabel(xlabel, fontsize=axeslabel_fontsize)
+    if ylabel: ax.set_ylabel(ylabel, fontsize=axeslabel_fontsize)
+    if title: ax.set_title(title, fontsize=title_fontsize)
     ax.tick_params(axis='both', labelsize=axesvalues_fontsize)
     
     if saveName:

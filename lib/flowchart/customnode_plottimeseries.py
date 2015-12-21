@@ -19,16 +19,16 @@ import gc
 
 
 
-class plotArrayNode(Node):
+class plotTimeseriesNode(Node):
     """Plot number of 1D arrays as timeseries"""
-    nodeName = "PlotArray"
+    nodeName = "PlotTimeseries"
 
     sigItemReceived    = QtCore.Signal(object, object)  #(id(item), item)
     sigRegItemReceived = QtCore.Signal(object)  #already registered item received (id(item))
 
     def __init__(self, name, parent=None):
-        super(plotArrayNode, self).__init__(name, terminals={'Array': {'io': 'in', 'multi': True}})
-        self._ctrlWidget = plotArrayNodeCtrlWidget(self)
+        super(plotTimeseriesNode, self).__init__(name, terminals={'Array': {'io': 'in', 'multi': True}})
+        self._ctrlWidget = plotTimeseriesNodeCtrlWidget(self)
         #self.items = set()   #set to save incoming items
         self._items = dict()
         self.sigItemReceived.connect(self.on_sigItemReceived)
@@ -99,7 +99,7 @@ class plotArrayNode(Node):
 
     def close(self):
         self.clear()
-        print '---->>> CLOSE'
+        #print '---->>> CLOSE'
         self._ctrlWidget.win.hide()
         self._ctrlWidget.win.close()
 
@@ -113,7 +113,7 @@ class plotArrayNode(Node):
         if term in self._items.keys():  # if we have already something from this terminal
             if 'plotItems' in self._items[term].keys():
                 if self._items[term]['plotItems'][0] is item:  # if the item is absolutely same
-                    print '>>> on_sigItemReceived(): already have something from term <{0}>: item <{1}> is the same'.format(term, item)
+                    #print '>>> on_sigItemReceived(): already have something from term <{0}>: item <{1}> is the same'.format(term, item)
                     
                     # in this case item on the upper subplot will be updated automatically, but the bottom subplot will stay same...
                     # When the item is receive, we are manually creating a COPY of incoming item and are adding this copy to the
@@ -126,28 +126,28 @@ class plotArrayNode(Node):
                     self._items[term]['plotItems'].append(item2)
                     return
                 else:
-                    print '>>> on_sigItemReceived(): already have something from term <{0}>: item <{1}> is different'.format(term, item)
+                    #print '>>> on_sigItemReceived(): already have something from term <{0}>: item <{1}> is different'.format(term, item)
                     self.removeItems(self._items[term])
 
         if isinstance(item, (pg.PlotDataItem, pg.ScatterPlotItem)):
-            print '>>> on_sigItemReceived(): registering incoming item'
+            #print '>>> on_sigItemReceived(): registering incoming item'
             self._items[term] = dict()
             # init symbol pen and size
             item.setSymbolPen(item.opts['pen'])
             item.setSymbolSize(5)
 
-            print '>>> on_sigItemReceived(): adding item to upper subplot'
+            #print '>>> on_sigItemReceived(): adding item to upper subplot'
             self.canvas()[0].addItem(item)
 
             # for some reason it is impossible to add same item to two subplots...
-            print '>>> on_sigItemReceived(): creating item-copy for bottom subplot'
+            #print '>>> on_sigItemReceived(): creating item-copy for bottom subplot'
             item2 = self.copyItem(item)
             
             #print '>>> on_sigItemReceived(): adding item-copy to bottom subplot'
             self.canvas()[1].addItem(item2)
 
             self._items[term]['plotItems'] = [item, item2]
-            print 'adding items: (1) {0} {1} >>> (2) {2} {3}'.format(item, type(item), item2, type(item2))
+            #print 'adding items: (1) {0} {1} >>> (2) {2} {3}'.format(item, type(item), item2, type(item2))
             return
 
     def copyItem(self, sampleItem):
@@ -172,10 +172,10 @@ class plotArrayNode(Node):
         del item
 
     def removeItem(self, item):
-        print '>>> plotArray: removeItem is called'
+        #print '>>> plotArray: removeItem is called'
         try:
             if 'plotItems' in item.keys() and isinstance(item['plotItems'], list) and len(item['plotItems']) == 2:
-                print '>>> plotArray: actually removing items'
+                #print '>>> plotArray: actually removing items'
                 self.canvas()[0].removeItem(item['plotItems'][0])
                 self.canvas()[1].removeItem(item['plotItems'][1])
         except RuntimeError:  # sometimes happens by loading new chart (RuntimeError: wrapped C/C++ object of type PlotDataItem has been deleted)
@@ -185,10 +185,10 @@ class plotArrayNode(Node):
         gc.collect()
 
 
-class plotArrayNodeCtrlWidget(QtWidgets.QWidget):
+class plotTimeseriesNodeCtrlWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
-        super(plotArrayNodeCtrlWidget, self).__init__()
-        uic.loadUi('/home/nck/prj/master_thesis/code/lib/flowchart/customnode_plotarray.ui', self)
+        super(plotTimeseriesNodeCtrlWidget, self).__init__()
+        uic.loadUi('/home/nck/prj/master_thesis/code/lib/flowchart/customnode_plottimeseries.ui', self)
         self._parent = parent
         self._listWidgetItems = set()  # registered items in ListWidget
         self.initUI()
@@ -325,7 +325,7 @@ class plotArrayNodeCtrlWidget(QtWidgets.QWidget):
 
 def test():
     app = QtWidgets.QApplication()
-    ex = plotArrayNodeCtrlWidget()
+    ex = plotTimeseriesNodeCtrlWidget()
     ex.show()
 
 
