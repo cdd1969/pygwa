@@ -186,7 +186,7 @@ class PandasModel(QtCore.QAbstractTableModel):
         # append header of the newly set data to our HeaderModel
         self._headerModel.clear()  #flush previous model
         for name in self.getDataHeader():
-            item = QtGui.QStandardItem(name)
+            item = QtGui.QStandardItem(name+'\t; dtype <{0}>'.format(self._dataPandas[name].dtype))
             item.setCheckable(True)
             item.setEditable(False)
             item.setCheckState(Qt.Checked)

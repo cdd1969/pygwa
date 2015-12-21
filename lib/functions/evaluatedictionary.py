@@ -40,9 +40,9 @@ def evaluationFunction(dictionary, function4arguments=None, log=False):
             >>> {'skiprows': [3, 5, 6, 7]}  #Note! not string!
 
     """
-    if not inspect.isfunction(function4arguments):
+    if not inspect.isfunction(function4arguments) and not inspect.ismethod(function4arguments):
         if function4arguments is not None:
-            raise ValueError('Argument passed is not a function or None. Received type: {0}'.format(type(function4arguments)))
+            raise ValueError('Argument passed is not a function, method or None. Received type: {0}'.format(type(function4arguments)))
         
     nameArgFound = False
     for name in ['name', u'name']:

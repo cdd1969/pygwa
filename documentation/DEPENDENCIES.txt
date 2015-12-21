@@ -1,0 +1,7 @@
+QT 4/5
+PyQt 4/5
+py: pyqtgraph
+py: pandas
+py: matplotlib
+py: openpyxl (for Node "export to XLS")
+py: xlwt (for Node "export to XLS")

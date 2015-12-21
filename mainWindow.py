@@ -285,6 +285,8 @@ from lib.flowchart.customnode_plotarray import plotArrayNode
 from lib.flowchart.customnode_df2recarray import df2recArrayNode
 from lib.flowchart.customnode_detectpeaks import detectPeaksNode
 from lib.flowchart.customnode_interpolateDf import interpolateDfNode
+from lib.flowchart.customnode_readxls import readXLSNode
+from lib.flowchart.customnode_toxls import toXLSNode
 
 
 
@@ -308,6 +310,8 @@ class uiData(QtCore.QObject):
     def initLibrary(self):
         self._flowchartLib = fclib.LIBRARY.copy()  # start with the default node set
         self._flowchartLib.addNodeType(readCSVNode, [('My',)])
+        self._flowchartLib.addNodeType(readXLSNode, [('My',)])
+        self._flowchartLib.addNodeType(toXLSNode, [('My',)])
         self._flowchartLib.addNodeType(viewPandasDfNode, [('My',)])
         self._flowchartLib.addNodeType(selectDfColumnNode, [('My',)])
         self._flowchartLib.addNodeType(plotArrayNode, [('My',)])

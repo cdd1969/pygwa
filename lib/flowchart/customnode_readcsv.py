@@ -136,67 +136,6 @@ class readCSVNodeCtrlWidget(ParameterTree):
                     ctrlWidget.setEnabled(not state)
                 except AttributeError:  #AttributeError: 'GroupParameterItem' object has no attribute 'widget'
                     pass
-                #child.setOpts(visible=not state)
-        #self.p.child('Load CSV parameters').child('Advanced parameters').child(emmiterName).child(changeName).setOpts(visible=state)
-
-        
-    def visitTree(self, tree):
-        """ this is a recursion function to visit all children of passed QTreeWidget"""
-        lst = []
-        for i in xrange(tree.topLevelItemCount()):
-            self.visitAllChildren(lst, tree.topLevelItem(i))
-        return lst
-
-    def visitAllChildren(self, lst, item):
-        try:
-            lst.append(item.param.name())
-        except AttributeError, err:  #AttributeError: 'GroupParameterItem' object has no attribute 'name'
-            pass
-        for i in xrange(item.childCount()):
-            self.visitAllChildren(lst, item.child(i))
-    
-
-    def performFunctionToChildren(self, function, paramNames=[], treatNamesAsIgnoreNames=True):
-        """ now perform <function> to all children (some children can be ignored by passing <paramNames>)
-
-            if treatNamesAsIgnoreNames=True, the list <ignoreNames> = <paramNames>
-            
-            but if it was set to False, it will be treated as the names of the parameters, to which we
-            will perform out <function>, i.e. in this case <ignoreNames> = <allNames> - <paramNames>
-        
-
-        """
-        def visitTreeDoAction(tree, do_something, **kwargs):
-            """ this is a recursion function to visit all children of passed QTreeWidget"""
-            for i in xrange(tree.topLevelItemCount()):
-                visitAllChildrenDoAction(do_something, tree.topLevelItem(i), **kwargs)
-
-        def visitAllChildrenDoAction(do_something, item, ignoreNames=[]):
-            try:
-                n = item.param.name()
-                if n not in ignoreNames:
-                    do_something(item)
-            except AttributeError, err:  #AttributeError: 'GroupParameterItem' object has no attribute 'name'
-                print 'ERROR:', err, item
-                print '_______',
-            for i in xrange(item.childCount()):
-                visitAllChildrenDoAction(do_something, item.child(i), ignoreNames)
-        
-        if treatNamesAsIgnoreNames is True:
-            ignoreNames = paramNames
-            if 'params' not in ignoreNames:
-                ignoreNames.append('params')  #pop root item
-        else:
-            allNames = self.visitTree(self)
-            ignoreNames = [n for n in allNames if n not in paramNames]
-
-        visitTreeDoAction(self, function, ignoreNames=ignoreNames)
-
-    def _printChild(self, item):
-        print item.param.name(), '>>>', item
-        print item.widget
-        print '_________________'
-
 
 
     def params(self):
