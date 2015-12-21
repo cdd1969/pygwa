@@ -288,6 +288,8 @@ from lib.flowchart.customnode_interpolateDf import interpolateDfNode
 from lib.flowchart.customnode_readxls import readXLSNode
 from lib.flowchart.customnode_toxls import toXLSNode
 from lib.flowchart.customnode_plot_overheadvsriverwl import plotGWLvsWLNode
+from lib.flowchart.customnode_serfes1991 import serfes1991Node
+from lib.flowchart.customnode_pickequaldates import pickEqualDatesNode
 
 
 
@@ -320,6 +322,8 @@ class uiData(QtCore.QObject):
         self._flowchartLib.addNodeType(df2recArrayNode, [('My',)])
         self._flowchartLib.addNodeType(detectPeaksNode, [('Processing',)])
         self._flowchartLib.addNodeType(interpolateDfNode, [('Processing',)])
+        self._flowchartLib.addNodeType(serfes1991Node, [('Processing',)])
+        self._flowchartLib.addNodeType(pickEqualDatesNode, [('Processing',)])
 
         # create a StringListModel of registered node names, it will be used for auto completion
         self._nodeNamesList  = self._flowchartLib.nodeList.keys()

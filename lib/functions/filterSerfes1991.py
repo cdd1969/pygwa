@@ -6,6 +6,46 @@ import time
 import gc
 
 
+def get_number_of_measurements_per_day(data, datetime=None, log=False):
+    """ Calculate number of measurements/entries per day (per 24h) in the passed
+        dataframe.
+
+
+        Args:
+            data (pd.DataFrame): input data, where indexes are Datetime objects,
+                see `parse_dates` parameters of `pd.read_csv()`
+
+            datetime (Optional[str]): Location of the datetime objects.
+                By default is `None`, meaning that datetime objects are
+                located within `pd.DataFrame.index`. If not `None` - pass the
+                column-name of dataframe where datetime objects are located.
+                This is needed to determine number of measurements per day.
+                Note: this argument is ignored if `N` is not `None` !!!
+
+            log (Optional[bool]): flag to show some prints in console
+
+        Returns:
+            N (int): number of entries per day
+    """
+
+    if datetime is None:
+        entriesPerDay = data.groupby(data.index.date).count()  # series for all the timespan
+    else:
+        if datetime in data.columns:
+            try:
+                dfts = data.set_index(datetime)  # we need to aply group method only to timeseries (index=datetime). Thus we will create a fake one
+                entriesPerDay = data.groupby(dfts.index.date).count()  # series for all the timespan
+                del dfts
+            except:
+                raise ValueError('Passed column <{0}> is not of type <datetime64>. Received type : {1}'.format(datetime, data[datetime].dtype))
+        else:
+            raise KeyError('Passed column name <{0}> not found in dataframe. DataFrame has following columns: {1}'.format(datetime, list(data.columns)))
+    N = entriesPerDay.ix[1, 0]  # pick one value from series (from 1st row, 0-column; because 0-0 can give false N-entries per day)
+    if log:
+        print (entriesPerDay)
+        print ('i will use following number of entries per day: ', N)
+    return N
+
 
 #@profile
 def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, verbose=False, log=False):
@@ -65,20 +105,7 @@ def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, verbose=
 
     #if user has not explicitly passed number of measurements in a day, find it out!
     if N is None:
-        if datetime is None:
-            entriesPerDay = data.groupby(data.index.date).count()  # series for all the timespan
-        else:
-            if datetime in data.columns:
-                try:
-                    dfts = data.set_index(datetime)  # we need to aply group method only to timeseries (index=datetime). Thus we will create a fake one
-                    entriesPerDay = data.groupby(dfts.index.date).count()  # series for all the timespan
-                    del dfts
-                except:
-                    raise ValueError('Passed column <{0}> is not of type <datetime64>. Received type : {1}'.format(datetime, data[datetime].dtype))
-            else:
-                raise KeyError('Passed column name <{0}> not found in dataframe. DataFrame has following columns: {1}'.format(datetime, list(data.columns)))
-        N = entriesPerDay.ix[1, 0]  # pick one value from series
-        if log: print (entriesPerDay)
+        N = get_number_of_measurements_per_day(data, datetime=datetime, log=log)
 
     nEntries = len(data.index)
     halfN = int(N/2)

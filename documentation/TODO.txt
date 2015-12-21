@@ -6,13 +6,13 @@ In this file i will store known TODOs
     Create
     Create Node to determine Tidal Efficiency based on diff. methods
 
-2)
+2) (DONE)
     Create
-    Create Node to plot OVERHEAD vs RIVER water-level
+    Create Node to plot GROUND water-level vs RIVER water-level
 
 3)
     Add
-    Add DOCs for two Nodes: 'readXLS' , 'toXLS'
+    Add DOCs for Nodes: 'readXLS' , 'toXLS', 'plotGWLvsWL', 'pickEqualDates', 'serfes1991'
 
 4)
     Fix

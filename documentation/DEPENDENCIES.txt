@@ -4,9 +4,9 @@ This file will contain list of dependencies of pyGWA
 
 QT 4/5
 PyQt 4/5
-py: pyqtgraph
-py: pandas
-py: matplotlib
+py: pyqtgraph (devel branch)
+py: pandas (>= 0.16.2)
+py: matplotlib (>= 1.5.0)
 py: openpyxl 1.8.6 (for Node "export to XLS". Note important to install old version!!!!
     see http://stackoverflow.com/questions/30102232/pandas-can-not-write-to-excel-file,
     pip install openpyxl==1.8.6)
