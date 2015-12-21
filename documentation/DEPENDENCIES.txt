@@ -3,5 +3,7 @@ PyQt 4/5
 py: pyqtgraph
 py: pandas
 py: matplotlib
-py: openpyxl (for Node "export to XLS")
+py: openpyxl 1.8.6 (for Node "export to XLS". Note important to install old version!!!!
+    see http://stackoverflow.com/questions/30102232/pandas-can-not-write-to-excel-file,
+    pip install openpyxl==1.8.6)
 py: xlwt (for Node "export to XLS")

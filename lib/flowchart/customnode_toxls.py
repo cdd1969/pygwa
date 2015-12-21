@@ -15,7 +15,7 @@ from pyqtgraph import BusyCursor
 
 class toXLSNode(Node):
     """Write pandas.DataFrame to a excel sheet """
-    nodeName = "export to Excel"
+    nodeName = "toXLS"
 
 
     def __init__(self, name, parent=None):
@@ -24,9 +24,7 @@ class toXLSNode(Node):
 
         
     def process(self, In):
-        print 'process is called'
         if self._ctrlWidget.saveAllowed():
-            print 'processing!'
             kwargs = self.ctrlWidget().evaluateState()
             with BusyCursor():
                 if isinstance(In, (pd.DataFrame, pd.Series)):
@@ -43,6 +41,15 @@ class toXLSNode(Node):
             msg.setWindowTitle("File saved successfully!")
             msg.setStandardButtons(QtGui.QMessageBox.Ok)
             msg.exec_()
+
+        if self._ctrlWidget.toClipbord():
+            with BusyCursor():
+                if isinstance(In, (pd.DataFrame, pd.Series)):
+                    In.to_clipboard(excel=True)
+                elif isinstance(In, Package):
+                    In.unpack().to_clipboard(excel=True)
+                else:
+                    raise TypeError('Unsupported data received. Expected pandas.DataFrame or Package, received:', type(In))
         return
 
     def ctrlWidget(self):
@@ -93,10 +100,12 @@ class toXLSNodeCtrlWidget(ParameterTree):
         # save default state
         self._savedState = self.saveState()
         self._save = False
+        self._toClipbord = False
 
     def initConnections(self):
         self.p.child('Help').sigActivated.connect(self.on_help_clicked)
         self.p.child('Save file').sigActivated.connect(self.on_save_clicked)
+        self.p.child('Copy to\nclipboard').sigActivated.connect(self.on_copy2clipboard_clicked)
 
     @QtCore.pyqtSlot()  #default signal
     def on_help_clicked(self):
@@ -108,6 +117,15 @@ class toXLSNodeCtrlWidget(ParameterTree):
         self._parent.update()  #we want to update only with this flag enabled, not when terminal is connected
         self._save = False
 
+    @QtCore.pyqtSlot()  #default signal
+    def on_copy2clipboard_clicked(self):
+        self._toClipbord = True
+        self._parent.update()  #we want to update only with this flag enabled, not when terminal is connected
+        self._toClipbord = False
+
+    def toClipbord(self):
+        return self.toClipbord
+
     def saveAllowed(self):
         return self._save
 
@@ -115,13 +133,14 @@ class toXLSNodeCtrlWidget(ParameterTree):
         params = [
             {'name': 'Help', 'type': 'action'},
             {'name': 'Parameters', 'type': 'group', 'children': [
-                {'name': 'file path', 'type': 'str', 'value': 'export.xlsx', 'default': 'export.xlsx', 'tip': '<string>\nFile path of file to be created'},
+                {'name': 'file path', 'type': 'str', 'value': 'export.xls', 'default': 'export.xls', 'tip': '<string>\nFile path of file to be created'},
                 {'name': 'sheet_name', 'type': 'str', 'value': 'Sheet1', 'default': 'Sheet1', 'tip': '<string, default "Sheet1">\nName of sheet which will contain DataFrame'},
                 {'name': 'na_rep', 'type': 'str', 'value': "", 'default': "", 'tip': '<string, default "">\nMissing data representation'},
                 
                 {'name': 'Additional parameters', 'type': 'text', 'value': '#Pass here manually params. For Example:\n#{"float_format": None, "columns": None, "header": True, etc...}\n{}', 'expanded': False}
             ]},
-            {'name': 'Save file', 'type': 'action'},
+            {'name': 'Copy to\nclipboard', 'type': 'action', 'tip': 'Copy current DataFrame to clipboard, so it can be pasted\nwith CTRL+V into Excel or text-editor'},
+            {'name': 'Save file', 'type': 'action', 'tip': 'Generate Excel file'},
         ]
         return params
 
