@@ -6,14 +6,13 @@ from pyqtgraph.flowchart.Node import Node
 
 
 import numpy as np
-import cPickle as pickle
 import gc
 import pandas as pd
 
 import os, sys
 import traceback
 from pyqtgraph import BusyCursor
-
+from ..TableView import TableView
 
 
 
@@ -76,7 +75,8 @@ class viewPandasDfCtrlWidget(QtWidgets.QWidget):
 
 
     def initUI(self):
-        self.tableView = QtWidgets.QTableView()
+        #self.tableView = QtWidgets.QTableView()
+        self.tableView = TableView(parent=self)
         self.update()
 
     def setModels(self):
@@ -114,6 +114,7 @@ class viewPandasDfCtrlWidget(QtWidgets.QWidget):
         except:
             self.twWindow = None
         self.setModels()  # we enable and disable buttons also in this method
+        self.tableView.resizeColumnsToContents()
 
     @QtCore.pyqtSlot()  #default signal
     def on_pushButton_viewTable_clicked(self):
@@ -152,6 +153,15 @@ class viewPandasDfCtrlWidget(QtWidgets.QWidget):
 
     def parent(self):
         return self._parent
+
+
+
+
+
+
+
+
+
 
 
 
@@ -214,7 +224,8 @@ class PandasModel(QtCore.QAbstractTableModel):
     
     def flags(self, index=QtCore.QModelIndex()):
         """define flags for all items of current model"""
-        return (Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+        #return (Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+        return (Qt.ItemIsSelectable | Qt.ItemIsEnabled)
 
 
     def getData(self):
@@ -305,19 +316,19 @@ class PandasModel(QtCore.QAbstractTableModel):
     def destroy(self):
         #print 'destroy() is called'
         self._headerModel.clear()
-        del self._headerModel
+        #del self._headerModel
         try:
-            del self._dataPandas
+            #del self._dataPandas
+            pass
         except:
             print 'self._dataPandas not deleted'
         try:
-            del self._data
+            #del self._data
+            pass
         except:
             print 'self._data not deleted'
 
         #self.clear()
         self.endResetModel()
-        del self
+        #del self
         gc.collect()
-
-
