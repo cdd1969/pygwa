@@ -12,15 +12,17 @@ from pyqtgraph.parametertree import Parameter, ParameterTree
 from ..functions.evaluatedictionary import evaluateDict, evaluationFunction
 import webbrowser
 from pyqtgraph import BusyCursor
+from ..common.NodeWithCtrlWidget import NodeWithCtrlWidget
 
 
-class readCSVNode(Node):
+
+class readCSVNode(NodeWithCtrlWidget):
     """Load column-based data from ASCII file"""
     nodeName = "readCSV"
 
 
     def __init__(self, name, parent=None):
-        super(readCSVNode, self).__init__(name, terminals={'output': {'io': 'out'}})
+        super(readCSVNode, self).__init__(name, parent=parent, terminals={'output': {'io': 'out'}})
         self._ctrlWidget = readCSVNodeCtrlWidget(self)
 
         
@@ -29,25 +31,6 @@ class readCSVNode(Node):
         with BusyCursor():
             df = pd.read_csv(**kwargs)
         return {'output': Package(df)}
-
-    def ctrlWidget(self):
-        return self._ctrlWidget
-
-    def saveState(self):
-        """overriding stadart Node method to extend it with saving ctrlWidget state"""
-        state = Node.saveState(self)
-        # sacing additionaly state of the control widget
-        state['crtlWidget'] = self.ctrlWidget().saveState()
-        return state
-        
-    def restoreState(self, state):
-        """overriding stadart Node method to extend it with restoring ctrlWidget state"""
-        Node.restoreState(self, state)
-        # additionally restore state of the control widget
-        self.ctrlWidget().restoreState(state['crtlWidget'])
-        #self.update()  # we do not call update() since we want to process only on LoadButton clicked
-
-
 
 
 
@@ -205,7 +188,6 @@ class readCSVNodeCtrlWidget(ParameterTree):
                 dateParserStr = kwargs['date_parser']
                 #kwargs['date_parser'] = lambda x: datetime.strptime(x, dateParserStr)
         kwargs['filepath_or_buffer'] = state['children']['Select File']['value']
-
         return kwargs
 
 

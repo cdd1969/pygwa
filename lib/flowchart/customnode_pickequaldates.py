@@ -10,15 +10,16 @@ from ..functions.general import isNumpyDatetime
 import webbrowser
 from ..functions.general import returnPandasDf
 import gc
+from ..common.NodeWithCtrlWidget import NodeWithCtrlWidget
 
 
-class pickEqualDatesNode(Node):
+class pickEqualDatesNode(NodeWithCtrlWidget):
     """Pick values which correspond to datetimes in other DataFame"""
     nodeName = "pickEqualDates"
 
 
     def __init__(self, name, parent=None):
-        super(pickEqualDatesNode, self).__init__(name, terminals={'datePattern': {'io': 'in'}, 'toPick': {'io': 'in'}, 'Out': {'io': 'out'}})
+        super(pickEqualDatesNode, self).__init__(name, parent=parent, terminals={'datePattern': {'io': 'in'}, 'toPick': {'io': 'in'}, 'Out': {'io': 'out'}})
         self._ctrlWidget = pickEqualDatesNodeCtrlWidget(self)
 
         
@@ -46,24 +47,6 @@ class pickEqualDatesNode(Node):
                 selector = df1[kwargs['datetime <datePattern>']].isin(df2[kwargs['datetime <toPick>']])
             selectedDf = df1[selector]
             return {'Out': Package(selectedDf)}
-
-
-    def ctrlWidget(self):
-        return self._ctrlWidget
-
-    def saveState(self):
-        """overriding stadart Node method to extend it with saving ctrlWidget state"""
-        state = Node.saveState(self)
-        # sacing additionaly state of the control widget
-        state['crtlWidget'] = self.ctrlWidget().saveState()
-        return state
-        
-    def restoreState(self, state):
-        """overriding stadart Node method to extend it with restoring ctrlWidget state"""
-        Node.restoreState(self, state)
-        # additionally restore state of the control widget
-        self.ctrlWidget().restoreState(state['crtlWidget'])
-        #self.update()  # we do not call update() since we want to process only on LoadButton clicked
 
 
 
@@ -112,7 +95,7 @@ class pickEqualDatesNodeCtrlWidget(ParameterTree):
             those that can be passed to pandas.read_csv() as **kwargs (see function4arguments)
 
             user should reimplement this function for each Node"""
-            
+
         kwargs = {
             'datetime <datePattern>': self.p.param('datetime <datePattern>').value(),
             'datetime <toPick>': self.p.param('datetime <toPick>').value()

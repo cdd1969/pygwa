@@ -32,7 +32,10 @@ class datetime2secondsNode(NodeWithCtrlWidget):
                 kwargs = self.ctrlWidget().evaluateState()
                 b = In.astype(np.dtype('datetime64[s]'))
                 return{'Out': b.astype(np.int64)-kwargs['tz correct']*60*60 }
-
+    
+    def restoreState(self, state):
+        """overriding standard Node method to extend it with restoring ctrlWidget state"""
+        NodeWithCtrlWidget.restoreState(self, state, update=True)
 
 
 

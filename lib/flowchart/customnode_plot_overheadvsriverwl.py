@@ -10,16 +10,16 @@ from ..functions import plot_pandas
 import webbrowser
 from pyqtgraph import BusyCursor
 from ..functions.general import returnPandasDf
+from ..common.NodeWithCtrlWidget import NodeWithCtrlWidget
 
 
-
-class plotGWLvsWLNode(Node):
+class plotGWLvsWLNode(NodeWithCtrlWidget):
     """Plot Growundwater-level VS River water-level (matplotlib)"""
     nodeName = "plotGWLvsWL"
 
 
     def __init__(self, name, parent=None):
-        super(plotGWLvsWLNode, self).__init__(name, terminals={'In': {'io': 'in'}})
+        super(plotGWLvsWLNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}})
         self._ctrlWidget = plotGWLvsWLNodeCtrlWidget(self)
 
         
@@ -47,33 +47,6 @@ class plotGWLvsWLNode(Node):
                     if self._ctrlWidget.p['plot overheads'] is True:
                         del df[overhead_name]
         return
-
-    def ctrlWidget(self):
-        return self._ctrlWidget
-
-    def saveState(self):
-        """overriding stadart Node method to extend it with saving ctrlWidget state"""
-        state = Node.saveState(self)
-        # sacing additionaly state of the control widget
-        state['crtlWidget'] = self.ctrlWidget().saveState()
-        return state
-        
-    def restoreState(self, state):
-        """overriding stadart Node method to extend it with restoring ctrlWidget state"""
-        Node.restoreState(self, state)
-        # additionally restore state of the control widget
-        self.ctrlWidget().restoreState(state['crtlWidget'])
-        #self.update()  # we do not call update() since we want to process only on LoadButton clicked
-
-
-
-
-
-
-
-
-
-
 
 
 

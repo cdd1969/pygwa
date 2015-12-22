@@ -5,7 +5,7 @@ from ..flowchart import package
 import numpy as np
 
 
-def returnPandasDf(obj):
+def returnPandasDf(obj, raiseException=False):
     """ Unfortunately the pyqtgraph Nodes cannot transmit pandas.DataFrame
         objects through its terminals. Therefore in this project these objects
         are wrapped into Package.Package() class, before pushed to terminal.
@@ -18,13 +18,30 @@ def returnPandasDf(obj):
                 Input = returnPandasDf(Input)
                 # now `Input` is surely pd.DataFrame or pd.Series
                 #... process `Input`
+
+
+        Args:
+        ------
+            obj : object of any dtype, but it is expected to recieve pd.DataFrame
+                or package with this dtype
+
+            raiseException (Optional[bool]): if `True` when data is not what it is
+                expected - will raise Error. If `False` (default) - will return
+                `None` instead
+
+        Returns:
+        --------
+            [pd.DataFrame/pd.Series/None]
     """
     if isinstance(obj, (pd.DataFrame, pd.Series)):
         return obj
     elif isinstance(obj, package.Package):
         return returnPandasDf(obj.unpack())
     else:
-        raise TypeError('Unsupported data received. Expected pd.DataFrame, pd.Series or Package, received:', type(obj))
+        if raiseException:
+            raise TypeError('Unsupported data received. Expected pd.DataFrame, pd.Series or Package, received:', type(obj))
+        else:
+            return None
 
 
 def isNumpyDatetime(dtype):
@@ -36,6 +53,9 @@ def isNumpyDatetime(dtype):
         return True
     else:
         return False
+
+
+
 
 
 if __name__ == '__main__':

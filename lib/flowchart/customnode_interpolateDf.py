@@ -17,40 +17,16 @@ import gc
 import copy
 import matplotlib.pyplot as plt
 from pyqtgraph import BusyCursor
+from ..common.NodeWithCtrlWidget import NodeWithCtrlWidget
 
 
-class columnInterpolateGroupParameter(pTypes.GroupParameter):
-    """ this parameter will be added for each column of the received
-        DataDrame, so we can set different interpolation options for each
-        column separately
-    """
-    def __init__(self, **opts):
-        opts['type'] = 'bool'
-        opts['value'] = True
-        opts['expanded'] = False
-        pTypes.GroupParameter.__init__(self, **opts)
-        self.addChild({'name': 'Entries', 'type': 'int', 'value': -1, 'readonly': True, 'tip': 'number of entries in current column'})
-        self.addChild({'name': 'NaNs before', 'type': 'int', 'value': -1, 'readonly': True, 'tip': 'number of NaNs in current column before interpolation'})
-        self.addChild({'name': 'NaNs after', 'type': 'int', 'value': -1, 'readonly': True, 'tip': 'number of NaNs in current column after interpolation'})
-        
-        self.addChild({'name': 'interpolateMargin', 'type': 'int', 'value': 100, 'step': 1, 'limits': (1, int(1000)), 'default': 100, 'tip': 'number of data-points to consider left and\nright from NaN value during interpolation'})
-        self.addChild({'name': 'method', 'type': 'list', 'value': 'linear', 'values': ['linear', 'time', 'index', 'values', 'nearest', 'zero', 'slinear', 'quadratic', 'cubic', 'barycentric', 'krogh', 'polynomial', 'spline', 'piecewise_polynomial', 'pchip'], 'default': 'polynomial', 'tip': 'Method of interpolation. See docs'})
-        self.addChild({'name': 'order', 'type': 'int', 'value': 15, 'default': 15, 'step': 1, 'limits': (1, int(1000)), 'tip': 'Both ‘polynomial’ and ‘spline’ require that you\n also specify an order (int), e.g. df.interpolate \n(method=’polynomial’, order=4). See docs'})
-        self.addChild({'name': '**kwargs', 'type': 'text', 'value': '#Example:\n#{"axis": 1, "limit": 20, "limit_direction": "both"}', 'tip': 'these <**kwargs> will be passed to DataFrame.interpolate()\nin addition to defined above "method" and "order".\nLines may be commented with "#"', 'default': '#Example:\n#{"axis": 1, "limit": 20, "limit_direction": "both"}', "expanded": False})
-        self.addChild({'name': 'Plot', 'type': 'action', 'tip': 'Visualize performed interpolation with matplotlib'})
-
-        self.nEntries = self.param('Entries')
-        self.nNansBefore = self.param('NaNs before')
-        self.nNansAfter = self.param('NaNs after')
-
-
-class interpolateDfNode(Node):
+class interpolateDfNode(NodeWithCtrlWidget):
     """Interpolate missing data in given pandas.DataFrame"""
     nodeName = "interpolateDf"
 
 
     def __init__(self, name, parent=None):
-        super(interpolateDfNode, self).__init__(name, terminals={'In': {'io': 'in'}, 'Out': {'io': 'out'}})
+        super(interpolateDfNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}, 'Out': {'io': 'out'}})
         self._ctrlWidget = interpolateDfNodeCtrlWidget(parent=self)
         self._columnsToUpdate = list()
 
@@ -148,10 +124,7 @@ class interpolateDfNode(Node):
         
     def restoreState(self, state):
         """overriding standard Node method to extend it with restoring ctrlWidget state"""
-        Node.restoreState(self, state)
-        # additionally restore state of the control widget
-        self.ctrlWidget().restoreState(state['crtlWidget'])
-        self.update()
+        NodeWithCtrlWidget.restoreState(self, state, update=True)
 
     @QtCore.pyqtSlot(object, object)
     def updateColumns(self, sender, value):
@@ -288,3 +261,32 @@ class interpolateDfNodeCtrlWidget(ParameterTree):
             # {'a': None}.items() >>> [('a', None)] => two times indexing
             kwargs[d.items()[0][0]] = d.items()[0][1]
         return kwargs
+
+
+
+
+
+class columnInterpolateGroupParameter(pTypes.GroupParameter):
+    """ this parameter will be added for each column of the received
+        DataDrame, so we can set different interpolation options for each
+        column separately
+    """
+    def __init__(self, **opts):
+        opts['type'] = 'bool'
+        opts['value'] = True
+        opts['expanded'] = False
+        pTypes.GroupParameter.__init__(self, **opts)
+        self.addChild({'name': 'Entries', 'type': 'int', 'value': -1, 'readonly': True, 'tip': 'number of entries in current column'})
+        self.addChild({'name': 'NaNs before', 'type': 'int', 'value': -1, 'readonly': True, 'tip': 'number of NaNs in current column before interpolation'})
+        self.addChild({'name': 'NaNs after', 'type': 'int', 'value': -1, 'readonly': True, 'tip': 'number of NaNs in current column after interpolation'})
+        
+        self.addChild({'name': 'interpolateMargin', 'type': 'int', 'value': 100, 'step': 1, 'limits': (1, int(1000)), 'default': 100, 'tip': 'number of data-points to consider left and\nright from NaN value during interpolation'})
+        self.addChild({'name': 'method', 'type': 'list', 'value': 'linear', 'values': ['linear', 'time', 'index', 'values', 'nearest', 'zero', 'slinear', 'quadratic', 'cubic', 'barycentric', 'krogh', 'polynomial', 'spline', 'piecewise_polynomial', 'pchip'], 'default': 'polynomial', 'tip': 'Method of interpolation. See docs'})
+        self.addChild({'name': 'order', 'type': 'int', 'value': 15, 'default': 15, 'step': 1, 'limits': (1, int(1000)), 'tip': 'Both ‘polynomial’ and ‘spline’ require that you\n also specify an order (int), e.g. df.interpolate \n(method=’polynomial’, order=4). See docs'})
+        self.addChild({'name': '**kwargs', 'type': 'text', 'value': '#Example:\n#{"axis": 1, "limit": 20, "limit_direction": "both"}', 'tip': 'these <**kwargs> will be passed to DataFrame.interpolate()\nin addition to defined above "method" and "order".\nLines may be commented with "#"', 'default': '#Example:\n#{"axis": 1, "limit": 20, "limit_direction": "both"}', "expanded": False})
+        self.addChild({'name': 'Plot', 'type': 'action', 'tip': 'Visualize performed interpolation with matplotlib'})
+
+        self.nEntries = self.param('Entries')
+        self.nNansBefore = self.param('NaNs before')
+        self.nNansAfter = self.param('NaNs after')
+

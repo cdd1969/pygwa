@@ -11,16 +11,16 @@ from pyqtgraph.parametertree import Parameter, ParameterTree
 from ..functions.detectpeaks import detectPeaks
 from ..functions.evaluatedictionary import evaluateDict, evaluationFunction
 import webbrowser
+from ..common.NodeWithCtrlWidget import NodeWithCtrlWidget
 
 
-
-class detectPeaksNode(Node):
+class detectPeaksNode(NodeWithCtrlWidget):
     """Detect peaks (minima/maxima) from passed signal"""
     nodeName = "detectPeaks"
 
 
     def __init__(self, name, parent=None):
-        super(detectPeaksNode, self).__init__(name, terminals={'In': {'io': 'in'}})
+        super(detectPeaksNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}})
         self._ctrlWidget = detectPeaksNodeCtrlWidget(parent=self)
         self._outputTerminalNames_MinMax = ['val:min', 'ind:min', 'val:max', 'ind:max']
         self._outputTerminalNames_All    = ['val', 'ind']
@@ -49,22 +49,10 @@ class detectPeaksNode(Node):
             raise KeyError('Invalid mode Received {0}'.format(self._mode))
 
         return out
-
-    def ctrlWidget(self):
-        return self._ctrlWidget
-
-    def saveState(self):
-        """overriding stadart Node method to extend it with saving ctrlWidget state"""
-        state = Node.saveState(self)
-        # sacing additionaly state of the control widget
-        state['crtlWidget'] = self.ctrlWidget().saveState()
-        return state
         
     def restoreState(self, state):
         """overriding stadart Node method to extend it with restoring ctrlWidget state"""
-        Node.restoreState(self, state)
-        # additionally restore state of the control widget
-        self.ctrlWidget().restoreState(state['crtlWidget'])
+        NodeWithCtrlWidget.restoreState(self, state)
         self.updateWithoutArgs()
 
     @QtCore.pyqtSlot(bool)

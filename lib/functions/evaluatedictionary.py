@@ -5,15 +5,45 @@ from datetime import datetime  #this is requred to use <readCSV_Node> parse_date
 
 
 
-def evaluationFunction(dictionary, function4arguments=None, log=False):
+def evaluationFunction(dictionary, function4arguments=None, validArgumnets=None, log=False):
     """ function will evaluate (apply python-native function *eval()*) passed dictionary,
         taking only those entries, which have key that match passed *function4arguments*'s
         argument names or will take ALL dictionary entries if *function4arguments* is None
 
 
         NOTE !!!! Dictionary must not be nested
+
+        Args:
+        ------
+            dictionary (dict):
+                input dictionary, NOT NESTED! to take our parameters from.
+                this dictionary should contain at least two entries: `name` and `value`.
+                Because the evaluation is based on these two keys.
+                    {'name': 'blabla',  <- MANDATORY KEYS!
+                     'value': 'hallo',  <- MANDATORY KEYS!
+                      ...}
+
+            function4arguments (Optional[function or method]):
+                Default None.
+                function or method, from which the default argument's names will be gathered.
+                Afterwads these argument-names will be compared with value for `name` entrie
+                in `dictionary`. If `None` - the `name` will not be compared to anything, but
+                will be treated as valid
         
-        example:
+            validArgumnets (Optional[list[str]]):
+                Default None
+                If not `None` - the argument `function4arguments` will be ignored, and the
+                list of valid `name`s is passed explicitly with this argument
+
+        Returns:
+        --------
+            stateArgs (dict):
+                dictionary with one entry: key - is the name of the parameter; value - value
+                of this parameter
+
+
+        Examlple:
+        ---------
             Lets imagine we have three different dictionaries that we will feed to this function
             <Input>
             -------
@@ -57,9 +87,16 @@ def evaluationFunction(dictionary, function4arguments=None, log=False):
     else:
         defaultArgNames = list()
     
+    if validArgumnets is not None:
+        defaultArgNames = validArgumnets
+
+    if log:
+        print 'evaluationFunction(): default args of function/method <{0}>'.format(str(function4arguments))
+        print 'evaluationFunction(): {0}'.format(defaultArgNames)
+    
     stateArgs = None
     # if passed argument name is in defauklt argument names
-    if dictionary['name'] in defaultArgNames or function4arguments is None:
+    if dictionary['name'] in defaultArgNames or (function4arguments is None and validArgumnets is not None):
         stateArgs = dict()
         # save value from passed state...
         if dictionary['value'] in ['', u'']:  #if emty line

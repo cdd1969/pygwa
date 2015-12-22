@@ -291,6 +291,7 @@ from lib.flowchart.customnode_plot_overheadvsriverwl import plotGWLvsWLNode
 from lib.flowchart.customnode_serfes1991 import serfes1991Node
 from lib.flowchart.customnode_pickequaldates import pickEqualDatesNode
 from lib.flowchart.customnode_datetime2sec import datetime2secondsNode
+from lib.flowchart.customnode_scatterplotwidget import scatterPlotWidgetNode
 
 
 
@@ -317,6 +318,7 @@ class uiData(QtCore.QObject):
         self._flowchartLib.addNodeType(readXLSNode, [('Input/Output',)])
         self._flowchartLib.addNodeType(toXLSNode, [('Input/Output',)])
         self._flowchartLib.addNodeType(viewPandasDfNode, [('Display',)])
+        self._flowchartLib.addNodeType(scatterPlotWidgetNode, [('Display',)])
         #self._flowchartLib.addNodeType(selectDfColumnNode, [('Data',)])
         self._flowchartLib.addNodeType(plotTimeseriesNode, [('Display',)])
         self._flowchartLib.addNodeType(plotGWLvsWLNode, [('Display',)])

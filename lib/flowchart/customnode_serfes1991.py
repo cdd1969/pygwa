@@ -12,17 +12,18 @@ from ..functions.evaluatedictionary import evaluateDict, evaluationFunction
 from ..functions.general import isNumpyDatetime
 import webbrowser
 from ..functions.general import returnPandasDf
-import numpy as np
 import gc
+from ..common.NodeWithCtrlWidget import NodeWithCtrlWidget
 
 
-class serfes1991Node(Node):
+
+class serfes1991Node(NodeWithCtrlWidget):
     """Apply Serfes Filter to hydrograph (see Sefes 1991)"""
     nodeName = "Serfes Filter"
 
 
     def __init__(self, name, parent=None):
-        super(serfes1991Node, self).__init__(name, terminals={'In': {'io': 'in'}, 'Out': {'io': 'out'}})
+        super(serfes1991Node, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}, 'Out': {'io': 'out'}})
         self._ctrlWidget = serfes1991NodeCtrlWidget(self)
 
         
@@ -45,35 +46,6 @@ class serfes1991Node(Node):
             if self._ctrlWidget.applyAllowed():
                 result = serfes.filter_wl_71h_serfes1991(df, **kwargs)
                 return {'Out': Package(result)}
-            #else:
-            #    pass
-                #return {'Out': None}
-
-    def ctrlWidget(self):
-        return self._ctrlWidget
-
-    def saveState(self):
-        """overriding stadart Node method to extend it with saving ctrlWidget state"""
-        state = Node.saveState(self)
-        # sacing additionaly state of the control widget
-        state['crtlWidget'] = self.ctrlWidget().saveState()
-        return state
-        
-    def restoreState(self, state):
-        """overriding stadart Node method to extend it with restoring ctrlWidget state"""
-        Node.restoreState(self, state)
-        # additionally restore state of the control widget
-        self.ctrlWidget().restoreState(state['crtlWidget'])
-        #self.update()  # we do not call update() since we want to process only on LoadButton clicked
-
-
-
-
-
-
-
-
-
 
 
 

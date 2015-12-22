@@ -33,4 +33,8 @@ KNOWN BUGS AND ISSUES
 
 7)
     Function, Statistical Analysis
-    Sometimes bugs appear when NaNs are passed. Check that out 
+    Sometimes bugs appear when NaNs are passed. Check that out
+
+8)
+    Node: viewPandasDf
+    When clicking on columns (for selecting/deselecting them) - qtableview closes

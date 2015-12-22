@@ -3,7 +3,7 @@
 from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from PyQt5.QtCore import Qt, qDebug
 from pyqtgraph.flowchart.Node import Node
-
+import re
 
 import numpy as np
 import gc
@@ -196,7 +196,7 @@ class PandasModel(QtCore.QAbstractTableModel):
         # append header of the newly set data to our HeaderModel
         self._headerModel.clear()  #flush previous model
         for name in self.getDataHeader():
-            item = QtGui.QStandardItem(name+'\t; dtype <{0}>'.format(self._dataPandas[name].dtype))
+            item = QtGui.QStandardItem(name+' ;; dtype <{0}>'.format(self._dataPandas[name].dtype))
             item.setCheckable(True)
             item.setEditable(False)
             item.setCheckState(Qt.Checked)
@@ -256,12 +256,17 @@ class PandasModel(QtCore.QAbstractTableModel):
         ''' This method can be used to pass specific column names in method @createNumpyData
             Selected column is the clumn which name IS CHECKED
 
-            <columns> is a list of strings (i.e. ['datetime', 'col1', 'col2']) or None'''
+            <columns> is a list of strings (i.e. ['datetime', 'col1', 'col2']) or None
+        '''
         columns = list()
         for i in xrange(self._headerModel.rowCount()):
             item = self._headerModel.item(i)
             if item.checkState() == Qt.Checked:
-                columns.append(item.text())
+                #columns.append(item.text())
+                # since i have changed the text of the item to `colname+' ;; <dtype>'`
+                # i need to extract column name once again
+                #print 're', re.search('(.*?)\s;;\sdtype.*', item.text()).group(1)
+                columns.append(re.search('(.*?)\s;;\sdtype.*', item.text()).group(1))
         
         # if all has been checked => return None
         if len(columns) == self._headerModel.rowCount():

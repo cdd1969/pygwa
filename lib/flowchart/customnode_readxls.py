@@ -12,15 +12,17 @@ from pyqtgraph.parametertree import Parameter, ParameterTree
 from ..functions.evaluatedictionary import evaluateDict, evaluationFunction
 import webbrowser
 from pyqtgraph import BusyCursor
+from ..common.NodeWithCtrlWidget import NodeWithCtrlWidget
 
 
-class readXLSNode(Node):
+
+class readXLSNode(NodeWithCtrlWidget):
     """Load EXCEL file into pandas.DataFrame"""
     nodeName = "readXLS"
 
 
     def __init__(self, name, parent=None):
-        super(readXLSNode, self).__init__(name, terminals={'output': {'io': 'out'}})
+        super(readXLSNode, self).__init__(name, parent=parent, terminals={'output': {'io': 'out'}})
         self._ctrlWidget = readXLSNodeCtrlWidget(self)
 
         
@@ -29,23 +31,6 @@ class readXLSNode(Node):
         with BusyCursor():
             df = pd.read_excel(**kwargs)
         return {'output': Package(df)}
-
-    def ctrlWidget(self):
-        return self._ctrlWidget
-
-    def saveState(self):
-        """overriding stadart Node method to extend it with saving ctrlWidget state"""
-        state = Node.saveState(self)
-        # sacing additionaly state of the control widget
-        state['crtlWidget'] = self.ctrlWidget().saveState()
-        return state
-        
-    def restoreState(self, state):
-        """overriding stadart Node method to extend it with restoring ctrlWidget state"""
-        Node.restoreState(self, state)
-        # additionally restore state of the control widget
-        self.ctrlWidget().restoreState(state['crtlWidget'])
-        #self.update()  # we do not call update() since we want to process only on LoadButton clicked
 
 
 
@@ -161,7 +146,6 @@ class readXLSNodeCtrlWidget(ParameterTree):
         for d in listWithDicts:
             # {'a': None}.items() = [('a', None)] => two times indexing
             kwargs[d.items()[0][0]] = d.items()[0][1]
-
 
         try:
             Additional_kwargs = eval(state['children']['Parameters']['children']['Additional parameters']['value'])
