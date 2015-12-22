@@ -1,18 +1,14 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-from lib.functions import filterSerfes1991 as serfes
 from pyqtgraph import BusyCursor
 from lib.flowchart.package import Package
-import copy
 import os, sys
 from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph.flowchart.Node import Node
 from pyqtgraph.parametertree import Parameter, ParameterTree
-from ..functions.evaluatedictionary import evaluateDict, evaluationFunction
 from ..functions.general import isNumpyDatetime
 import webbrowser
 from ..functions.general import returnPandasDf
-import numpy as np
 import gc
 
 
@@ -116,11 +112,7 @@ class pickEqualDatesNodeCtrlWidget(ParameterTree):
             those that can be passed to pandas.read_csv() as **kwargs (see function4arguments)
 
             user should reimplement this function for each Node"""
-
-        if state is None:
-            state = self.saveState()
-
-
+            
         kwargs = {
             'datetime <datePattern>': self.p.param('datetime <datePattern>').value(),
             'datetime <toPick>': self.p.param('datetime <toPick>').value()

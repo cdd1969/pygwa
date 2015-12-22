@@ -27,17 +27,12 @@ class toXLSNode(Node):
     def process(self, In):
         if self._ctrlWidget.saveAllowed():
             kwargs = self.ctrlWidget().evaluateState()
-            with BusyCursor():
-                df = returnPandasDf(In)
-                df.to_excel(**kwargs)
-            #show message box...
-            msg = QtGui.QMessageBox()
-            msg.setIcon(QtGui.QMessageBox.Information)
-            msg.setText('file saved at:\n'+os.path.abspath(kwargs['excel_writer']))
-            msg.setWindowTitle("File saved successfully!")
-            msg.setStandardButtons(QtGui.QMessageBox.Ok)
-            msg.exec_()
-
+            df = returnPandasDf(In)
+            fileName = QtGui.QFileDialog.getSaveFileName(None, "Save As..", "export.xlsx", "Excel files (*.xls *.xlsx)")[0]
+            if fileName:
+                with BusyCursor():
+                    df.to_excel(fileName, **kwargs)
+                
         if self._ctrlWidget.toClipbord():
             with BusyCursor():
                 df = returnPandasDf(In)
@@ -125,7 +120,7 @@ class toXLSNodeCtrlWidget(ParameterTree):
         params = [
             {'name': 'Help', 'type': 'action'},
             {'name': 'Parameters', 'type': 'group', 'children': [
-                {'name': 'file path', 'type': 'str', 'value': 'export.xls', 'default': 'export.xls', 'tip': '<string>\nFile path of file to be created'},
+                #{'name': 'file path', 'type': 'str', 'value': 'export.xls', 'default': 'export.xls', 'tip': '<string>\nFile path of file to be created'},
                 {'name': 'sheet_name', 'type': 'str', 'value': 'Sheet1', 'default': 'Sheet1', 'tip': '<string, default "Sheet1">\nName of sheet which will contain DataFrame'},
                 {'name': 'na_rep', 'type': 'str', 'value': "", 'default': "", 'tip': '<string, default "">\nMissing data representation'},
                 
@@ -161,7 +156,7 @@ class toXLSNodeCtrlWidget(ParameterTree):
             kwargs[d.items()[0][0]] = d.items()[0][1]
 
         # this one has not been included, since the name "file path" will not be recognized with <function4arguments=pd.to_excel> (see above)
-        kwargs['excel_writer'] = state['children']['Parameters']['children']['file path']['value']
+        #kwargs['excel_writer'] = state['children']['Parameters']['children']['file path']['value']
 
         try:
             Additional_kwargs = eval(state['children']['Parameters']['children']['Additional parameters']['value'])

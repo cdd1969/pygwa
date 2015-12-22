@@ -290,6 +290,7 @@ from lib.flowchart.customnode_toxls import toXLSNode
 from lib.flowchart.customnode_plot_overheadvsriverwl import plotGWLvsWLNode
 from lib.flowchart.customnode_serfes1991 import serfes1991Node
 from lib.flowchart.customnode_pickequaldates import pickEqualDatesNode
+from lib.flowchart.customnode_datetime2sec import datetime2secondsNode
 
 
 
@@ -316,14 +317,15 @@ class uiData(QtCore.QObject):
         self._flowchartLib.addNodeType(readXLSNode, [('Input/Output',)])
         self._flowchartLib.addNodeType(toXLSNode, [('Input/Output',)])
         self._flowchartLib.addNodeType(viewPandasDfNode, [('Display',)])
-        self._flowchartLib.addNodeType(selectDfColumnNode, [('My',)])
+        #self._flowchartLib.addNodeType(selectDfColumnNode, [('Data',)])
         self._flowchartLib.addNodeType(plotTimeseriesNode, [('Display',)])
         self._flowchartLib.addNodeType(plotGWLvsWLNode, [('Display',)])
-        self._flowchartLib.addNodeType(df2recArrayNode, [('My',)])
         self._flowchartLib.addNodeType(detectPeaksNode, [('Processing',)])
         self._flowchartLib.addNodeType(interpolateDfNode, [('Processing',)])
         self._flowchartLib.addNodeType(serfes1991Node, [('Processing',)])
         self._flowchartLib.addNodeType(pickEqualDatesNode, [('Processing',)])
+        self._flowchartLib.addNodeType(df2recArrayNode, [('Data conversion',)])
+        self._flowchartLib.addNodeType(datetime2secondsNode, [('Data conversion',)])
 
         # create a StringListModel of registered node names, it will be used for auto completion
         self._nodeNamesList  = self._flowchartLib.nodeList.keys()
