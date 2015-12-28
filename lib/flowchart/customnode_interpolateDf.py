@@ -256,10 +256,14 @@ class interpolateDfNodeCtrlWidget(ParameterTree):
         if state is None:
             state = self.saveState()
         listWithDicts = evaluateDict(state['children'][columnName], functionToDicts=evaluationFunction, log=False)
+        print 'returning listWithDicts for column', columnName
+        print listWithDicts
         kwargs = dict()
         for d in listWithDicts:
             # {'a': None}.items() >>> [('a', None)] => two times indexing
             kwargs[d.items()[0][0]] = d.items()[0][1]
+        print 'returning kwargs for column', columnName
+        print kwargs
         return kwargs
 
 

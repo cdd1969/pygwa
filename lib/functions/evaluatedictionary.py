@@ -96,7 +96,7 @@ def evaluationFunction(dictionary, function4arguments=None, validArgumnets=None,
     
     stateArgs = None
     # if passed argument name is in defauklt argument names
-    if dictionary['name'] in defaultArgNames or (function4arguments is None and validArgumnets is not None):
+    if dictionary['name'] in defaultArgNames or (function4arguments is None and validArgumnets is None):
         stateArgs = dict()
         # save value from passed state...
         if dictionary['value'] in ['', u'']:  #if emty line

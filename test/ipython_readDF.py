@@ -3,7 +3,7 @@ import pandas as pd
 
 dateparser = lambda x: datetime.strptime(x, '%d.%m.%Y %H:%M')
 
-df = pd.read_csv('Farge-ALL_10min.all', parse_dates=['Datetime'], sep=';', date_parser=dateparser, decimal='.', usecols=[1, 2, 3, 4, 5, 6, 7], header=0, skiprows=1, index_col=0)
+df = pd.read_csv('TESTDATA.all', parse_dates=['Datetime'], sep=';', date_parser=dateparser, decimal='.', usecols=[0, 1, 2], header=0, skiprows=1)
 
 
 df.index.to_julian_date().values
