@@ -9,6 +9,8 @@ import re
 import numpy as np
 import gc
 import pandas as pd
+import matplotlib.pyplot as plt
+
 
 import os, sys
 import traceback
@@ -74,6 +76,7 @@ class viewPandasDfCtrlWidget(QtWidgets.QWidget):
         uic.loadUi('/home/nck/prj/master_thesis/code/lib/flowchart/customnode_viewpandasdf.ui', self)
         self._parent = parent
         self.initUI()
+        self.pushButton_viewPlot.setEnabled(False)
 
 
     def initUI(self):
@@ -146,7 +149,11 @@ class viewPandasDfCtrlWidget(QtWidgets.QWidget):
     @QtCore.pyqtSlot()  #default signal
     def on_pushButton_viewPlot_clicked(self):
         """ open nice graphic representation of our data"""
-        pass
+        plt.figure()
+        ax = plt.subplot(111)
+        columns = self.parent().getPandasModel().selectColumns()
+        self.parent().getPandasModel().getData()[columns].plot(ax=ax)
+        plt.show()
     
     @QtCore.pyqtSlot(bool)  #default signal
     def on_radioButton_columnIndex_toggled(self, isChecked):
@@ -268,14 +275,22 @@ class PandasModel(QtCore.QAbstractTableModel):
                 # since i have changed the text of the item to `colname+' ;; <dtype>'`
                 # i need to extract column name once again
                 #print 're', re.search('(.*?)\s;;\sdtype.*', item.text()).group(1)
-                columns.append(re.search('(.*?)\s;;\sdtype.*', item.text()).group(1))
+                columns.append(self.getItemName(item))
         
-        # if all has been checked => return None
-        if len(columns) == self._headerModel.rowCount():
-            columns = None
+        ## if all has been checked => return None
+        #if len(columns) == self._headerModel.rowCount():
+        #    columns = None
 
         #print "selectColumns() returning", columns
         return columns
+
+    def getItemName(self, tw_item):
+        #columns.append(item.text())
+        # since i have changed the text of the item to `colname+' ;; <dtype>'`
+        # i need to extract column name once again
+        #print 're', re.search('(.*?)\s;;\sdtype.*', item.text()).group(1)
+        return re.search('(.*?)\s;;\sdtype.*', tw_item.text()).group(1)
+
 
     def createNumpyData(self):
         # we will use Numpy cause of its blazing speed
@@ -290,7 +305,21 @@ class PandasModel(QtCore.QAbstractTableModel):
 
     @QtCore.pyqtSlot(object)
     def on_tv_itemChanged(self, item):
-        self.update()
+        print '>>>', self.getItemName(item)
+        if item.checkState() == Qt.Checked:
+            for i in xrange(self._headerModel.rowCount()):
+                if item is self._headerModel.item(i):
+                    print '>>> index found', i
+                    self._parent.ctrlWidget().tableView.horizontalHeader().showSection(i)
+                    break
+        else:
+            for i in xrange(self._headerModel.rowCount()):
+                if item is self._headerModel.item(i):
+                    print '>>> index found', i
+                    self._parent.ctrlWidget().tableView.horizontalHeader().hideSection(i)
+                    break
+                
+        
 
 
     def rowCount(self, parent=None):
@@ -306,13 +335,10 @@ class PandasModel(QtCore.QAbstractTableModel):
         return QtCore.QVariant()
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
+        print 'headerData() section:', section
         if role == Qt.DisplayRole:
             if orientation == Qt.Horizontal:
-                selectedHeader = self.selectColumns()
-                if selectedHeader is not None:  # if not all columns
-                    return selectedHeader[section]
-                else:                           # if all columns
-                    return self._dataPandas.columns[section]
+                return self._dataPandas.columns[section]
             elif orientation == Qt.Vertical:
                 return section
         return QtCore.QVariant()
