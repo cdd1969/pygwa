@@ -19,7 +19,7 @@ class plotGWLvsWLNode(NodeWithCtrlWidget):
 
 
     def __init__(self, name, parent=None):
-        super(plotGWLvsWLNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}})
+        super(plotGWLvsWLNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}}, color=(150, 150, 250, 150))
         self._ctrlWidget = plotGWLvsWLNodeCtrlWidget(self)
 
         

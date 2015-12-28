@@ -6,7 +6,8 @@ import pyqtgraph as pg
 from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from PyQt5.QtCore import Qt, qDebug
 from pyqtgraph.flowchart.Node import Node
-from pyqtgraph.functions import mkPen
+from pyqtgraph import functions as fn
+
 import pyqtgraph as pg
 import sys
 from ..common.onedimarrayitem import OneDimArrayItem
@@ -28,6 +29,7 @@ class plotTimeseriesNode(Node):
 
     def __init__(self, name, parent=None):
         super(plotTimeseriesNode, self).__init__(name, terminals={'Array': {'io': 'in', 'multi': True}})
+        self.graphicsItem().setBrush(fn.mkBrush(150, 150, 250, 150))
         self._ctrlWidget = plotTimeseriesNodeCtrlWidget(self)
         #self.items = set()   #set to save incoming items
         self._items = dict()
@@ -158,7 +160,7 @@ class plotTimeseriesNode(Node):
     def redraw(self):
         for iId in self._items.keys():
             state = self._items[iId]['arrayItem'].saveState()
-            pen = mkPen(color=state['color'], width=state['size'])
+            pen = fn.mkPen(color=state['color'], width=state['size'])
             for plotItem in self._items[iId]['plotItems']:
                 plotItem.setPen(pen)
 

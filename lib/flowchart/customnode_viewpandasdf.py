@@ -3,6 +3,7 @@
 from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from PyQt5.QtCore import Qt, qDebug
 from pyqtgraph.flowchart.Node import Node
+from pyqtgraph import functions as fn
 import re
 
 import numpy as np
@@ -25,6 +26,7 @@ class viewPandasDfNode(Node):
 
     def __init__(self, name, parent=None):
         super(viewPandasDfNode, self).__init__(name, terminals={'In': {'io': 'in'}})
+        self.graphicsItem().setBrush(fn.mkBrush(150, 150, 250, 150))
         self._pandasModel = None
         self._ctrlWidget = viewPandasDfCtrlWidget(self)
         

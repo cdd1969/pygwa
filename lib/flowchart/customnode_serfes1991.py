@@ -23,7 +23,7 @@ class serfes1991Node(NodeWithCtrlWidget):
 
 
     def __init__(self, name, parent=None):
-        super(serfes1991Node, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}, 'Out': {'io': 'out'}})
+        super(serfes1991Node, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}, 'Out': {'io': 'out'}}, color=(250, 250, 150, 150))
         self._ctrlWidget = serfes1991NodeCtrlWidget(self)
 
         

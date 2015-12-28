@@ -20,7 +20,7 @@ class detectPeaksNode(NodeWithCtrlWidget):
 
 
     def __init__(self, name, parent=None):
-        super(detectPeaksNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}})
+        super(detectPeaksNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}}, color=(250, 250, 150, 150))
         self._ctrlWidget = detectPeaksNodeCtrlWidget(parent=self)
         self._outputTerminalNames_MinMax = ['val:min', 'ind:min', 'val:max', 'ind:max']
         self._outputTerminalNames_All    = ['val', 'ind']

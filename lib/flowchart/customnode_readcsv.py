@@ -15,15 +15,15 @@ from pyqtgraph import BusyCursor
 from ..common.NodeWithCtrlWidget import NodeWithCtrlWidget
 
 
-
 class readCSVNode(NodeWithCtrlWidget):
     """Load column-based data from ASCII file"""
     nodeName = "readCSV"
 
 
     def __init__(self, name, parent=None):
-        super(readCSVNode, self).__init__(name, parent=parent, terminals={'output': {'io': 'out'}})
+        super(readCSVNode, self).__init__(name, terminals={'output': {'io': 'out'}}, color=(100, 250, 100, 150), parent=parent)
         self._ctrlWidget = readCSVNodeCtrlWidget(self)
+
 
         
     def process(self, display=True):

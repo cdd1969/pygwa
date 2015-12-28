@@ -26,7 +26,7 @@ class interpolateDfNode(NodeWithCtrlWidget):
 
 
     def __init__(self, name, parent=None):
-        super(interpolateDfNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}, 'Out': {'io': 'out'}})
+        super(interpolateDfNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}, 'Out': {'io': 'out'}}, color=(250, 250, 150, 150))
         self._ctrlWidget = interpolateDfNodeCtrlWidget(parent=self)
         self._columnsToUpdate = list()
 

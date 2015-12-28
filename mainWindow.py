@@ -3,9 +3,10 @@
 
 import os, sys
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
-from pyqtgraph.flowchart import Flowchart, Node
+from pyqtgraph.flowchart import Node
+from lib.flowchart.Flowchart import customFlowchart as Flowchart
 from lib.functions.dictionary2qtreewidgetitem import fill_widget
-from lib.NodeLibrary import nodelib
+from lib.flowchart.NodeLibrary import nodelib
 
 
 
@@ -76,9 +77,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # generating flowchart instance. Further we will work only with this instance,
         # simply saving/loading it's state.
-        self.fc = Flowchart(terminals={
-                            'dataIn': {'io': 'in'},
-                            'dataOut': {'io': 'out'}}, library=self.uiData.flowchartLib())
+        self.fc = Flowchart(parent=self,
+                            terminals={
+                              'dataIn': {'io': 'in'},
+                              'dataOut': {'io': 'out'}},
+                            library=self.uiData.flowchartLib())
         
         # connecting standard signals of the flowchart
         self.connectFCSignals()
@@ -160,7 +163,8 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def on_actionLoad_fc(self):
         if self.doActionIfUnsavedChanges(message='Are you sure to load another Flowchart without saving this one?'):
-            self.fc.loadFile()
+            directory = os.path.join(os.getcwd(), 'examples')
+            self.fc.loadFile(startDir=directory)
             fn = self.fc.widget().currentFileName
             if fn != self.uiData.standardFileName():
                 self.uiData.setCurrentFileName(fn)

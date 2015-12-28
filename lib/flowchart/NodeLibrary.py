@@ -1,19 +1,19 @@
 # these imports are for creating custom Node-Library
 import pyqtgraph.flowchart.library as fclib
-from flowchart.customnode_readcsv import readCSVNode
-from flowchart.customnode_viewpandasdf import viewPandasDfNode
-from flowchart.customnode_selectdfcolumn import selectDfColumnNode
-from flowchart.customnode_plottimeseries import plotTimeseriesNode
-from flowchart.customnode_df2recarray import df2recArrayNode
-from flowchart.customnode_detectpeaks import detectPeaksNode
-from flowchart.customnode_interpolateDf import interpolateDfNode
-from flowchart.customnode_readxls import readXLSNode
-from flowchart.customnode_toxls import toXLSNode
-from flowchart.customnode_plot_overheadvsriverwl import plotGWLvsWLNode
-from flowchart.customnode_serfes1991 import serfes1991Node
-from flowchart.customnode_pickequaldates import pickEqualDatesNode
-from flowchart.customnode_datetime2sec import datetime2secondsNode
-from flowchart.customnode_scatterplotwidget import scatterPlotWidgetNode
+from customnode_readcsv import readCSVNode
+from customnode_viewpandasdf import viewPandasDfNode
+from customnode_selectdfcolumn import selectDfColumnNode
+from customnode_plottimeseries import plotTimeseriesNode
+from customnode_df2recarray import df2recArrayNode
+from customnode_detectpeaks import detectPeaksNode
+from customnode_interpolateDf import interpolateDfNode
+from customnode_readxls import readXLSNode
+from customnode_toxls import toXLSNode
+from customnode_plot_overheadvsriverwl import plotGWLvsWLNode
+from customnode_serfes1991 import serfes1991Node
+from customnode_pickequaldates import pickEqualDatesNode
+from customnode_datetime2sec import datetime2secondsNode
+from customnode_scatterplotwidget import scatterPlotWidgetNode
 
 
 def nodelib():

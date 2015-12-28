@@ -22,7 +22,7 @@ class readXLSNode(NodeWithCtrlWidget):
 
 
     def __init__(self, name, parent=None):
-        super(readXLSNode, self).__init__(name, parent=parent, terminals={'output': {'io': 'out'}})
+        super(readXLSNode, self).__init__(name, parent=parent, terminals={'output': {'io': 'out'}}, color=(100, 250, 100, 150))
         self._ctrlWidget = readXLSNodeCtrlWidget(self)
 
         

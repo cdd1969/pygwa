@@ -19,7 +19,7 @@ class pickEqualDatesNode(NodeWithCtrlWidget):
 
 
     def __init__(self, name, parent=None):
-        super(pickEqualDatesNode, self).__init__(name, parent=parent, terminals={'datePattern': {'io': 'in'}, 'toPick': {'io': 'in'}, 'Out': {'io': 'out'}})
+        super(pickEqualDatesNode, self).__init__(name, parent=parent, terminals={'datePattern': {'io': 'in'}, 'toPick': {'io': 'in'}, 'Out': {'io': 'out'}}, color=(250, 250, 150, 150))
         self._ctrlWidget = pickEqualDatesNodeCtrlWidget(self)
 
         
