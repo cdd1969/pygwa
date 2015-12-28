@@ -5,6 +5,8 @@ import os, sys
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
 from pyqtgraph.flowchart import Flowchart, Node
 from lib.functions.dictionary2qtreewidgetitem import fill_widget
+from lib.NodeLibrary import nodelib
+
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -276,22 +278,8 @@ class MainWindow(QtWidgets.QMainWindow):
             return True
 
 
-# these imports are for creating custom Node-Library
-import pyqtgraph.flowchart.library as fclib
-from lib.flowchart.customnode_readcsv import readCSVNode
-from lib.flowchart.customnode_viewpandasdf import viewPandasDfNode
-from lib.flowchart.customnode_selectdfcolumn import selectDfColumnNode
-from lib.flowchart.customnode_plottimeseries import plotTimeseriesNode
-from lib.flowchart.customnode_df2recarray import df2recArrayNode
-from lib.flowchart.customnode_detectpeaks import detectPeaksNode
-from lib.flowchart.customnode_interpolateDf import interpolateDfNode
-from lib.flowchart.customnode_readxls import readXLSNode
-from lib.flowchart.customnode_toxls import toXLSNode
-from lib.flowchart.customnode_plot_overheadvsriverwl import plotGWLvsWLNode
-from lib.flowchart.customnode_serfes1991 import serfes1991Node
-from lib.flowchart.customnode_pickequaldates import pickEqualDatesNode
-from lib.flowchart.customnode_datetime2sec import datetime2secondsNode
-from lib.flowchart.customnode_scatterplotwidget import scatterPlotWidgetNode
+
+
 
 
 
@@ -313,21 +301,7 @@ class uiData(QtCore.QObject):
 
 
     def initLibrary(self):
-        self._flowchartLib = fclib.LIBRARY.copy()  # start with the default node set
-        self._flowchartLib.addNodeType(readCSVNode, [('Input/Output',)])
-        self._flowchartLib.addNodeType(readXLSNode, [('Input/Output',)])
-        self._flowchartLib.addNodeType(toXLSNode, [('Input/Output',)])
-        self._flowchartLib.addNodeType(viewPandasDfNode, [('Display',)])
-        self._flowchartLib.addNodeType(scatterPlotWidgetNode, [('Display',)])
-        #self._flowchartLib.addNodeType(selectDfColumnNode, [('Data',)])
-        self._flowchartLib.addNodeType(plotTimeseriesNode, [('Display',)])
-        self._flowchartLib.addNodeType(plotGWLvsWLNode, [('Display',)])
-        self._flowchartLib.addNodeType(detectPeaksNode, [('Processing',)])
-        self._flowchartLib.addNodeType(interpolateDfNode, [('Processing',)])
-        self._flowchartLib.addNodeType(serfes1991Node, [('Processing',)])
-        self._flowchartLib.addNodeType(pickEqualDatesNode, [('Processing',)])
-        self._flowchartLib.addNodeType(df2recArrayNode, [('Data conversion',)])
-        self._flowchartLib.addNodeType(datetime2secondsNode, [('Data conversion',)])
+        self._flowchartLib = nodelib()
 
         # create a StringListModel of registered node names, it will be used for auto completion
         self._nodeNamesList  = self._flowchartLib.nodeList.keys()
