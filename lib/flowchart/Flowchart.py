@@ -3,8 +3,12 @@ from pyqtgraph.flowchart.Flowchart import Flowchart
 from pyqtgraph.Qt import QtGui
 from pyqtgraph import configfile as configfile
 
+
 class customFlowchart(Flowchart):
-    """Custom Flowchart"""
+    """Custom Flowchart
+        - save/load now blocks mainwindow
+        - input/output nodes are hidden
+    """
 
     def __init__(self, parent=None, **kwargs):
         Flowchart.__init__(self, **kwargs)

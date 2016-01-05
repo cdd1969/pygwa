@@ -237,13 +237,15 @@ def plot_pandas_scatter(df, x=[0], y=[1], saveName=None, xlabel=None, ylabel=Non
 
 
 def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, ylabel=None, title=None, trendlinemode=None, legendlabels=[None],
-                                N_DEVIATIONS=10, xlim=None, ylim=None, HYDR_VALS=None,
+                                N_DEVIATIONS=10, xlim=None, ylim=None, HYDR_VALS=None, s=10, marker='o',
                                 axeslabel_fontsize=10., title_fontsize=20., axesvalues_fontsize=10., annotation_fontsize=10., legend_fontsize=8.):
     """
         df              - pandas.DataFrame timeseries for original hydrographs
         x, y            - list with keys or indexes of X and Y data columns
         saveName        - None, or string with figure name to be saved
         title           - title for figure
+        marker          - marker for plotting scatter field
+        s               - size of the scatter points
         xlabel          - None, or string for labeling x-axes
         ylabel          - None, or string for labeling y-axes
         trendlinemode   - 1, 2, 3 or None:
@@ -262,13 +264,14 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
     if len(x) != len(y):
         raise ValueError('Number of keys for X and Y dimension should be equal. Got: {0} for X and {1} for y'.format(len(x), len(y)))
     
-    print "plotting scatter data..."
+    print "plotting scatter data...", trendlinemode
     #fig = plt.figure(figsize=(11.69, 8.27))
     fig = plt.figure(figsize=(6, 4), tight_layout=True)
     
     ax = fig.add_subplot(111)
     for xi, yi in zip(x, y):
         df.plot(x=xi, y=yi, ax=ax, marker="o", markersize=6., style='.', markeredgecolor='black', markeredgewidth=0.2, legend=False)
+        #df.plot.scatter(x=xi, y=yi, ax=ax, marker=marker, s=s, legend=False)
 
 
 

@@ -7,7 +7,7 @@ from pyqtgraph.flowchart import Node
 from lib.flowchart.Flowchart import customFlowchart as Flowchart
 from lib.functions.dictionary2qtreewidgetitem import fill_widget
 from lib.flowchart.NodeLibrary import nodelib
-
+from lib.CustomQCompleter import CustomQCompleter
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -38,10 +38,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.initFlowchart()
 
         #init node selector tab, set autocompletion etc
-        self._nodeNameCompleter = QtWidgets.QCompleter(self)
+        #self._nodeNameCompleter = QtWidgets.QCompleter(self)
+        self._nodeNameCompleter = CustomQCompleter(self)
         self._nodeNameCompleter.setModel(self.uiData.nodeNamesModel())
         self._nodeNameCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.lineEdit_nodeSelect.setCompleter(self._nodeNameCompleter)
+        self.lineEdit_nodeSelect.setPlaceholderText('Type Node Name Here')
 
         # set tree view of node library
         fill_widget(self.treeWidget, self.uiData.nodeNamesTree())
@@ -102,7 +104,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         def dropEvent(event):
             pos = event.pos()
-            nodeType = event.source().currentItem().text(0)
+            try:
+                nodeType = event.source().currentItem().text(0)
+            except AttributeError:
+                nodeType = event.source().text()
             #print "Got drop at fcWidget.view:", nodeType, '. At coords:', pos
             #print self.flowChartWidget.view.viewBox().mapFromView(pos)
             #print self.flowChartWidget.view.viewBox().mapSceneToView(pos)
@@ -258,6 +263,14 @@ class MainWindow(QtWidgets.QMainWindow):
         listFoundWidget = self.treeWidget.findItems(currentText, QtCore.Qt.MatchContains | QtCore.Qt.MatchRecursive)
         if len(listFoundWidget) == 1:
             self.treeWidget.setCurrentItem(listFoundWidget[0])
+        self.lineEdit_nodeSelect.selectAll()
+    
+    @QtCore.pyqtSlot()
+    def on_lineEditNodeSelect_focusInEvent(self, event):
+        self.lineEdit_nodeSelect.selectAll()
+        print 'You!'
+        event.accept()
+        
 
     def center(self):
         qr = self.frameGeometry()

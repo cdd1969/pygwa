@@ -17,3 +17,11 @@ In this file i will store known TODOs
 4)
     Fix
     Fix the Node-Library (reorganise nodes into different groups)
+
+5)
+    Add
+    Add switch to NodeOptions-Tab when double-click the NodeGraphicsItem
+    To do that:
+        - open class `NodeGraphicsItem`
+        - canhge method `def mouseClickEvent(self, ev):`
+        - use info @ http://www.pyqtgraph.org/documentation/graphicsscene/mouseclickevent.html

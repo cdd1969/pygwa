@@ -96,6 +96,8 @@ class plotGWLvsWLNodeCtrlWidget(ParameterTree):
             
             {'name': 'Plot parameters', 'type': 'group', 'expanded': False, 'children': [
                 {'name': 'trendlinemode', 'type': 'list', 'value': 'None', 'default': 'None', 'values': [1, 3, "None"], 'tip': '1    - draw trendlines using all data points\n3    - draw trendlines using all data points, and shift them to the most-far-lying point\nNone - do not draw trendline'},
+                {'name': 'marker', 'type': 'list', 'value': 'o', 'default': 'o', 'values': ['o', '.', 'x', '+', 'h'], 'tip': 'marker style for points'},
+                {'name': 's', 'type': 'int', 'value': 10, 'default': 10, 'tip': 'point size'},
                 {'name': 'title', 'type': 'str', 'value': None, 'default': None, 'tip': 'Figure title (default None)'},
                 {'name': 'xlabel', 'type': 'str', 'value': None, 'default': None, 'tip': 'None, or string for labeling x-axes'},
                 {'name': 'ylabel', 'type': 'str', 'value': None, 'default': None, 'tip': 'None, or string for labeling y-axes'},

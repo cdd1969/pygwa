@@ -22,8 +22,8 @@ from ..TableView import TableView
 
 
 class viewPandasDfNode(Node):
-    """View Pandas dataframe in QTable-view"""
-    nodeName = "viewPandasDf"
+    """View Pandas dataframe in QTable-view and simple matplotlib plot"""
+    nodeName = "QuickView"
 
 
     def __init__(self, name, parent=None):
@@ -335,7 +335,6 @@ class PandasModel(QtCore.QAbstractTableModel):
         return QtCore.QVariant()
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
-        print 'headerData() section:', section
         if role == Qt.DisplayRole:
             if orientation == Qt.Horizontal:
                 return self._dataPandas.columns[section]

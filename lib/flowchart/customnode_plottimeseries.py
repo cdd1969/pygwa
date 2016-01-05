@@ -10,11 +10,8 @@ from pyqtgraph import functions as fn
 
 import pyqtgraph as pg
 import sys
-from ..common.onedimarrayitem import OneDimArrayItem
 from ..common.DateAxisItem import DateAxisItem
-from copy import copy, deepcopy
 import datetime
-import time
 from pyqtgraph import BusyCursor
 import gc
 
@@ -22,7 +19,7 @@ import gc
 
 class plotTimeseriesNode(Node):
     """Plot number of 1D arrays as timeseries"""
-    nodeName = "PlotTimeseries"
+    nodeName = "TimeseriesPlot"
 
     sigItemReceived    = QtCore.Signal(object, object)  #(id(item), item)
     sigRegItemReceived = QtCore.Signal(object)  #already registered item received (id(item))
