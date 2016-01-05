@@ -11,13 +11,32 @@ import matplotlib.pyplot as plt
 from datetime import datetime as dtime
 
 
-def remove_region(peak_value_array, peak_index_array):
+def remove_region(peak_value_array, peak_index_array, order=1):
     """ function will compare values in <peak_values_array> and remove
         the regions of equal values leaving only one entry for each region
+        
+        Args:
+        -----
+            peak_value_array (1-D array_like):
+                array with detected peak values
+            peak_index_array (1-D array_like):
+                array with detected peak indeces. These indeces indicate
+                the position of peaks within original signal
+            order (int):
+                the length of the region to consider. Default = 1.
+                Two peaks at `i` and `i+1` will be considered as the "region"
+                if following two conditions are met:
+                    1) peak_value_array[i+1] == peak_value_array[i]
+                    2) peak_index_array[i+1] - peak_index_array[i] <= order
+                This param has been introduced while solving ISSUE#9
 
-        <peak_index_array> is an array of indeces of peak that were found in data
+        Return:
+        -------
+            (new_peak_value_array, new_peak_index_array):
+                numpy 1D arrays with removed regions
 
-        example:
+        Example:
+        --------
             data   = [1, 2, 3, 4, 4, 4, 4, 3, 2, 1, 0, 1, 2, 3, 4]
             isPeak = [Y, N, N, Y, Y, Y, Y, N, N, N, Y, N, N, N, Y]  # yes/no
             (this is usually produced by scipy.signal.argrelextrema())
@@ -29,6 +48,8 @@ def remove_region(peak_value_array, peak_index_array):
             new_peaks_indeces = [0, 5, 10, 14]
             new_peaks_values  = [1, 4, 0 , 4 ]
     """
+    if int(order) < 1:
+        raise ValueError('Invalid integer: `order` must be >=1. Received `order=%i`' % int(order))
     diffs_v = np.diff(peak_value_array)
     diffs_i = np.diff(peak_index_array)
     if len(diffs_i) != len(diffs_v):
@@ -61,7 +82,8 @@ def remove_region(peak_value_array, peak_index_array):
     for j, (diff_i, diff_v) in enumerate(zip(diffs_i, diffs_v)):
         ##print '>>> j', j, '>>> i`s', peak_index_array[j], peak_index_array[j+1]
         ##print '>>> REGION', regionIndices
-        if diff_v == 0 and diff_i == 1:  # values at <j> and <j+1> are of same value, difference between them is 0
+        #if diff_v == 0 and diff_i == 1:  # This was the original part. Check (Issue#9)
+        if diff_v == 0 and diff_i <= order:  # values at <j> and <j+1> are of same value, difference between them is 0
             if len(regionIndices) == 0 or regionIndices[-1] != j:
                 ##print "appending regionIndices:", j
                 regionIndices.append(j)
@@ -70,7 +92,7 @@ def remove_region(peak_value_array, peak_index_array):
         else:  # close region!
             # this can happen due to...
             #   - values at <j> and <j+1> are different values.
-            #   - <j> and <j+1> are not near each other >>> diff_i != 1
+            #   - <j> and <j+1> are not near each other >>> diff_i > order
             # now we need to process our previously created region, delete it, and start searching for the new one
             
             # find middle value of the region, if region exists
@@ -139,8 +161,8 @@ def detectPeaks(array1D, order=5, split=False, removeRegions=True, mode='clip', 
         peakVals_min = array1D[peakIndices_min]
         
         if removeRegions:
-            peakVals_max, peakIndices_max = remove_region(peakVals_max, peakIndices_max)
-            peakVals_min, peakIndices_min = remove_region(peakVals_min, peakIndices_min)
+            peakVals_max, peakIndices_max = remove_region(peakVals_max, peakIndices_max, order=order)
+            peakVals_min, peakIndices_min = remove_region(peakVals_min, peakIndices_min, order=order)
         if plot:
             f = plt.figure()
             ax = f.add_subplot(111)

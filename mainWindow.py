@@ -264,12 +264,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if len(listFoundWidget) == 1:
             self.treeWidget.setCurrentItem(listFoundWidget[0])
         self.lineEdit_nodeSelect.selectAll()
-    
-    @QtCore.pyqtSlot()
-    def on_lineEditNodeSelect_focusInEvent(self, event):
-        self.lineEdit_nodeSelect.selectAll()
-        print 'You!'
-        event.accept()
         
 
     def center(self):
