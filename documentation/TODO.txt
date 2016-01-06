@@ -1,8 +1,8 @@
 -------------------------------------------------------------------------
-In this file i will store known TODOs
+Known TODOs
 -------------------------------------------------------------------------
 
-1)
+1) (DONE)
     Create
     Create Node to determine Tidal Efficiency based on diff. methods
 
@@ -18,10 +18,25 @@ In this file i will store known TODOs
     Fix
     Fix the Node-Library (reorganise nodes into different groups)
 
-5)
+5) (DISMISSED)
     Add
     Add switch to NodeOptions-Tab when double-click the NodeGraphicsItem
     To do that:
         - open class `NodeGraphicsItem`
         - canhge method `def mouseClickEvent(self, ev):`
         - use info @ http://www.pyqtgraph.org/documentation/graphicsscene/mouseclickevent.html
+
+    UPD:
+        I have reorganized GUI to two dock-widget, thus the idea discribed above is not needed
+        any longer
+
+6)
+    Add
+    Add Undo/Redo buttons
+    This can be done by saving the flowchart state to history file every time when it
+    (flowchart) is changed.
+
+7)
+    Add
+    Add Copy-Node button
+    This will allow user to copy already prepared Node (i.e. with controls set)

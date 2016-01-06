@@ -8,6 +8,7 @@ from lib.flowchart.Flowchart import customFlowchart as Flowchart
 from lib.functions.dictionary2qtreewidgetitem import fill_widget
 from lib.flowchart.NodeLibrary import nodelib
 from lib.CustomQCompleter import CustomQCompleter
+import PROJECTMETA
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -23,6 +24,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
 
     def initUI(self):
+        self.setWindowTitle(PROJECTMETA.__label__)
         self.center()
 
         self.splitter.setSizes([300, 500])  #set horizontal sizes between splitter
@@ -45,6 +47,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lineEdit_nodeSelect.setCompleter(self._nodeNameCompleter)
         self.lineEdit_nodeSelect.setPlaceholderText('Type Node Name Here')
 
+        # connect on select QTreeWidgetItem > se text in QLineEdit
+        self.treeWidget.itemActivated.connect(self.on_nodeLibTreeWidget_itemActivated)
 
         # init dock widgets
         css = "color: white; font-size: 12pt; font-weight: bold; background: rgb(102, 102, 204);  qproperty-alignment: 'AlignVCenter | AlignHCenter';"
@@ -52,7 +56,7 @@ class MainWindow(QtWidgets.QMainWindow):
         label_1.setStyleSheet(css)
         self.dockWidget.setTitleBarWidget(label_1)
         
-        label_2 = QtWidgets.QLabel("Node Properties")
+        label_2 = QtWidgets.QLabel("Node Controls")
         label_2.setStyleSheet(css)
         self.dockWidget_2.setTitleBarWidget(label_2)
 
@@ -64,6 +68,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionSave_fc.triggered.connect(self.on_actionSave_fc)
         self.actionSave_As_fc.triggered.connect(self.on_actionSave_As_fc)
         self.actionLoad_fc.triggered.connect(self.on_actionLoad_fc)
+        self.actionAbout.triggered.connect(self.on_actionAbout)
+        self.actionHelp.triggered.connect(self.on_actionHelp)
         self.actionQuit.triggered.connect(self.closeEvent)
 
         self.uiData.sigCurrentFilenameChanged.connect(self.renameFlowchartTab)
@@ -77,11 +83,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.lineEdit_nodeSelect.editingFinished.connect(self.on_lineEditNodeSelect_editingFinished)
  
-    def closeEvent(self, event):
-        if self.doActionIfUnsavedChanges(message='Are you sure to quit?'):
-            QtWidgets.qApp.quit()  #quit application
-        else:
-            event.ignore()
+
 
     def initFlowchart(self):
         # removing dummyWidget created with QtDesigner
@@ -146,7 +148,11 @@ class MainWindow(QtWidgets.QMainWindow):
             del widget
         # finally add dummy widget - to be selected with nodes that does not have any ctrlWidget()
         self.stackNodeCtrlStackedWidget.addWidget(self._dummyWidget)
-
+    
+    @QtCore.pyqtSlot(object, int)
+    def on_nodeLibTreeWidget_itemActivated(self, item, column):
+        self.lineEdit_nodeSelect.setText(item.text(0))
+        self.lineEdit_nodeSelect.selectAll()
 
     @QtCore.pyqtSlot()
     def on_actionNew_fc(self, init=False):
@@ -190,6 +196,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.uiData.setCurrentFileName(fn)
                 self.uiData.setChangesUnsaved(False)
                 #self.statusBar().showMessage("File loaded: "+fn)
+
+    @QtCore.pyqtSlot()
+    def on_actionAbout(self):
+        QtWidgets.QMessageBox.about(self, "About...", "{0}\n\nVersion: {1}\nAuthor: {2}\nContact: {3}".format(
+            PROJECTMETA.about, PROJECTMETA.__version__, PROJECTMETA.__author__, PROJECTMETA.__contact__))
+
+    @QtCore.pyqtSlot()
+    def on_actionHelp(self):
+        pass
 
 
     
@@ -282,6 +297,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
 
     def center(self):
+        """ Center MainWindow position"""
         qr = self.frameGeometry()
         cp = QtWidgets.QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
@@ -303,7 +319,11 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             return True
 
-
+    def closeEvent(self, event):
+        if self.doActionIfUnsavedChanges(message='Are you sure to quit?'):
+            QtWidgets.qApp.quit()  #quit application
+        else:
+            event.ignore()
 
 
 

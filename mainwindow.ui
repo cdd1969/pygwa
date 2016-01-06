@@ -127,9 +127,10 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionLoad_fc"/>
+   <addaction name="actionNew_fc"/>
    <addaction name="actionSave_fc"/>
    <addaction name="actionSave_As_fc"/>
+   <addaction name="actionLoad_fc"/>
   </widget>
   <widget class="QDockWidget" name="dockWidget">
    <property name="sizePolicy">
@@ -141,7 +142,7 @@
    <property name="minimumSize">
     <size>
      <width>105</width>
-     <height>20</height>
+     <height>156</height>
     </size>
    </property>
    <property name="font">
@@ -230,7 +231,7 @@
    <property name="minimumSize">
     <size>
      <width>129</width>
-     <height>20</height>
+     <height>368</height>
     </size>
    </property>
    <property name="font">

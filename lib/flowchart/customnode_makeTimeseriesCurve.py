@@ -83,6 +83,7 @@ class makeTimeseriesCurveNodeCtrlWidget(ParameterTree):
         self.p.child('tz correct').sigValueChanged.connect(self._parent.update)
         self.p.child('Y:signal').sigValueChanged.connect(self._parent.update)
         self.p.child('X:datetime').sigValueChanged.connect(self._parent.update)
+        self.p.child('color').sigValueChanged.connect(self._parent.update)
 
 
 

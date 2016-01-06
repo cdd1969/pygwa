@@ -103,10 +103,10 @@ class serfes1991NodeCtrlWidget(ParameterTree):
             {'name': 'Help', 'type': 'action'},
             {'name': 'datetime', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Location of the datetime objects.\nBy default is `None`, meaning that datetime objects are\nlocated within `pd.DataFrame.index`. If not `None` - pass the\ncolumn-name of dataframe where datetime objects are located.\nThis is needed to determine number of measurements per day.\nNote: this argument is ignored if `N` is not `None` !!!'},
             {'name': 'N', 'type': 'str', 'value': None, 'default': None, 'tip': '<int or None>\nExplicit number of measurements in 24 hours. By\ndefault `N=None`, meaning that script will try to determine\nnumber of measurements per 24 hours based on real datetime\ninformation provided with `datetime` argument'},
+            {'name': 'Calculate N', 'type': 'action'},
             {'name': 'usecols', 'type': 'str', 'value': None, 'default': None, 'tip': '<List[str] or None>\nExplicitly pass the name of the columns\nthat will be evaluated. These columns must have numerical dtype\n(i.e. int32, int64, float32, float64). Default value is `None`\nmeaning that all numerical columns will be processed'},
             {'name': 'verbose', 'type': 'bool', 'value': False, 'default': False, 'tip': 'If `True` - will keep all three iterations\nin the output. If `False` - will save only final (3rd) iteration.\nThis may useful for debugging, or checking this filter.'},
             {'name': 'log', 'type': 'bool', 'value': False, 'default': False, 'tip': 'flag to show some prints in console'},
-            {'name': 'Calculate N', 'type': 'action'},
             {'name': 'Apply Filter', 'type': 'action'},
 
         ]

@@ -93,7 +93,7 @@ class detectPeaksTSNodeCtrlWidget(ParameterTree):
             {'name': 'Peak Detection Params', 'type': 'group', 'children': [
                 {'name': 'order', 'type': 'int', 'value': 100, 'default': 100, 'limits': (0, int(10e6)), 'tip': 'How many points on each side to use for the comparison'},
                 {'name': 'mode', 'type': 'list', 'values': ['clip', 'wrap'], 'value': 'clip', 'default': 'clip', 'tip': 'How the edges of the vector are treated. ‘wrap’ (wrap around)\nor ‘clip’ (treat overflow as the same as the last (or first) element)'},
-                {'name': 'removeRegions', 'type': 'bool', 'value': True, 'default': True, 'tip': "remove possible multiple peaks that go one-by-one"}
+                {'name': 'removeRegions', 'type': 'bool', 'value': True, 'readonly': True, 'default': True, 'tip': "remove possible multiple peaks that go one-by-one"}
             ]},
             {'name': 'Period Check Params', 'type': 'group', 'children': [
                 {'name': 'T', 'type': 'str', 'value': 12.42, 'default': None, 'tip': 'Awaited period of the signal in hours. If `None`, will calculate\nthe Period `T` as the mean of difference between peaks, multiplied\nby two (i.e. T = peaks["time"].diff().mean()*2)'},

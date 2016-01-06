@@ -1,9 +1,5 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-
-import sys
-from numpy import NaN, Inf, arange, isscalar, asarray, array
-from scipy import signal
 import numpy as np
 
 

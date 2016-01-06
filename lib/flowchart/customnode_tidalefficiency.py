@@ -69,13 +69,6 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
             return {'E': E}
 
 
-    def process_method_3(self, df, colName_river, colName_gw, colName_datetime, matched_peaks):
-        # select only valid cycles
-        pass
-
-
-
-
 
 class tidalEfficiencyNodeCtrlWidget(ParameterTree):
     

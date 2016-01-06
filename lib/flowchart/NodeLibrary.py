@@ -19,6 +19,7 @@ from customnode_tidalefficiency import tidalEfficiencyNode
 from customnode_matchpeaks import matchPeaksNode
 from customnode_pipe import pipeNode
 from customnode_makeTimeseriesCurve import makeTimeseriesCurveNode
+from customnode_timelag import timeLagNode
 
 
 def nodelib():
@@ -48,6 +49,7 @@ def nodelib():
     flowchartLib.addNodeType(matchPeaksNode, [('Processing',)])
     flowchartLib.addNodeType(pickEqualDatesNode, [('Processing',)])
     flowchartLib.addNodeType(tidalEfficiencyNode, [('Processing',)])
+    flowchartLib.addNodeType(timeLagNode, [('Processing',)])
 
     flowchartLib.addNodeType(df2recArrayNode, [('Data conversion',)])
     flowchartLib.addNodeType(datetime2secondsNode, [('Data conversion',)])
