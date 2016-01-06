@@ -18,6 +18,7 @@ from customnode_scatterplotwidget import scatterPlotWidgetNode
 from customnode_tidalefficiency import tidalEfficiencyNode
 from customnode_matchpeaks import matchPeaksNode
 from customnode_pipe import pipeNode
+from customnode_makeTimeseriesCurve import makeTimeseriesCurveNode
 
 
 def nodelib():
@@ -33,20 +34,24 @@ def nodelib():
     flowchartLib.addNodeType(readCSVNode, [('Input/Output',)])
     flowchartLib.addNodeType(readXLSNode, [('Input/Output',)])
     flowchartLib.addNodeType(toXLSNode, [('Input/Output',)])
+    
     flowchartLib.addNodeType(viewPandasDfNode, [('Display', 'Widgets')])
     flowchartLib.addNodeType(scatterPlotWidgetNode, [('Display', 'Widgets')], override=True)
     flowchartLib.addNodeType(plotTimeseriesNode, [('Display', 'Widgets')])
     flowchartLib.addNodeType(plotGWLvsWLNode, [('Display',)])
-    flowchartLib.addNodeType(selectDfColumnNode, [('Data',)])
+    flowchartLib.addNodeType(makeTimeseriesCurveNode, [('Display',)])
+
     flowchartLib.addNodeType(detectPeaksNode, [('Processing',)])
     flowchartLib.addNodeType(detectPeaksTSNode, [('Processing',)])
     flowchartLib.addNodeType(interpolateDfNode, [('Processing',)])
     flowchartLib.addNodeType(serfes1991Node, [('Processing',)])
+    flowchartLib.addNodeType(matchPeaksNode, [('Processing',)])
     flowchartLib.addNodeType(pickEqualDatesNode, [('Processing',)])
+    flowchartLib.addNodeType(tidalEfficiencyNode, [('Processing',)])
+
     flowchartLib.addNodeType(df2recArrayNode, [('Data conversion',)])
     flowchartLib.addNodeType(datetime2secondsNode, [('Data conversion',)])
-    flowchartLib.addNodeType(tidalEfficiencyNode, [('Processing',)])
-    flowchartLib.addNodeType(matchPeaksNode, [('Processing',)])
+    flowchartLib.addNodeType(selectDfColumnNode, [('Data',)])
     flowchartLib.addNodeType(pipeNode, [('Appearance',)])
 
 

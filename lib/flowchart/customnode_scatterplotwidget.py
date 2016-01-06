@@ -19,7 +19,7 @@ class scatterPlotWidgetNode(NodeWithCtrlWidget):
 
 
     def __init__(self, name, parent=None):
-        super(scatterPlotWidgetNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}}, color=(150, 150, 250, 150))
+        super(scatterPlotWidgetNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}}, color=(150, 150, 250, 200))
         self._ctrlWidget = scatterPlotWidgetNodeCtrlWidget(parent=self)
 
         

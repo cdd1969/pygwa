@@ -26,7 +26,7 @@ class plotTimeseriesNode(Node):
 
     def __init__(self, name, parent=None):
         super(plotTimeseriesNode, self).__init__(name, terminals={'Array': {'io': 'in', 'multi': True}})
-        self.graphicsItem().setBrush(fn.mkBrush(150, 150, 250, 150))
+        self.graphicsItem().setBrush(fn.mkBrush(150, 150, 250, 200))
         self._ctrlWidget = plotTimeseriesNodeCtrlWidget(self)
         #self.items = set()   #set to save incoming items
         self._items = dict()

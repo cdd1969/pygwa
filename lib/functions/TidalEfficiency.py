@@ -93,11 +93,12 @@ def tidalEfficiency_method2(river_cycle_amp, gw_cycle_amp):
 
     E = E_sum/len(gw_cycle_amp)
 
-    return E
+    return E, len(gw_cycle_amp)
 
 
 
-def tidalEfficiency_method3(df, river, gw, datetime_col, peaks_river, peaks_gw):
+def tidalEfficiency_method3(df, river, gw, datetime_col, river_cycle_time_min, river_cycle_time_max,
+        gw_cycle_time_min, gw_cycle_time_max):
     '''
     Calculate Tidal Efficiency as the mean of the ratios (calculated
     separately for each tidal-cycle) of the standard deviation of the
@@ -121,7 +122,20 @@ def tidalEfficiency_method3(df, river, gw, datetime_col, peaks_river, peaks_gw):
             column name of the ground-water measurements
         datetime_col (str):
             column name of the Datetime information
-
+        river_cycle_time_min (pandas.Series, 1-D array_like):
+            datetime of the MIN peak (lowwater) of the river for every tidal cycle
+            Note, DATA MUST BE CLEAN!
+        river_cycle_time_max (pandas.Series, 1-D array_like):
+            datetime of the MAX peak (highwater) of the river for every tidal cycle
+            Note, DATA MUST BE CLEAN!
+        gw_cycle_time_min (pandas.Series, 1-D array_like):
+            datetime of the MIN peak (lowwater) of the grondwater in well
+            for every tidal cycle
+            Note, DATA MUST BE CLEAN!
+        gw_cycle_time_max (pandas.Series, 1-D array_like):
+            datetime of the MAX peak (highwater) of the grondwater in well
+            for every tidal cycle
+            Note, DATA MUST BE CLEAN!
     Returns:
     --------
         E (float):
@@ -130,46 +144,45 @@ def tidalEfficiency_method3(df, river, gw, datetime_col, peaks_river, peaks_gw):
     
     # 1. check peaks
     #   1.1 they should have equal length
-    if len(peaks_river.index) != len(peaks_gw.index):
-        pass
-        # Error
+    l1 = len(river_cycle_time_min)
+    l2 = len(river_cycle_time_max)
+    l3 = len(gw_cycle_time_min)
+    l4 = len(gw_cycle_time_max)
+    if (3*l1 - l2 - l3 - l4) != 0:
+        raise Exception('Length of *peak* arrays is not equal. Aborting')
 
-    #   1.2 they should both start from min or max, so that extrema values appear matched
-    if not ((peaks_river['val'][0] > peaks_river['val'][1] and peaks_gw['val'][0] > peaks_gw['val'][1]) or
-            (peaks_river['val'][0] < peaks_river['val'][1] and peaks_gw['val'][0] < peaks_gw['val'][1])):
-       pass
-       # Error
-
-    #   1.3 peaks should be more-or-less within same time-frame
-    delta_t = datetime.timedelta(hours=24)
-    if not (abs(peaks_river['time'][0] - peaks_gw['time'][0]) < delta_t and
-            abs(peaks_river['time'][-1] - peaks_gw['time'][-1]) < delta_t):
-       pass
-       # Error
 
 
     # 2. Determine period
-    T = peaks_river['time'].diff().mean()
+    T = (river_cycle_time_max-river_cycle_time_min).mean()*2
 
 
     # 3. Do the calculations
     E_sum = 0.
     N = 0  # number of cycles
-    for i in xrange(1, len(peaks_river.index), 2):
-        date_peak_1 = peaks_river['time'][i-1]
-        date_peak_2 = peaks_river['time'][i]
+
+    for w_tmin, w_tmax, gw_tmin, gw_tmax in zip(river_cycle_time_min, river_cycle_time_max, gw_cycle_time_min, gw_cycle_time_max):
         # 3.2 find the index of the entry closest to specific datetime
-        i1 = df[datetime_col].searchsorted(date_peak_1-T/4)  # note, here we assume that between peak1 and peak2 is T/2
-        i2 = df[datetime_col].searchsorted(date_peak_2+T/4)  # note, here we assume that between peak1 and peak2 is T/2
-        std_w  = df.ix[i1:i2, river].std()
-        std_gw  = df.ix[i1:i2, gw].std()
+        try:
+            w_i1 = df[datetime_col].searchsorted(w_tmin-T/4)[0]  # note, here we assume that between peak1 and peak2 is T/2
+            w_i2 = df[datetime_col].searchsorted(w_tmax+T/4)[0]  # note, here we assume that between peak1 and peak2 is T/2
+            
+            gw_i1 = df[datetime_col].searchsorted(gw_tmin-T/4)[0]  # note, here we assume that between peak1 and peak2 is T/2
+            gw_i2 = df[datetime_col].searchsorted(gw_tmax+T/4)[0]  # note, here we assume that between peak1 and peak2 is T/2
+        except:
+            continue
+            
+        std_w  = df.ix[w_i1:w_i2, river].std()
+        std_gw  = df.ix[gw_i1:gw_i2, gw].std()
+
         E_i = std_gw/std_w
         E_sum += E_i
         N += 1
 
+
     E = E_sum/float(N)
 
-    return E
+    return E, N
 
 # ///////////////////////////////////////////////////////////
 # ///////////////////////////////////////////////////////////

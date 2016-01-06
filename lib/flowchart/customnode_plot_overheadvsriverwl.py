@@ -141,8 +141,8 @@ class plotGWLvsWLNodeCtrlWidget(ParameterTree):
         kwargs['x'] = [state['children']['X: River WL']['value']]
         kwargs['y'] = [state['children']['Y: Well GWL']['value']]
         if kwargs['trendlinemode'] == 'None': kwargs['trendlinemode'] = None
-        if kwargs['title'] == 'None': kwargs['title'] = None
-        if kwargs['xlabel'] == 'None': kwargs['xlabel'] = None
-        if kwargs['ylabel'] == 'None': kwargs['ylabel'] = None
+        if kwargs['title'] in [None, 'None']: kwargs['title'] = None
+        if kwargs['xlabel'] in [None, 'None']: kwargs['xlabel'] = state['children']['X: River WL']['value']
+        if kwargs['ylabel'] in [None, 'None']: kwargs['ylabel'] = state['children']['Y: Well GWL']['value']
 
         return kwargs

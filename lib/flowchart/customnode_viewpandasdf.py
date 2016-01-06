@@ -28,7 +28,7 @@ class viewPandasDfNode(Node):
 
     def __init__(self, name, parent=None):
         super(viewPandasDfNode, self).__init__(name, terminals={'In': {'io': 'in'}})
-        self.graphicsItem().setBrush(fn.mkBrush(150, 150, 250, 150))
+        self.graphicsItem().setBrush(fn.mkBrush(150, 150, 250, 200))
         self._pandasModel = None
         self._ctrlWidget = viewPandasDfCtrlWidget(self)
         
