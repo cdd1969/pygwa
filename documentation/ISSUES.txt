@@ -1,0 +1,64 @@
+-------------------------------------------------------------------------------------------------------------
+KNOWN BUGS AND ISSUES
+-------------------------------------------------------------------------------------------------------------
+
+1)
+    Node: interpolateDf
+    when loading Flowchart, the State is not fully restore. Children are not added.
+    Probably this is comming from method *process* where all columns are deleted at first
+
+2) (DONE)
+    Node: plotTimeseries
+    When dataIn is changed, it is onl updated on the upper subplot. To update it at the bottom, you need to
+    reconnect the input terminal
+
+3)
+    Node: plotTimeseries
+    PlotTimeseries currently works only with curves in which X-axes has been built with *datetime* objects
+
+4)
+    Node: plotTimeseries
+    PlotTimeseries does not update te colors of the points when a color of a curve is changed after it has been added
+    the canvas
+
+5)
+    Node: readCSV
+    Supports only certain datetime formats. For example, it will fail loading *24:00:00* (only 23:59:59 is
+    accepted). To treat those annoying 24:00:00 you may use script */utils/remove_24h.py*
+
+6)
+    General, Flowchart
+    The changes in the Node-parameters doesnt provoke the *unsavedChanges* status. Currently it it toggled
+    only when : a) node is added b) node is removed c) node is renamed
+
+7)
+    Function, Statistical Analysis
+    Sometimes bugs appear when NaNs are passed. Check that out
+
+8) (DONE)
+    Node: viewPandasDf
+    When clicking on columns (for selecting/deselecting them) - qtableview closes
+
+9) (DONE)
+    Node: detectPeaks_ts
+    peak detection does not work as expected with keyword order
+    i.e.
+        a = [5, 4, 3, 1, 2, 1, 3, 4 , 5]
+    it detects two minimum peaks at 1 and 1
+
+    Check this code....
+        import scipy.signal as sg
+        import numpy as np
+        a = [1.87, 1.97, 2.07, 2.17, 2.25, 2.35, 2.42, 2.47, 2.51, 2.53, 2.52, 2.53, 2.48]
+        a = np.array(a)
+        print sg.argrelextrema(a, np.greater_equal, order=10)
+        # >>> (array([ 9, 11]),)
+        # So that is our problem! We want only one peak!
+
+    This problem has been fixed by introducing `order` parameter in <remove_region()>
+    function in module lib.functions.detectpeaks
+
+10)
+    Node: plotGWLvsWL
+    Something is wrong with trendlines...
+    Not working, sometimes KeyError, sometimes everythin's ok
