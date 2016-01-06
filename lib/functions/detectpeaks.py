@@ -591,13 +591,14 @@ def match_peaks(peaks_w, peaks_gw, match_colName='time_min', **kwargs):
     peaks_matched = peaks_w.copy(deep=True)
     del peaks_matched['check']
     del peaks_matched['time_diff']
-    peaks_matched['md_N']        = None
-    peaks_matched['md_ind_min']  = None
-    peaks_matched['md_ind_max']  = None
-    peaks_matched['md_time_min'] = None
-    peaks_matched['md_time_max'] = None
-    peaks_matched['md_val_min']  = None
-    peaks_matched['md_val_max']  = None
+    peaks_matched['tidehub'] = np.abs(peaks_matched['val_max'] - peaks_matched['val_min'])
+    peaks_matched['md_N']        = np.nan
+    peaks_matched['md_ind_min']  = np.nan
+    peaks_matched['md_ind_max']  = np.nan
+    peaks_matched['md_time_min'] = pd.NaT
+    peaks_matched['md_time_max'] = pd.NaT
+    peaks_matched['md_val_min']  = np.nan
+    peaks_matched['md_val_max']  = np.nan
     
     for row in peaks_w.itertuples():
         i = row.Index
@@ -613,6 +614,7 @@ def match_peaks(peaks_w, peaks_gw, match_colName='time_min', **kwargs):
             peaks_matched.ix[i, 'md_val_min']  = peaks_gw.iloc[j, peaks_gw.columns.get_loc('val_min')]
             peaks_matched.ix[i, 'md_val_max']  = peaks_gw.iloc[j, peaks_gw.columns.get_loc('val_max')]
 
+    peaks_matched['md_tidehub']  = np.abs(peaks_matched['md_val_max'] - peaks_matched['md_val_min'])
     return peaks_matched
     
 

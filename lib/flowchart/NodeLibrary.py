@@ -17,6 +17,7 @@ from customnode_datetime2sec import datetime2secondsNode
 from customnode_scatterplotwidget import scatterPlotWidgetNode
 from customnode_tidalefficiency import tidalEfficiencyNode
 from customnode_matchpeaks import matchPeaksNode
+from customnode_pipe import pipeNode
 
 
 def nodelib():
@@ -46,6 +47,7 @@ def nodelib():
     flowchartLib.addNodeType(datetime2secondsNode, [('Data conversion',)])
     flowchartLib.addNodeType(tidalEfficiencyNode, [('Processing',)])
     flowchartLib.addNodeType(matchPeaksNode, [('Processing',)])
+    flowchartLib.addNodeType(pipeNode, [('Appearance',)])
 
 
     return flowchartLib

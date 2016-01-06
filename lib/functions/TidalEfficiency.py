@@ -40,7 +40,7 @@ def tidalEfficiency_method1(df, river, gw, log=False):
 
 
 
-def tidalEfficiency_method2(peaks_river, peaks_gw):
+def tidalEfficiency_method2(river_cycle_amp, gw_cycle_amp):
     '''
     Calculate Tidal Efficiency according to Smith 1994, as the mean
     of the amplitude ratios for every tidal-cycle.
@@ -53,13 +53,12 @@ def tidalEfficiency_method2(peaks_river, peaks_gw):
 
     Args:
     -----
-        df (pandas.DataFrame):
-            data to be processed; columns with names given in `river`
-            and `gw` must exist
-        river (str):
-            column name of the water measurements
-        gw (str):
-            column name of the ground-water measurements
+        river_cycle_amp (pandas.Series, 1-D array_like):
+            amplitudes of the river for every tidal cycle
+            Note, DATA MUST BE CLEAN!
+        gw_cycle_amp (pandas.Series, 1-D array_like):
+            amplitudes of the groundwater well for every tidal cycle
+            Note, DATA MUST BE CLEAN!
 
     Returns:
     --------
@@ -67,37 +66,32 @@ def tidalEfficiency_method2(peaks_river, peaks_gw):
             tidal efficiency factor
     '''
     
-    # 1. check peaks
+    # 1. check amplitudes
     #   1.1 they should have equal length
-    if len(peaks_river.index) != len(peaks_gw.index):
-        raise Exception('Length of *peak* arrays are not equal: peaks_river = % d, peaks_gw = % d' % len(peaks_river.index), len(peaks_gw.index))
+    if len(river_cycle_amp) != len(gw_cycle_amp):
+        raise Exception('Length of *peak* arrays is not equal: peaks_river = % d, peaks_gw = % d' % len(river_cycle_amp), len(gw_cycle_amp))
         # Error
-
-    #   1.2 they should both start from min or max, so that extrema values appear matched
-    if not ((peaks_river['val'][0] > peaks_river['val'][1] and peaks_gw['val'][0] > peaks_gw['val'][1]) or
-            (peaks_river['val'][0] < peaks_river['val'][1] and peaks_gw['val'][0] < peaks_gw['val'][1])):
-        raise Exception('Both arrays should share first peak type. It should be either MAX or MIN peak in both arrays.')
-        # Error
-
-    #   1.3 peaks should be more-or-less within same time-frame
-    delta_t = datetime.timedelta(hours=24)
-    if not (abs(peaks_river['time'][0] - peaks_gw['time'][0]) < delta_t and
-            abs(peaks_river['time'][-1] - peaks_gw['time'][-1]) < delta_t):
-       raise Exception('Both arrays should describe data within same time-range. More than % d hours timedelta detected between matching peaks.')
-        
-       # Error
 
 
     # 2. now do the calculations
-    E_sum = 0.
-    N = 0
-    for i in xrange(1, len(peaks_river.index), 2):
-        A_river_i = abs(peaks_river['val'][i-1] - peaks_river['val'][i])
-        A_gw_i    = abs(peaks_gw['val'][i-1] - peaks_gw['val'][i])
-        E_sum += A_gw_i/float(A_river_i)
-        N += 1
+    ERROR = False
+    # if pd.Series or np.ndarray - do quick
+    try:
+        E_array = gw_cycle_amp/river_cycle_amp
+        if len(E_array) != len(gw_cycle_amp):
+            ERROR = True
+        else:
+            E_sum = E_array.sum()
+    except:
+        ERROR = True
 
-    E = E_sum/float(N)
+    # if not... do with row-iterations, slow
+    if ERROR:
+        E_sum = 0.
+        for a_w, a_gw in zip(river_cycle_amp, gw_cycle_amp):
+            E_sum += a_gw/float(a_w)
+
+    E = E_sum/len(gw_cycle_amp)
 
     return E
 

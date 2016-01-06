@@ -25,19 +25,18 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
 
     def __init__(self, name, parent=None):
         terms = {'df': {'io': 'in'},
-                 'peaks_w': {'io': 'in'},
-                 'peaks_gw': {'io': 'in'},
+                 'matched_peaks': {'io': 'in'},
                  'E': {'io': 'out'}}
         super(tidalEfficiencyNode, self).__init__(name, parent=parent, terminals=terms, color=(250, 250, 150, 150))
         self._ctrlWidget = tidalEfficiencyNodeCtrlWidget(parent=self)
 
         
-    def process(self, df, peaks_w, peaks_gw):
+    def process(self, df, matched_peaks):
         E = None
+        self._ctrlWidget.p.param('E = ').setValue(str(E))
         with BusyCursor():
             df = returnPandasDf(df)
-            peaks_w = returnPandasDf(peaks_w)
-            peaks_gw = returnPandasDf(peaks_gw)
+            matched_peaks = returnPandasDf(matched_peaks)
 
             colname = [col for col in df.columns if not isNumpyDatetime(df[col].dtype)]
             self._ctrlWidget.p.param('river').setLimits(colname)
@@ -51,16 +50,23 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
                 E = tidalEfficiency_method1(df, kwargs['river'], kwargs['gw'])
 
             elif kwargs['method'] == '2) Cyclic amplitude':
-                E = tidalEfficiency_method2(peaks_w, peaks_gw)
+                # select only valid cycles
+                df_slice = matched_peaks.loc[~matched_peaks['md_N'].isin([np.nan, None])]
+                E = tidalEfficiency_method2(df_slice['tidehub'], df_slice['md_tidehub'])
 
             elif kwargs['method'] == '3) Cyclic STD':
                 E = tidalEfficiency_method3(df, kwargs['river'], kwargs['gw'], kwargs['datetime'], peaks_w, peaks_gw)
             else:
                 raise Exception('Method <%s> not yet implemented' % kwargs['method'])
         
+            self._ctrlWidget.p.param('E = ').setValue(str(E))
             return {'E': E}
 
 
+    def process_method_2(self, mp_df):
+        # select only valid cycles
+        df_slice = mp_df.loc[mp_df['md_N'] not in [np.nan, None]]
+        return tidalEfficiency_method2(df_slice['tidehub'], df_slice['md_tidehub'])
 
 
 
@@ -103,7 +109,8 @@ class tidalEfficiencyNodeCtrlWidget(ParameterTree):
             {'name': 'gw', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Column name with GROUNDWATER hydrograph data'},
             {'name': 'datetime', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Location of the datetime objects.'},
             {'name': 'method', 'type': 'list', 'value': '1) STD', 'default': '1) STD', 'values': ['1) STD', '2) Cyclic amplitude', '3) Cyclic STD'], 'tip': 'Method to calculate Tidal Efficiency. Read docs'},
-            {'name': 'Calculate E', 'type': 'action'}
+            #{'name': 'Calculate E', 'type': 'action'}
+            {'name': 'E = ', 'type': 'str', 'readonly': True, 'value': None}
 
         ]
         return params
