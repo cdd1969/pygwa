@@ -187,7 +187,7 @@ class plotTimeseriesNode(Node):
 class plotTimeseriesNodeCtrlWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(plotTimeseriesNodeCtrlWidget, self).__init__()
-        uic.loadUi('/home/nck/prj/master_thesis/code/lib/flowchart/customnode_plottimeseries.ui', self)
+        uic.loadUi('./lib/flowchart/customnode_plottimeseries.ui', self)
         self._parent = parent
         self._listWidgetItems = set()  # registered items in ListWidget
         self.initUI()

@@ -73,7 +73,7 @@ class viewPandasDfNode(Node):
 class viewPandasDfCtrlWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(viewPandasDfCtrlWidget, self).__init__()
-        uic.loadUi('/home/nck/prj/master_thesis/code/lib/flowchart/customnode_viewpandasdf.ui', self)
+        uic.loadUi('./lib/flowchart/customnode_viewpandasdf.ui', self)
         self._parent = parent
         self.initUI()
         self.pushButton_viewPlot.setEnabled(False)

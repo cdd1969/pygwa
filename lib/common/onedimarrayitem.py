@@ -107,7 +107,7 @@ class OneDimArrayItem(object):
 class OneDimArrayItemCtrlWidget(QtWidgets.QWidget):
     def __init__(self, parent=None, color='r'):
         super(OneDimArrayItemCtrlWidget, self).__init__()
-        uic.loadUi('/home/nck/prj/master_thesis/code/lib/common/onedimarrayhorizontalwidget.ui', self)
+        uic.loadUi('./lib/common/onedimarrayhorizontalwidget.ui', self)
         self._parent = parent
         self.initUI(color=color)
 

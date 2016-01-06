@@ -30,12 +30,17 @@ def replace_and_standardize_date(fname, inplace=0):
         If you would like to cahnge <p>, do not forget to change also <newline> definition:
             newline = p.sub(r'\g<space1>'+newDateStr+r'\g<space2>'+newTimeStr+r'\g<rests>', line)
 
-
-
-
-        API:
-            <inplace=0> - only SHOW replacement
-            <inplace=1> - create backupfile and DO replacement
+        Args:
+        -----
+            fname (str):
+                filename with ASCII data to fix
+            inplace (int):
+                0 - only SHOW replacement
+                1 - create backupfile and DO replacement
+        
+        Return:
+        -------
+            changes the file `fname` in place!
 
     """
     i = 0

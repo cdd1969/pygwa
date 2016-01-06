@@ -25,7 +25,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def initUI(self):
         self.setWindowTitle(PROJECTMETA.__label__)
-        self.center()
+        self.center()  # center window position
 
         self.splitter.setSizes([300, 500])  #set horizontal sizes between splitter
 
