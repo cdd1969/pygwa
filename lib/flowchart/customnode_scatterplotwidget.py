@@ -184,9 +184,9 @@ class scatterPlotWidgetNodeCtrlWidget(ParameterTree):
         if fields is None:
             fields = self.evaluateState()
 
-        print '>>> setting fields'
-        print fields
-        print '>>> setting fields finished'
+        ##print '>>> setting fields'
+        ##print fields
+        ##print '>>> setting fields finished'
         self._spw.setFields(fields)
 
 

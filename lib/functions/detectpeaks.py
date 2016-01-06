@@ -447,7 +447,6 @@ def find_index_closest_value(val, ts, side=None):
             can be accessed with ts[ ]
     '''
     # check inputs
-    print 'SIDE=', side
     if side not in ['right (>t)', 'right (>=t)', 'left (<=t)', 'left (<t)', 'both']:
         raise ValueError('Invalid `side` received: %s' % side)
     

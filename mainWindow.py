@@ -45,6 +45,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lineEdit_nodeSelect.setCompleter(self._nodeNameCompleter)
         self.lineEdit_nodeSelect.setPlaceholderText('Type Node Name Here')
 
+
+        # init dock widgets
+        css = "color: white; font-size: 12pt; font-weight: bold; background: rgb(102, 102, 204);  qproperty-alignment: 'AlignVCenter | AlignHCenter';"
+        label_1 = QtWidgets.QLabel("Node Library")
+        label_1.setStyleSheet(css)
+        self.dockWidget.setTitleBarWidget(label_1)
+        
+        label_2 = QtWidgets.QLabel("Node Properties")
+        label_2.setStyleSheet(css)
+        self.dockWidget_2.setTitleBarWidget(label_2)
+
         # set tree view of node library
         fill_widget(self.treeWidget, self.uiData.nodeNamesTree())
     
@@ -107,7 +118,11 @@ class MainWindow(QtWidgets.QMainWindow):
             try:
                 nodeType = event.source().currentItem().text(0)
             except AttributeError:
-                nodeType = event.source().text()
+                try:
+                    nodeType = event.source().text()
+                except:
+                    event.ignore()
+                    return
             #print "Got drop at fcWidget.view:", nodeType, '. At coords:', pos
             #print self.flowChartWidget.view.viewBox().mapFromView(pos)
             #print self.flowChartWidget.view.viewBox().mapSceneToView(pos)
