@@ -19,7 +19,7 @@ class plotGWLvsWLNode(NodeWithCtrlWidget):
 
 
     def __init__(self, name, parent=None):
-        super(plotGWLvsWLNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}})
+        super(plotGWLvsWLNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}}, color=(150, 150, 250, 150))
         self._ctrlWidget = plotGWLvsWLNodeCtrlWidget(self)
 
         
@@ -96,6 +96,8 @@ class plotGWLvsWLNodeCtrlWidget(ParameterTree):
             
             {'name': 'Plot parameters', 'type': 'group', 'expanded': False, 'children': [
                 {'name': 'trendlinemode', 'type': 'list', 'value': 'None', 'default': 'None', 'values': [1, 3, "None"], 'tip': '1    - draw trendlines using all data points\n3    - draw trendlines using all data points, and shift them to the most-far-lying point\nNone - do not draw trendline'},
+                {'name': 'marker', 'type': 'list', 'value': 'o', 'default': 'o', 'values': ['o', '.', 'x', '+', 'h'], 'tip': 'marker style for points'},
+                {'name': 's', 'type': 'int', 'value': 10, 'default': 10, 'tip': 'point size'},
                 {'name': 'title', 'type': 'str', 'value': None, 'default': None, 'tip': 'Figure title (default None)'},
                 {'name': 'xlabel', 'type': 'str', 'value': None, 'default': None, 'tip': 'None, or string for labeling x-axes'},
                 {'name': 'ylabel', 'type': 'str', 'value': None, 'default': None, 'tip': 'None, or string for labeling y-axes'},
@@ -139,8 +141,8 @@ class plotGWLvsWLNodeCtrlWidget(ParameterTree):
         kwargs['x'] = [state['children']['X: River WL']['value']]
         kwargs['y'] = [state['children']['Y: Well GWL']['value']]
         if kwargs['trendlinemode'] == 'None': kwargs['trendlinemode'] = None
-        if kwargs['title'] == 'None': kwargs['title'] = None
-        if kwargs['xlabel'] == 'None': kwargs['xlabel'] = None
-        if kwargs['ylabel'] == 'None': kwargs['ylabel'] = None
+        if kwargs['title'] in [None, 'None']: kwargs['title'] = None
+        if kwargs['xlabel'] in [None, 'None']: kwargs['xlabel'] = state['children']['X: River WL']['value']
+        if kwargs['ylabel'] in [None, 'None']: kwargs['ylabel'] = state['children']['Y: Well GWL']['value']
 
         return kwargs

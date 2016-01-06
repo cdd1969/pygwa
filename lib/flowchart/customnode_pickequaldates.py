@@ -19,7 +19,7 @@ class pickEqualDatesNode(NodeWithCtrlWidget):
 
 
     def __init__(self, name, parent=None):
-        super(pickEqualDatesNode, self).__init__(name, parent=parent, terminals={'datePattern': {'io': 'in'}, 'toPick': {'io': 'in'}, 'Out': {'io': 'out'}})
+        super(pickEqualDatesNode, self).__init__(name, parent=parent, terminals={'datePattern': {'io': 'in'}, 'toPick': {'io': 'in'}, 'Out': {'io': 'out'}}, color=(250, 250, 150, 150))
         self._ctrlWidget = pickEqualDatesNodeCtrlWidget(self)
 
         
@@ -30,9 +30,9 @@ class pickEqualDatesNode(NodeWithCtrlWidget):
             df2 = returnPandasDf(datePattern)
 
             colname = [None]+[col for col in df1.columns if isNumpyDatetime(df1[col].dtype)]
-            self._ctrlWidget.p.param('datetime <datePattern>').setLimits(colname)
-            colname = [None]+[col for col in df2.columns if isNumpyDatetime(df2[col].dtype)]
             self._ctrlWidget.p.param('datetime <toPick>').setLimits(colname)
+            colname = [None]+[col for col in df2.columns if isNumpyDatetime(df2[col].dtype)]
+            self._ctrlWidget.p.param('datetime <datePattern>').setLimits(colname)
             
             kwargs = self.ctrlWidget().evaluateState()
 
@@ -40,11 +40,11 @@ class pickEqualDatesNode(NodeWithCtrlWidget):
             if kwargs['datetime <datePattern>'] is None and kwargs['datetime <toPick>'] is None:
                 selector = df1.index.isin(df2.index)
             elif kwargs['datetime <datePattern>'] is not None and kwargs['datetime <toPick>'] is None:
-                selector = df1[kwargs['datetime <datePattern>']].isin(df2.index)
-            elif kwargs['datetime <datePattern>'] is None and kwargs['datetime <toPick>'] is not None:
-                selector = df1.index.isin(df2[kwargs['datetime <toPick>']])
+                selector = df1[kwargs['datetime <toPick>']].isin(df2.index)
+            elif kwargs['datetime <toPick>'] is None and kwargs['datetime <toPick>'] is not None:
+                selector = df1.index.isin(df2[kwargs['datetime <datePattern>']])
             elif kwargs['datetime <datePattern>'] is not None and kwargs['datetime <toPick>'] is not None:
-                selector = df1[kwargs['datetime <datePattern>']].isin(df2[kwargs['datetime <toPick>']])
+                selector = df1[kwargs['datetime <toPick>']].isin(df2[kwargs['datetime <datePattern>']])
             selectedDf = df1[selector]
             return {'Out': Package(selectedDf)}
 

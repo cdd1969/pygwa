@@ -3,8 +3,12 @@
 
 import os, sys
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
-from pyqtgraph.flowchart import Flowchart, Node
+from pyqtgraph.flowchart import Node
+from lib.flowchart.Flowchart import customFlowchart as Flowchart
 from lib.functions.dictionary2qtreewidgetitem import fill_widget
+from lib.flowchart.NodeLibrary import nodelib
+from lib.CustomQCompleter import CustomQCompleter
+import PROJECTMETA
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -20,6 +24,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
 
     def initUI(self):
+        self.setWindowTitle(PROJECTMETA.__label__)
         self.center()
 
         self.splitter.setSizes([300, 500])  #set horizontal sizes between splitter
@@ -35,10 +40,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.initFlowchart()
 
         #init node selector tab, set autocompletion etc
-        self._nodeNameCompleter = QtWidgets.QCompleter(self)
+        #self._nodeNameCompleter = QtWidgets.QCompleter(self)
+        self._nodeNameCompleter = CustomQCompleter(self)
         self._nodeNameCompleter.setModel(self.uiData.nodeNamesModel())
         self._nodeNameCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.lineEdit_nodeSelect.setCompleter(self._nodeNameCompleter)
+        self.lineEdit_nodeSelect.setPlaceholderText('Type Node Name Here')
+
+        # connect on select QTreeWidgetItem > se text in QLineEdit
+        self.treeWidget.itemActivated.connect(self.on_nodeLibTreeWidget_itemActivated)
+
+        # init dock widgets
+        css = "color: white; font-size: 12pt; font-weight: bold; background: rgb(102, 102, 204);  qproperty-alignment: 'AlignVCenter | AlignHCenter';"
+        label_1 = QtWidgets.QLabel("Node Library")
+        label_1.setStyleSheet(css)
+        self.dockWidget.setTitleBarWidget(label_1)
+        
+        label_2 = QtWidgets.QLabel("Node Controls")
+        label_2.setStyleSheet(css)
+        self.dockWidget_2.setTitleBarWidget(label_2)
 
         # set tree view of node library
         fill_widget(self.treeWidget, self.uiData.nodeNamesTree())
@@ -48,6 +68,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionSave_fc.triggered.connect(self.on_actionSave_fc)
         self.actionSave_As_fc.triggered.connect(self.on_actionSave_As_fc)
         self.actionLoad_fc.triggered.connect(self.on_actionLoad_fc)
+        self.actionAbout.triggered.connect(self.on_actionAbout)
+        self.actionHelp.triggered.connect(self.on_actionHelp)
         self.actionQuit.triggered.connect(self.closeEvent)
 
         self.uiData.sigCurrentFilenameChanged.connect(self.renameFlowchartTab)
@@ -61,11 +83,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.lineEdit_nodeSelect.editingFinished.connect(self.on_lineEditNodeSelect_editingFinished)
  
-    def closeEvent(self, event):
-        if self.doActionIfUnsavedChanges(message='Are you sure to quit?'):
-            QtWidgets.qApp.quit()  #quit application
-        else:
-            event.ignore()
+
 
     def initFlowchart(self):
         # removing dummyWidget created with QtDesigner
@@ -74,9 +92,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # generating flowchart instance. Further we will work only with this instance,
         # simply saving/loading it's state.
-        self.fc = Flowchart(terminals={
-                            'dataIn': {'io': 'in'},
-                            'dataOut': {'io': 'out'}}, library=self.uiData.flowchartLib())
+        self.fc = Flowchart(parent=self,
+                            terminals={
+                              'dataIn': {'io': 'in'},
+                              'dataOut': {'io': 'out'}},
+                            library=self.uiData.flowchartLib())
         
         # connecting standard signals of the flowchart
         self.connectFCSignals()
@@ -97,7 +117,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         def dropEvent(event):
             pos = event.pos()
-            nodeType = event.source().currentItem().text(0)
+            try:
+                nodeType = event.source().currentItem().text(0)
+            except AttributeError:
+                try:
+                    nodeType = event.source().text()
+                except:
+                    event.ignore()
+                    return
             #print "Got drop at fcWidget.view:", nodeType, '. At coords:', pos
             #print self.flowChartWidget.view.viewBox().mapFromView(pos)
             #print self.flowChartWidget.view.viewBox().mapSceneToView(pos)
@@ -121,7 +148,11 @@ class MainWindow(QtWidgets.QMainWindow):
             del widget
         # finally add dummy widget - to be selected with nodes that does not have any ctrlWidget()
         self.stackNodeCtrlStackedWidget.addWidget(self._dummyWidget)
-
+    
+    @QtCore.pyqtSlot(object, int)
+    def on_nodeLibTreeWidget_itemActivated(self, item, column):
+        self.lineEdit_nodeSelect.setText(item.text(0))
+        self.lineEdit_nodeSelect.selectAll()
 
     @QtCore.pyqtSlot()
     def on_actionNew_fc(self, init=False):
@@ -158,12 +189,22 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def on_actionLoad_fc(self):
         if self.doActionIfUnsavedChanges(message='Are you sure to load another Flowchart without saving this one?'):
-            self.fc.loadFile()
+            directory = os.path.join(os.getcwd(), 'examples')
+            self.fc.loadFile(startDir=directory)
             fn = self.fc.widget().currentFileName
             if fn != self.uiData.standardFileName():
                 self.uiData.setCurrentFileName(fn)
                 self.uiData.setChangesUnsaved(False)
                 #self.statusBar().showMessage("File loaded: "+fn)
+
+    @QtCore.pyqtSlot()
+    def on_actionAbout(self):
+        QtWidgets.QMessageBox.about(self, "About...", "{0}\n\nVersion: {1}\nAuthor: {2}\nContact: {3}".format(
+            PROJECTMETA.about, PROJECTMETA.__version__, PROJECTMETA.__author__, PROJECTMETA.__contact__))
+
+    @QtCore.pyqtSlot()
+    def on_actionHelp(self):
+        pass
 
 
     
@@ -252,8 +293,11 @@ class MainWindow(QtWidgets.QMainWindow):
         listFoundWidget = self.treeWidget.findItems(currentText, QtCore.Qt.MatchContains | QtCore.Qt.MatchRecursive)
         if len(listFoundWidget) == 1:
             self.treeWidget.setCurrentItem(listFoundWidget[0])
+        self.lineEdit_nodeSelect.selectAll()
+        
 
     def center(self):
+        """ Center MainWindow position"""
         qr = self.frameGeometry()
         cp = QtWidgets.QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
@@ -275,23 +319,13 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             return True
 
+    def closeEvent(self, event):
+        if self.doActionIfUnsavedChanges(message='Are you sure to quit?'):
+            QtWidgets.qApp.quit()  #quit application
+        else:
+            event.ignore()
 
-# these imports are for creating custom Node-Library
-import pyqtgraph.flowchart.library as fclib
-from lib.flowchart.customnode_readcsv import readCSVNode
-from lib.flowchart.customnode_viewpandasdf import viewPandasDfNode
-from lib.flowchart.customnode_selectdfcolumn import selectDfColumnNode
-from lib.flowchart.customnode_plottimeseries import plotTimeseriesNode
-from lib.flowchart.customnode_df2recarray import df2recArrayNode
-from lib.flowchart.customnode_detectpeaks import detectPeaksNode
-from lib.flowchart.customnode_interpolateDf import interpolateDfNode
-from lib.flowchart.customnode_readxls import readXLSNode
-from lib.flowchart.customnode_toxls import toXLSNode
-from lib.flowchart.customnode_plot_overheadvsriverwl import plotGWLvsWLNode
-from lib.flowchart.customnode_serfes1991 import serfes1991Node
-from lib.flowchart.customnode_pickequaldates import pickEqualDatesNode
-from lib.flowchart.customnode_datetime2sec import datetime2secondsNode
-from lib.flowchart.customnode_scatterplotwidget import scatterPlotWidgetNode
+
 
 
 
@@ -313,21 +347,7 @@ class uiData(QtCore.QObject):
 
 
     def initLibrary(self):
-        self._flowchartLib = fclib.LIBRARY.copy()  # start with the default node set
-        self._flowchartLib.addNodeType(readCSVNode, [('Input/Output',)])
-        self._flowchartLib.addNodeType(readXLSNode, [('Input/Output',)])
-        self._flowchartLib.addNodeType(toXLSNode, [('Input/Output',)])
-        self._flowchartLib.addNodeType(viewPandasDfNode, [('Display',)])
-        self._flowchartLib.addNodeType(scatterPlotWidgetNode, [('Display',)])
-        #self._flowchartLib.addNodeType(selectDfColumnNode, [('Data',)])
-        self._flowchartLib.addNodeType(plotTimeseriesNode, [('Display',)])
-        self._flowchartLib.addNodeType(plotGWLvsWLNode, [('Display',)])
-        self._flowchartLib.addNodeType(detectPeaksNode, [('Processing',)])
-        self._flowchartLib.addNodeType(interpolateDfNode, [('Processing',)])
-        self._flowchartLib.addNodeType(serfes1991Node, [('Processing',)])
-        self._flowchartLib.addNodeType(pickEqualDatesNode, [('Processing',)])
-        self._flowchartLib.addNodeType(df2recArrayNode, [('Data conversion',)])
-        self._flowchartLib.addNodeType(datetime2secondsNode, [('Data conversion',)])
+        self._flowchartLib = nodelib()
 
         # create a StringListModel of registered node names, it will be used for auto completion
         self._nodeNamesList  = self._flowchartLib.nodeList.keys()

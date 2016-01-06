@@ -96,14 +96,18 @@ def evaluationFunction(dictionary, function4arguments=None, validArgumnets=None,
     
     stateArgs = None
     # if passed argument name is in defauklt argument names
-    if dictionary['name'] in defaultArgNames or (function4arguments is None and validArgumnets is not None):
+    if dictionary['name'] in defaultArgNames or (function4arguments is None and validArgumnets is None):
         stateArgs = dict()
         # save value from passed state...
         if dictionary['value'] in ['', u'']:  #if emty line
             val = dictionary['default']
         else:
             try:
-                val = eval(dictionary['value'])
+                if dictionary['value'] in ['datetime', 'Datetime']:  # ve careful with lists. If we have an imported datetime module, and 'datetime' list-entry , it will be evaluated as dtype object! therefore we explicitly convert it to strings
+                    val = str(dictionary['value'])
+                else:
+                    val = eval(dictionary['value'])
+
             except Exception, err:
                 if log: print Exception, err, '. Received:', dictionary['name'], '=', dictionary['value'],  '>>> I will set value without evaluation'
                 val = dictionary['value']

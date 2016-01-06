@@ -22,7 +22,7 @@ class readXLSNode(NodeWithCtrlWidget):
 
 
     def __init__(self, name, parent=None):
-        super(readXLSNode, self).__init__(name, parent=parent, terminals={'output': {'io': 'out'}})
+        super(readXLSNode, self).__init__(name, parent=parent, terminals={'output': {'io': 'out'}}, color=(100, 250, 100, 150))
         self._ctrlWidget = readXLSNodeCtrlWidget(self)
 
         
@@ -111,6 +111,7 @@ class readXLSNodeCtrlWidget(ParameterTree):
                 {'name': 'sheetname', 'type': 'str', 'value': 0, 'default': 0, 'tip': '<string, int, mixed list of strings/ints, or None, default 0>\nStrings are used for sheet names, Integers are used in zero-indexed sheet positions.\nLists of strings/integers are used to request multiple sheets.\nSpecify `None` to get all sheets.\nstr|int -> DataFrame is returned. list|None -> Dict of DataFrames is returned, with \nkeys representing sheets.\nAvailable Cases\n - Defaults to 0 -> 1st sheet as a DataFrame\n - 1 -> 2nd sheet as a DataFrame\n - "Sheet1" -> 1st sheet as a DataFrame\n - [0,1,"Sheet5"] -> 1st, 2nd & 5th sheet as a dictionary of DataFrames\n - None -> All sheets as a dictionary of DataFrames'},
                 {'name': 'header', 'type': 'str', 'value': 0, 'default': 0, 'tip': '<int, list of ints, default 0>\nRow (0-indexed) to use for the column labels of the parsed DataFrame. If a list of \nintegers is passed those row positions will be combined into a MultiIndex'},
                 {'name': 'skiprows', 'type': 'str', 'value': None, 'default': None, 'tip': '<list-like or integer, default None>\nRows to skip at the beginning (0-indexed)'},
+                {'name': 'skip_footer', 'type': 'str', 'value': 0, 'default': 0, 'tip': '< int, default 0>\nRows at the end to skip (0-indexed)'},
                 {'name': 'index_col', 'type': 'str', 'value': None, 'default': None, 'tip': '<int, list of ints, default None>\nColumn (0-indexed) to use as the row labels of the DataFrame. Pass None if there is \nno such column. If a list is passed, those columns will be combined into a\nMultiIndex'},
                 {'name': 'converters', 'type': 'text', 'value': None, 'default': None, 'tip': '<dict, default None>\nDict of functions for converting values in certain columns. Keys can either be \nintegers or column labels, values are functions that take one input argument, the \nExcel cell content, and return the transformed content.', 'expanded': False},
                 {'name': 'parse_cols', 'type': 'str', 'value': None, 'default': None, 'tip': '< int or list, default None>\n - If None then parse all columns,\n - If int then indicates last column to be parsed\n - If list of ints then indicates list of column numbers to be parsed\n - If string then indicates comma separated list of column names and column ranges \n   (e.g. “A:E” or “A,C,E:F”)'},

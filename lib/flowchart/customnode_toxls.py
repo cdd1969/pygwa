@@ -22,7 +22,7 @@ class toXLSNode(NodeWithCtrlWidget):
 
 
     def __init__(self, name, parent=None):
-        super(toXLSNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}})
+        super(toXLSNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}}, color=(100, 250, 100, 150))
         self._ctrlWidget = toXLSNodeCtrlWidget(self)
 
         

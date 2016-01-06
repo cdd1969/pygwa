@@ -9,7 +9,7 @@ def fill_item(item, value):
         for key, val in sorted(value.iteritems()):
             child = QTreeWidgetItem()
             child.setText(0, unicode(key))
-            if isNodeClass(val) and hasattr(val, '__doc__'):  # this means that value is Node
+            if isNodeClass(val) and hasattr(val, '__doc__'):  # this means that `val` is Node instance
                 child.setToolTip(0, unicode(val.__doc__))
             item.addChild(child)
             fill_item(child, val)

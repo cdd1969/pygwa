@@ -3,20 +3,11 @@
 
 import os, sys
 from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.flowchart.Node import Node
 import numpy as np
-from package import Package
-import inspect
 from pyqtgraph.parametertree import Parameter, ParameterTree
-from ..functions.interpolate import applyInterpolationBasedOnRanges, createInterpolationRanges
-from ..functions.evaluatedictionary import evaluateDict, evaluationFunction
 import webbrowser
 import pyqtgraph.parametertree.parameterTypes as pTypes
-import pandas as pd
-import gc
-import copy
-import matplotlib.pyplot as plt
-from pyqtgraph import BusyCursor
+
 from ..common.NodeWithCtrlWidget import NodeWithCtrlWidget
 from ..functions.general import returnPandasDf
 from ..ScatterPlotWidget import ScatterPlotWidget
@@ -24,11 +15,11 @@ from ..ScatterPlotWidget import ScatterPlotWidget
 
 class scatterPlotWidgetNode(NodeWithCtrlWidget):
     """Explore data as scatter plot"""
-    nodeName = "scatterPlotWidget"
+    nodeName = "ScatterPlot"
 
 
     def __init__(self, name, parent=None):
-        super(scatterPlotWidgetNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}})
+        super(scatterPlotWidgetNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}}, color=(150, 150, 250, 200))
         self._ctrlWidget = scatterPlotWidgetNodeCtrlWidget(parent=self)
 
         
@@ -193,9 +184,9 @@ class scatterPlotWidgetNodeCtrlWidget(ParameterTree):
         if fields is None:
             fields = self.evaluateState()
 
-        print '>>> setting fields'
-        print fields
-        print '>>> setting fields finished'
+        ##print '>>> setting fields'
+        ##print fields
+        ##print '>>> setting fields finished'
         self._spw.setFields(fields)
 
 

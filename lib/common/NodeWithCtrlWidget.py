@@ -1,7 +1,7 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
 from pyqtgraph.flowchart.Node import Node
-
+from pyqtgraph import functions as fn
 
 
 
@@ -9,12 +9,13 @@ class NodeWithCtrlWidget(Node):
     """ This class simply reduces 3 methods from my custom Nodes
         and saves around 30 lines :)
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, name, color=(200, 200, 200, 150), **kwargs):
         self._parent = kwargs.get('parent', None)
         if 'parent' in kwargs.keys():
             kwargs.pop('parent')
-        super(NodeWithCtrlWidget, self).__init__(*args, **kwargs)
+        super(NodeWithCtrlWidget, self).__init__(name, **kwargs)
         self._ctrlWidget = None
+        self.graphicsItem().setBrush(fn.mkBrush(color))
 
     def ctrlWidget(self):
         return self._ctrlWidget
