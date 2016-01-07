@@ -58,16 +58,6 @@ class ScatterPlotWidget(pg.ScatterPlotWidget):
                        instead {value: name}.
         ============== ============================================================
         """
-                #print '-'*50
-        #print '-'*50
-        #print 'dtypes >>>', df.to_records().dtype
-        #print 'names >>>', df.to_records().dtype.names
-        #print 'fileds >>>', df.to_records().dtype.fields
-        #print 'fileds <<<Datetime Low Tide>>>', df.to_records().dtype.fields['Datetime Low Tide']
-        #print 'fileds <<<Datetime Low Tide>>>', df.to_records().dtype.fields['Datetime Low Tide'][0]  #this is the column dtype
-        #print '-'*50
-        #print '-'*50
-
 
         COLNAMES = [field[0] for field in fields]
         if self.data is not None:
@@ -98,8 +88,8 @@ class ScatterPlotWidget(pg.ScatterPlotWidget):
         try:
             pg.ScatterPlotWidget.updatePlot(self)
         except Exception, err:
-            print 'Unable to update plot'
-            print Exception, err
+            print( 'Unable to update plot')
+            print( Exception, err)
             
 
     

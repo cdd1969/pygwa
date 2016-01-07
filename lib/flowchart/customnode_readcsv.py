@@ -89,7 +89,6 @@ class readCSVNodeCtrlWidget(ParameterTree):
         if fname:
             self.p.child('Select File').setValue(fname)
             #self.itemWidget(self.p.child('Select File'), 0).setTooltip(fname)
-            print self.p.child('Select File').value()
     
     @QtCore.pyqtSlot(object)  #default signal
     def on_selectFile_valueChanged(self, value):
@@ -113,7 +112,7 @@ class readCSVNodeCtrlWidget(ParameterTree):
         changeName = ['Manuall parameters']
         for child in self.p.child('Load CSV parameters').children():
             if child.name() not in emmiterName+changeName:
-                print child, child.name(), '>>>setting ipts', not state
+                #print( child, child.name(), '>>>setting ipts', not state)
                 try:
                     ctrlWidget = child.items.items()[0][0].widget  # dont ask why,but this is the link to the widget
                     ctrlWidget.setEnabled(not state)
@@ -202,5 +201,5 @@ def test():
     layout.addWidget(t, 1, 0, 1, 1)
     win.show()
     win.resize(800, 800)
-    print t.evaluateState()
+    print (t.evaluateState())
     QtGui.QApplication.instance().exec_()

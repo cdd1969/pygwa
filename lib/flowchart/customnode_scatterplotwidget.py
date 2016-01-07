@@ -111,8 +111,6 @@ class scatterPlotWidgetNodeCtrlWidget(ParameterTree):
     @QtCore.pyqtSlot()  #default signal
     def on_plot_clicked(self):
         if self._spw.isHidden():
-            #kwargs = self.evaluateState()
-            #print kwargs
             self.setFields()
             self._spw.show()
         else:
@@ -157,10 +155,6 @@ class scatterPlotWidgetNodeCtrlWidget(ParameterTree):
     def restoreState(self, state):
 
         # here i wold have to probably add constructor of the missing params
-        #print '-----------------------'
-        #print 'restroing state:', state['name']
-        #print '-----------------------'
-
         #self.restoreState(state)
         pass
 
@@ -183,10 +177,6 @@ class scatterPlotWidgetNodeCtrlWidget(ParameterTree):
     def setFields(self, fields=None):
         if fields is None:
             fields = self.evaluateState()
-
-        ##print '>>> setting fields'
-        ##print fields
-        ##print '>>> setting fields finished'
         self._spw.setFields(fields)
 
 

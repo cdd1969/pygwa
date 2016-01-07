@@ -85,7 +85,6 @@ class readXLSNodeCtrlWidget(ParameterTree):
         if fname:
             self.p.child('Select File').setValue(fname)
             #self.itemWidget(self.p.child('Select File'), 0).setTooltip(fname)
-            print self.p.child('Select File').value()
     
     @QtCore.pyqtSlot(object)  #default signal
     def on_selectFile_valueChanged(self, value):

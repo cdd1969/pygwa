@@ -91,8 +91,8 @@ def evaluationFunction(dictionary, function4arguments=None, validArgumnets=None,
         defaultArgNames = validArgumnets
 
     if log:
-        print 'evaluationFunction(): default args of function/method <{0}>'.format(str(function4arguments))
-        print 'evaluationFunction(): {0}'.format(defaultArgNames)
+        print( 'evaluationFunction(): default args of function/method <{0}>'.format(str(function4arguments)))
+        print( 'evaluationFunction(): {0}'.format(defaultArgNames))
     
     stateArgs = None
     # if passed argument name is in defauklt argument names
@@ -109,7 +109,7 @@ def evaluationFunction(dictionary, function4arguments=None, validArgumnets=None,
                     val = eval(dictionary['value'])
 
             except Exception, err:
-                if log: print Exception, err, '. Received:', dictionary['name'], '=', dictionary['value'],  '>>> I will set value without evaluation'
+                if log: print( Exception, err, '. Received:', dictionary['name'], '=', dictionary['value'],  '>>> I will set value without evaluation')
                 val = dictionary['value']
 
 
@@ -147,7 +147,7 @@ def evaluateDict(dictionary, functionToDicts=None, functionToEntries=None, recur
 
     # apply function to root-level dictionary
     if functionToDicts is not None and not recursionResult:
-        if log: print 'dict <{0}>: applying functionToDict'.format(id(dictionary))
+        if log: print( 'dict <{0}>: applying functionToDict'.format(id(dictionary)))
         res_i = functionToDicts(dictionary, **kwargs)
         if res_i is not None:
             recursionResult.append(res_i)
@@ -156,16 +156,16 @@ def evaluateDict(dictionary, functionToDicts=None, functionToEntries=None, recur
     for n, v in dictionary.iteritems():
         if isinstance(v, dict):
             if functionToDicts is not None:
-                if log: print 'dict <{0}>: entry <{1}> {2}, applying functionToDict'.format(id(dictionary), n, type(v))
+                if log: print( 'dict <{0}>: entry <{1}> {2}, applying functionToDict'.format(id(dictionary), n, type(v)))
                 res_i = functionToDicts(v, **kwargs)
                 if res_i is not None:
                     recursionResult.append(res_i)
 
-            if log: print 'dict <{0}>: entry <{1}> {2}, entering recursion'.format(id(dictionary), n, type(v))
+            if log: print( 'dict <{0}>: entry <{1}> {2}, entering recursion'.format(id(dictionary), n, type(v)))
             evaluateDict(v, functionToDicts=functionToDicts, functionToEntries=functionToEntries, recursionResult=recursionResult, log=log, **kwargs)
         else:
             if functionToEntries is not None:
-                if log: print 'dict <{0}>: entry <{1}> {2} = {3}, applying functionToEntries'.format(id(dictionary), n, type(v), v)
+                if log: print( 'dict <{0}>: entry <{1}> {2} = {3}, applying functionToEntries'.format(id(dictionary), n, type(v), v))
                 res_i = functionToEntries(v, **kwargs)
                 if res_i is not None:
                     recursionResult.append(res_i)

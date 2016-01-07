@@ -59,12 +59,12 @@ class interpolateDfNode(NodeWithCtrlWidget):
 
         #Now perform some of evaluation
         if len(self._columnsToUpdate) == 0:  # update all columns
-            #print 'UPDATING ALL COLUMNS'
+            #print ('UPDATING ALL COLUMNS')
             self._columnsToUpdate = receivedColumns
         else:  # update only some of the columns
-            #print 'UPDATING PARTLY COLUMNS'
+            #print( 'UPDATING PARTLY COLUMNS')
             if self.outputs()['Out'].value() is not None:
-                #print 'UPDATING FROM OUTPUT'
+                #print( 'UPDATING FROM OUTPUT')
                 df = self.outputs()['Out'].value().unpack()
         
 
@@ -79,7 +79,7 @@ class interpolateDfNode(NodeWithCtrlWidget):
                 self._ctrlWidget.p.child(colName).nNansBefore.setValue(nanN)
                 
                 if nanN > 0:
-                    #print 'Updating ...', colName
+                    #print( 'Updating ...', colName)
                     params = self._ctrlWidget.evaluateState(columnName=colName)
                     realKwargs = {
                                     'method': params['method'],
@@ -89,18 +89,18 @@ class interpolateDfNode(NodeWithCtrlWidget):
                     if isinstance(params['**kwargs'], dict):
                         for key, val in params['**kwargs'].iteritems():
                             realKwargs[key] = val
-                    #print '>>>', colName, 'Real KWARGS >>>', realKwargs
+                    #print( '>>>', colName, 'Real KWARGS >>>', realKwargs)
 
 
                     ranges2treat = createInterpolationRanges(df_out, colName, interpolateMargin=params['interpolateMargin'])
                     
-                    #print '>>>', colName, 'ranges >>>', ranges2treat
+                    #print( '>>>', colName, 'ranges >>>', ranges2treat)
                     applyInterpolationBasedOnRanges(df_out, colName, ranges2treat, **realKwargs)
                     nNansAfter = nN-df_out[colName+'_interpolated'].count()
 
                     self._ctrlWidget.p.child(colName).child('Plot').show()  #show plotButton for parameter with NaNs
                 else:
-                    #print 'Skipping ...', colName, '(no NaNs)'
+                    #print( 'Skipping ...', colName, '(no NaNs)')
                     self._ctrlWidget.p.child(colName).child('Plot').hide()  #hide plotButton for parameter without NaNs
                     nNansAfter = 0
                 self._ctrlWidget.p.child(colName).nNansAfter.setValue(nNansAfter)
@@ -169,7 +169,7 @@ class interpolateDfNode(NodeWithCtrlWidget):
 
             plt.show()
         except Exception, err:
-            print "Error: Cannot plot.", Exception, err
+            print ("Error: Cannot plot.", Exception, err)
 
 
 
@@ -240,9 +240,9 @@ class interpolateDfNodeCtrlWidget(ParameterTree):
     def restoreState(self, state):
 
         # here i wold have to probably add constructor of the missing params
-        #print '-----------------------'
-        #print 'restroing state:', state['name']
-        #print '-----------------------'
+        #print ('-----------------------')
+        #print ('restroing state:', state['name'])
+        #print ('-----------------------')
 
         #self.restoreState(state)
         pass
@@ -256,14 +256,14 @@ class interpolateDfNodeCtrlWidget(ParameterTree):
         if state is None:
             state = self.saveState()
         listWithDicts = evaluateDict(state['children'][columnName], functionToDicts=evaluationFunction, log=False)
-        print 'returning listWithDicts for column', columnName
-        print listWithDicts
+        #print ('returning listWithDicts for column', columnName)
+        #print (listWithDicts)
         kwargs = dict()
         for d in listWithDicts:
             # {'a': None}.items() >>> [('a', None)] => two times indexing
             kwargs[d.items()[0][0]] = d.items()[0][1]
-        print 'returning kwargs for column', columnName
-        print kwargs
+        #print ('returning kwargs for column', columnName)
+        #print (kwargs)
         return kwargs
 
 

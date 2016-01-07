@@ -37,20 +37,13 @@ class plotTimeseriesNode(Node):
 
     def disconnected(self, localTerm, remoteTerm):
         if localTerm is self['Array'] and remoteTerm in self._items.keys():
-            print "localTerm <{0}> is disconnected from remoteTerm <{1}>".format(localTerm, remoteTerm)
+            #print( "localTerm <{0}> is disconnected from remoteTerm <{1}>".format(localTerm, remoteTerm))
             if 'plotItems' in self._items[remoteTerm].keys():
                 self.removeItem(self._items[remoteTerm])
                 del self._items[remoteTerm]
 
 
-    #def connected(self, localTerm, remoteTerm):
-    #    """Called whenever one of this node's terminals is connected elsewhere."""
-    #    print 'TERMS CONNECTED'
-
-
-
     def process(self, Array):
-        print '>>> plotArray: process() is called'
         for term, vals in Array.items():
             if vals is None:
                 continue
@@ -98,7 +91,6 @@ class plotTimeseriesNode(Node):
 
     def close(self):
         self.clear()
-        #print '---->>> CLOSE'
         self._ctrlWidget.win.hide()
         self._ctrlWidget.win.close()
 
@@ -112,7 +104,7 @@ class plotTimeseriesNode(Node):
         if term in self._items.keys():  # if we have already something from this terminal
             if 'plotItems' in self._items[term].keys():
                 if self._items[term]['plotItems'][0] is item:  # if the item is absolutely same
-                    #print '>>> on_sigItemReceived(): already have something from term <{0}>: item <{1}> is the same'.format(term, item)
+                    #print( '>>> on_sigItemReceived(): already have something from term <{0}>: item <{1}> is the same'.format(term, item))
                     
                     # in this case item on the upper subplot will be updated automatically, but the bottom subplot will stay same...
                     # When the item is receive, we are manually creating a COPY of incoming item and are adding this copy to the
@@ -125,28 +117,28 @@ class plotTimeseriesNode(Node):
                     self._items[term]['plotItems'].append(item2)
                     return
                 else:
-                    #print '>>> on_sigItemReceived(): already have something from term <{0}>: item <{1}> is different'.format(term, item)
+                    #print( '>>> on_sigItemReceived(): already have something from term <{0}>: item <{1}> is different'.format(term, item))
                     self.removeItems(self._items[term])
 
         if isinstance(item, (pg.PlotDataItem, pg.ScatterPlotItem)):
-            #print '>>> on_sigItemReceived(): registering incoming item'
+            #print( '>>> on_sigItemReceived(): registering incoming item')
             self._items[term] = dict()
             # init symbol pen and size
             item.setSymbolPen(item.opts['pen'])
             item.setSymbolSize(5)
 
-            #print '>>> on_sigItemReceived(): adding item to upper subplot'
+            #print( '>>> on_sigItemReceived(): adding item to upper subplot')
             self.canvas()[0].addItem(item)
 
             # for some reason it is impossible to add same item to two subplots...
-            #print '>>> on_sigItemReceived(): creating item-copy for bottom subplot'
+            #print( '>>> on_sigItemReceived(): creating item-copy for bottom subplot')
             item2 = self.copyItem(item)
             
-            #print '>>> on_sigItemReceived(): adding item-copy to bottom subplot'
+            #print( '>>> on_sigItemReceived(): adding item-copy to bottom subplot')
             self.canvas()[1].addItem(item2)
 
             self._items[term]['plotItems'] = [item, item2]
-            #print 'adding items: (1) {0} {1} >>> (2) {2} {3}'.format(item, type(item), item2, type(item2))
+            #print( 'adding items: (1) {0} {1} >>> (2) {2} {3}'.format(item, type(item), item2, type(item2)))
             return
 
     def copyItem(self, sampleItem):
@@ -171,14 +163,12 @@ class plotTimeseriesNode(Node):
         del item
 
     def removeItem(self, item):
-        #print '>>> plotArray: removeItem is called'
         try:
             if 'plotItems' in item.keys() and isinstance(item['plotItems'], list) and len(item['plotItems']) == 2:
-                #print '>>> plotArray: actually removing items'
                 self.canvas()[0].removeItem(item['plotItems'][0])
                 self.canvas()[1].removeItem(item['plotItems'][1])
         except RuntimeError:  # sometimes happens by loading new chart (RuntimeError: wrapped C/C++ object of type PlotDataItem has been deleted)
-            #print '>>> plotArray: item not deleted'
+            #print( '>>> plotArray: item not deleted')
             pass
         del item
         gc.collect()

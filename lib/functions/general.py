@@ -61,4 +61,4 @@ def isNumpyDatetime(dtype):
 if __name__ == '__main__':
     import numpy as np
     a = 1
-    print isNumpyDatetime(type(a))
+    print (isNumpyDatetime(type(a)))

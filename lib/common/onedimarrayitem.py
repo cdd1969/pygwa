@@ -138,14 +138,14 @@ def test():
     ex.ctrlWidget().show()
 
     array = [2, 3, 4,]
-    print id(array)
-    print id(ex.array())
+    print( id(array))
+    print( id(ex.array()))
 
 
     a = {'a': 1, 'b': 2}
-    print id(a), a
+    print( id(a), a)
     del a['a']
-    print id(a), a
+    print( id(a), a)
     
 
     sys.exit(app.exec_())

@@ -15,7 +15,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         #self.setupUi(self)
-        uic.loadUi('mainwindow.ui', self)
+        uic.loadUi('resources/mainwindow.ui', self)
         self.uiData = uiData(self)
         self.connectActions()
         #self.connectSignals()
@@ -125,11 +125,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 except:
                     event.ignore()
                     return
-            #print "Got drop at fcWidget.view:", nodeType, '. At coords:', pos
-            #print self.flowChartWidget.view.viewBox().mapFromView(pos)
-            #print self.flowChartWidget.view.viewBox().mapSceneToView(pos)
-            #print self.flowChartWidget.view.viewBox().mapToView(pos)
-            #print self.flowChartWidget.view.viewBox().mapViewToScene(pos)
+            #print( "Got drop at fcWidget.view:", nodeType, '. At coords:', pos)
+            #print( self.flowChartWidget.view.viewBox().mapFromView(pos))
+            #print( self.flowChartWidget.view.viewBox().mapSceneToView(pos))
+            #print( self.flowChartWidget.view.viewBox().mapToView(pos))
+            #print( self.flowChartWidget.view.viewBox().mapViewToScene(pos))
             mappedPos = self.flowChartWidget.view.viewBox().mapSceneToView(pos)
             if nodeType in self.uiData.nodeNamesList():  # to avoid drag'n'dropping Group-names
                 self.flowChartWidget.chart.createNode(nodeType, pos=mappedPos)
@@ -218,7 +218,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 
     @QtCore.pyqtSlot()
     def on_sigChartLoaded(self):
-        print "on_sigChartLoaded() is called"
+        #print("on_sigChartLoaded() is called")
         # since during the fc.loadFile() all the sigChartChanged() is blocked, our method @on_sigChartChanged()
         # will not be called, and thus the ctrlWidgets wont be added into the QStackWidget. Lets do it explicitly.
         # We know, that after the File with flow chart has been loaded in pyqtgraph.flowchart class, it emits
@@ -232,22 +232,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(object, str, object)
     def on_sigChartChanged(self, emitter, action, node):
-        print "on_sigChartChanged() is called"
-        #print self, emitter, action, node
+        #print( "on_sigChartChanged() is called")
+        #print( self, emitter, action, node)
         self.uiData.setChangesUnsaved(True)
 
         if action == 'add':
-            print 'on_sigChartChanged(): adding', node.ctrlWidget(), type(node.ctrlWidget())
+            #print( 'on_sigChartChanged(): adding', node.ctrlWidget(), type(node.ctrlWidget()))
             if node.ctrlWidget() is not None:
                 self.stackNodeCtrlStackedWidget.addWidget(node.ctrlWidget())
             self.on_selectedNodeChanged(node)
 
 
         elif action == 'remove':
-            print 'on_sigChartChanged(): remove'
+            #print( 'on_sigChartChanged(): remove')
             # widget is not removed but hidden! find a way to safely remove it
             self.stackNodeCtrlStackedWidget.removeWidget(node.ctrlWidget())
-            #print self.stackNodeCtrlStackedWidget.currentWidget().parent()
             #self.on_selectedNodeChanged(self.stackNodeCtrlStackedWidget.currentWidget().parent())
             #self.label_nodeCtrlName.setText("Node: <"+node.name()+">")
             node.close()
@@ -255,7 +254,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
         elif action == 'rename':
-            print 'on_sigChartChanged(): rename'
+            #print( 'on_sigChartChanged(): rename')
             if self.stackNodeCtrlStackedWidget.currentWidget() is node.ctrlWidget():
                 self.label_nodeCtrlName.setText("Node: <"+node.name()+">")
         else:
@@ -276,7 +275,6 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot(unicode, unicode)
     def renameFlowchartTab(self, oldName, newName):
         currentTab = self.tabWidget.currentIndex()
-        #print '>>> renameFlowchartTab()', newName, type(newName)
         if newName in [None, u'']:
             newName = 'new_flowchart'
         else:
@@ -400,12 +398,12 @@ class uiData(QtCore.QObject):
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
-    app.setWindowIcon(QtGui.QIcon('resources/theme_oceans_90.gif'))
+    app.setWindowIcon(QtGui.QIcon('resources/icon.gif'))
     ex = MainWindow()
     ex.show()
 
 
-    print type(ex.flowChartWidget)
+    print(type(ex.flowChartWidget))
     sys.exit(app.exec_())
 
 

@@ -125,7 +125,7 @@ def valueChanging(param, value):
     
 # Too lazy for recursion:
 for child in p.children():
-    print child
+    print(child)
     child.sigValueChanging.connect(valueChanging)
     for ch2 in child.children():
         ch2.sigValueChanging.connect(valueChanging)

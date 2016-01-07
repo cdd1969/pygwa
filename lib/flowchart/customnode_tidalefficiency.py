@@ -53,7 +53,7 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
                 # select only valid cycles
                 df_slice = matched_peaks.loc[~matched_peaks['md_N'].isin([np.nan, None])]
                 E, N = tidalEfficiency_method2(df_slice['tidehub'], df_slice['md_tidehub'])
-                print 'Method2: Calculated E with {0} tidal-cycles'.format(N)
+                print( 'Method2: Calculated E with {0} tidal-cycles'.format(N))
 
             elif kwargs['method'] == '3) Cyclic STD':
                 mPeaks_slice = matched_peaks.loc[~matched_peaks['md_N'].isin([np.nan, None])]
@@ -61,7 +61,7 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
                 E, N = tidalEfficiency_method3(df,  kwargs['river'], kwargs['gw'], kwargs['datetime'],
                     mPeaks_slice['time_min'], mPeaks_slice['time_max'],
                     mPeaks_slice['md_time_min'], mPeaks_slice['md_time_max'])
-                print 'Method3: Calculated E with {0} tidal-cycles'.format(N)
+                print( 'Method3: Calculated E with {0} tidal-cycles'.format(N))
             else:
                 raise Exception('Method <%s> not yet implemented' % kwargs['method'])
         

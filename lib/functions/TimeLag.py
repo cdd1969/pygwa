@@ -1,6 +1,5 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-
 import sys
 import numpy as np
 import datetime
@@ -64,7 +63,7 @@ def timelag_erskine1991_method(df_gw, cn_gw_v, cn_gw_t,
     df_W[cn_w_t] = df_W.index
 
 
-    #print 'shifting, amplifying well data...'
+    #print( 'shifting, amplifying well data...')
     # h'(t) = <T> + (h(t)- <h>)/E
     #   where <T> means "mean T"
     df_GW['shifted_amplified_'+cn_gw_v] = df_W[cn_w_v].mean() + (df_GW[cn_gw_v] - df_GW[cn_gw_v].mean()) / float(E)
@@ -75,7 +74,7 @@ def timelag_erskine1991_method(df_gw, cn_gw_v, cn_gw_t,
     #   we use these timetuples to increase speed of calculation, cause this approach of Erskine is timeconsuming
     #   by default it is recommended to set all of the timetuples to (0, 60) or some other awaited region
     #   then user can play around with the values.
-    #print 'Calculating timelag...'
+    #print( 'Calculating timelag...')
 
 
     if len(tlag_tuple) == 3:
@@ -96,15 +95,15 @@ def timelag_erskine1991_method(df_gw, cn_gw_v, cn_gw_t,
         df_GW['current_erskine_to_sum'] = (df_GW[cn_gw_v] - df_GW['current_river_h'])**2
         
         summ = df_GW['current_erskine_to_sum'].sum()
-        print 'timelag=', tlag_timedelta, ' >>> summ =', summ
+        print( 'timelag=', tlag_timedelta, ' >>> summ =', summ)
         SUMM_LIST.append(summ)
         TLAG_LIST.append(tlag_timedelta)
 
 
-    print '-'*100
-    print '\t minimal SUMM       :', min(SUMM_LIST)
-    print '\t corresponding TLAG :', TLAG_LIST[SUMM_LIST.index(min(SUMM_LIST))]
-    print '-'*100
+    print('-'*100)
+    print( '\t minimal SUMM       :', min(SUMM_LIST))
+    print( '\t corresponding TLAG :', TLAG_LIST[SUMM_LIST.index(min(SUMM_LIST))])
+    print( '-'*100)
     timelag = TLAG_LIST[SUMM_LIST.index(min(SUMM_LIST))]
 
 

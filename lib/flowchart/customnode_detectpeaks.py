@@ -76,7 +76,7 @@ class detectPeaksNode(NodeWithCtrlWidget):
 
 
     def updateWithoutArgs(self):
-        print 'update without args'
+        #print( 'update without args')
         self.changeOutTerminals()
         self.update()
 
