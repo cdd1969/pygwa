@@ -1,50 +1,57 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
 
-import pyqtgraph as pg
-
-from PyQt5 import QtWidgets, uic, QtCore, QtGui
-from PyQt5.QtCore import Qt, qDebug
-from pyqtgraph.flowchart.Node import Node
-from pyqtgraph import functions as fn
-
-import pyqtgraph as pg
-import sys
-from ..common.DateAxisItem import DateAxisItem
+import os, sys
 import datetime
-from pyqtgraph import BusyCursor
+import inspect
 import gc
+import copy
 
 
 
-class plotTimeseriesNode(Node):
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph import functions as fn
+from pyqtgraph import BusyCursor
+from pyqtgraph.parametertree import Parameter, ParameterTree
+from ..functions.evaluatedictionary import evaluateDict, evaluationFunction
+from ..common.NodeWithCtrlWidget import NodeWithCtrlWidget
+from ..common.DateAxisItem import DateAxisItem
+
+
+class plotTimeseriesNode(NodeWithCtrlWidget):
     """Plot number of 1D arrays as timeseries"""
     nodeName = "TimeseriesPlot"
 
     sigItemReceived    = QtCore.Signal(object, object)  #(id(item), item)
-    sigRegItemReceived = QtCore.Signal(object)  #already registered item received (id(item))
+    #sigRegItemReceived = QtCore.Signal(object)  #already registered item received (id(item))
 
     def __init__(self, name, parent=None):
-        super(plotTimeseriesNode, self).__init__(name, terminals={'Array': {'io': 'in', 'multi': True}})
+        super(plotTimeseriesNode, self).__init__(name, terminals={'Items': {'io': 'in', 'multi': True}})
         self.graphicsItem().setBrush(fn.mkBrush(150, 150, 250, 200))
+        self._graphicsWidget = plotTimeseriesGraphicsWidget(self)
         self._ctrlWidget = plotTimeseriesNodeCtrlWidget(self)
         #self.items = set()   #set to save incoming items
         self._items = dict()
         self.sigItemReceived.connect(self.on_sigItemReceived)
 
+    def ctrlWidget(self):
+        return self._ctrlWidget
+    def graphicsWidget(self):
+        return self._graphicsWidget
     def items(self):
         return self._items
 
     def disconnected(self, localTerm, remoteTerm):
-        if localTerm is self['Array'] and remoteTerm in self._items.keys():
+        if localTerm is self['Items'] and remoteTerm in self._items.keys():
             #print( "localTerm <{0}> is disconnected from remoteTerm <{1}>".format(localTerm, remoteTerm))
             if 'plotItems' in self._items[remoteTerm].keys():
                 self.removeItem(self._items[remoteTerm])
                 del self._items[remoteTerm]
 
 
-    def process(self, Array):
-        for term, vals in Array.items():
+    def process(self, Items):
+        for term, vals in Items.items():
             if vals is None:
                 continue
             if type(vals) is not list:
@@ -60,30 +67,9 @@ class plotTimeseriesNode(Node):
                 self.on_sigItemReceived(term, val)
     
     def canvas(self):
-        c1 = self._ctrlWidget.p1
-        c2 = self._ctrlWidget.p2
+        c1 = self._graphicsWidget.p1
+        c2 = self._graphicsWidget.p2
         return [c1, c2]
-
-    def items(self):
-        return self._items
-        
-    def ctrlWidget(self):
-        return self._ctrlWidget
-
-    def saveState(self):
-        """overriding standard Node method to extend it with saving ctrlWidget state"""
-        state = Node.saveState(self)
-        # saving additionally state of the control widget
-        #state['crtlWidget'] = self.ctrlWidget().saveState()
-        return state
-        
-    def restoreState(self, state):
-        """overriding standard Node method to extend it with restoring ctrlWidget state"""
-        Node.restoreState(self, state)
-        # additionally restore state of the control widget
-        #self.ctrlWidget().restoreState(state['crtlWidget'])
-        self.update()
-
 
     def clear(self):
         for item in self._items.values():
@@ -91,10 +77,10 @@ class plotTimeseriesNode(Node):
 
     def close(self):
         self.clear()
-        self._ctrlWidget.win.hide()
-        self._ctrlWidget.win.close()
-
-        Node.close(self)
+        self._graphicsWidget.win.clear()
+        self._graphicsWidget.win.hide()
+        self._graphicsWidget.win.close()
+        super(plotTimeseriesNode, self).close()
 
     @QtCore.pyqtSlot(object, object)
     def on_sigItemReceived(self, term, item):
@@ -154,14 +140,6 @@ class plotTimeseriesNode(Node):
                 plotItem.setPen(pen)
 
 
-    def removeGraphicItem(self, item):
-        try:
-            self.canvas()[0].removeItem(item)
-            self.canvas()[1].removeItem(item)
-        except RuntimeError:  # sometimes happens by loading new chart (RuntimeError: wrapped C/C++ object of type PlotDataItem has been deleted)
-            pass
-        del item
-
     def removeItem(self, item):
         try:
             if 'plotItems' in item.keys() and isinstance(item['plotItems'], list) and len(item['plotItems']) == 2:
@@ -174,10 +152,10 @@ class plotTimeseriesNode(Node):
         gc.collect()
 
 
-class plotTimeseriesNodeCtrlWidget(QtWidgets.QWidget):
+
+class plotTimeseriesGraphicsWidget(QtGui.QWidget):
     def __init__(self, parent=None):
-        super(plotTimeseriesNodeCtrlWidget, self).__init__()
-        uic.loadUi('./lib/flowchart/customnode_plottimeseries.ui', self)
+        super(plotTimeseriesGraphicsWidget, self).__init__()
         self._parent = parent
         self._listWidgetItems = set()  # registered items in ListWidget
         self.initUI()
@@ -197,42 +175,34 @@ class plotTimeseriesNodeCtrlWidget(QtWidgets.QWidget):
         win.addItem(self.coordLabel)
         
         #add custom datetime axis
-        axis1 = DateAxisItem(orientation='bottom')
-        axis2 = DateAxisItem(orientation='bottom')
+        x_axis1 = DateAxisItem(orientation='bottom')
+        x_axis2 = DateAxisItem(orientation='bottom')
+        self.y_axis1  = pg.AxisItem(orientation='left')  # keep reference to itm since we want to modify its label
+        self.y_axis2  = pg.AxisItem(orientation='left')  # keep reference to itm since we want to modify its label
 
-        self.p1 = win.addPlot(row=1, col=0, axisItems={'bottom': axis1})
-        #self.p1 = win.addPlot(row=1, col=0)
-        self.p1.setClipToView(False)
-        self.p2 = win.addPlot(row=2, col=0, axisItems={'bottom': axis2})
-        #self.p2 = win.addPlot(row=2, col=0)
-        self.p1.setClipToView(False)
+        self.p1 = win.addPlot(row=1, col=0, axisItems={'bottom': x_axis1, 'left': self.y_axis1})
+        #self.p1.setClipToView(True)
+        self.p2 = win.addPlot(row=2, col=0, axisItems={'bottom': x_axis2, 'left': self.y_axis2})
+        #self.p1.setClipToView(True)
         self.vb = self.p1.vb  # ViewBox
         
         self.zoomRegion = pg.LinearRegionItem()
         self.zoomRegion.setZValue(-10)
         self.zoomRegion.setRegion([1000, 2000])
         self.p2.addItem(self.zoomRegion, ignoreBounds=True)
-        #self.p2.addItem(self.zoomRegion)
         
         self.p1.setAutoVisible(y=True)
+        self.legend = self.p1.addLegend()
 
         self.initCrosshair()
-        self.toggleCrosshair()
-
-
         self.win = win
 
 
     def connectSignals(self):
-        #self.parent().sigItemReceived.connect(self.createListWidgetItem)
-
         self.zoomRegion.sigRegionChanged.connect(self.on_zoomRegion_changed)
         self.p1.sigRangeChanged.connect(self.updateZoomRegion)
 
         self.proxy = pg.SignalProxy(self.p1.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
-
-        self.checkBox_toggleCrosshair.stateChanged.connect(self.toggleCrosshair)
-        self.checkBox_togglePoints.stateChanged.connect(self.togglePoints)
 
 
     def parent(self):
@@ -241,9 +211,25 @@ class plotTimeseriesNodeCtrlWidget(QtWidgets.QWidget):
     def initCrosshair(self):
         self.vLine = pg.InfiniteLine(angle=90, movable=False)
         self.hLine = pg.InfiniteLine(angle=0, movable=False)
+        self.toggleCrosshair(False)
+    
 
-    def toggleCrosshair(self):
-        if self.checkBox_toggleCrosshair.isChecked():
+    @QtCore.pyqtSlot(bool)
+    def toggleLegend(self, enable):
+        print('toggleLegend', enable)
+        if enable:
+            #self.p1.addItem(self.legend)
+            # dont know how to restore legend...
+            pass
+        else:
+            self.legend.scene().removeItem(self.legend)
+
+
+
+    @QtCore.pyqtSlot(bool)
+    def toggleCrosshair(self, enable):
+        print('toggleCrosshair', enable)
+        if enable:
             #cross hair
             self.p1.addItem(self.vLine, ignoreBounds=True)
             self.p1.addItem(self.hLine, ignoreBounds=True)
@@ -251,28 +237,20 @@ class plotTimeseriesNodeCtrlWidget(QtWidgets.QWidget):
             self.p1.removeItem(self.vLine)
             self.p1.removeItem(self.hLine)
 
-    def togglePoints(self):
+    @QtCore.pyqtSlot(bool)
+    def togglePoints(self, enable):
+        print('togglePoints', enable)
         with BusyCursor():
             for item in self.parent().items().values():
                 # we want to toggle points only on upper subplot => index [0]
-                if self.checkBox_togglePoints.isChecked():
+                if enable:
                     symbol = 'x'
                 else:
                     symbol = None
                 item['plotItems'][0].setSymbol(symbol)
 
 
-
-    def removeListWidgetItem(self, id):
-        # remove item with given ID from the QListWidget
-        QListWidgetItem = self.parent().items()[id]['arrayItem'].QListWidget()
-        row = self.listWidget.row(QListWidgetItem)
-        self.listWidget.takeItem(row)
-
-
-    @QtCore.pyqtSlot()
     def on_zoomRegion_changed(self):
-        #self.zoomRegion.setZValue(-10)
         minX, maxX = self.zoomRegion.getRegion()
         self.p1.setXRange(minX, maxX, padding=0)
 
@@ -280,24 +258,11 @@ class plotTimeseriesNodeCtrlWidget(QtWidgets.QWidget):
         rgn = viewRange[0]
         self.zoomRegion.setRegion(rgn)
 
-
-
-    @QtCore.pyqtSlot()  #default signal
-    def on_pushButton_plot_clicked(self):
-        if not self.pushButton_plot.isChecked():
-            self.win.hide()
-        else:
-            self.win.show()
-
     @QtCore.pyqtSlot(object)
     def mouseMoved(self, evt):
         pos = evt[0]  ## using signal proxy turns original arguments into a tuple
         if self.p1.sceneBoundingRect().contains(pos):
             mousePoint = self.vb.mapSceneToView(pos)
-            #index = int(mousePoint.x())
-            #if index > 0 and index < len(data1):
-            #    self.coordLabel.setText("<span style='font-size: 12pt'>x=%0.1f,   <span style='color: red'>y1=%0.1f</span>,   <span style='color: green'>y2=%0.1f</span>" % (mousePoint.x(), data1[index], data2[index]))
-            
             # we add 1-hour manually (mouse.x+60*60). This is probably due to the TimeZone definition(???) in DateTimeAxis
             t = datetime.datetime.utcfromtimestamp(mousePoint.x()+60*60).strftime('%Y-%m-%d %H:%M')
             
@@ -307,8 +272,103 @@ class plotTimeseriesNodeCtrlWidget(QtWidgets.QWidget):
             self.hLine.setPos(mousePoint.y())
 
     def setCoordLabelText(self, x_coord, y_coord, **kwargs):
-        text = "<span style='font-size: 12pt'>t={0} | y={1:2.2f}".format(x_coord, y_coord)
+        text = "<span style='font-size: 12pt'>{0} | y={1:2.2f}".format(x_coord, y_coord)
         self.coordLabel.setText(text)
+
+    def setYAxisTextAndUnits(self, text='', units=None):
+        self.y_axis1.setLabel(text=text, units=units)
+        self.y_axis2.setLabel(text=text, units=units)
+
+    def setLabel(self, label):
+        self.p1.setTitle(label)
+
+
+
+
+
+
+
+
+
+class plotTimeseriesNodeCtrlWidget(ParameterTree):
+    
+    def __init__(self, parent=None):
+        super(plotTimeseriesNodeCtrlWidget, self).__init__()
+        self._parent = parent
+
+        self._gr = self._parent.graphicsWidget()
+        params = self.params()
+        ## Create tree of Parameter objects
+        self.p = Parameter.create(name='params', type='group', children=params)
+
+        ## set parameter tree to <self> (parameterTreeWidget)
+        self.setParameters(self.p, showTop=False)
+        self.initConnections()
+        # save default state
+        self._savedState = self.saveState()
+        self.on_yAxisLabelUnitsChanged()  #on init, it is important that WINDOW is already inited
+
+    def initConnections(self):
+        self.p.child('Plot').sigActivated.connect(self._gr.win.show)
+        #self.p.child('Label').sigValueChanged.connect(self._gr.setLabel)
+        self.p.child('Y:Label').sigValueChanged.connect(self.on_yAxisLabelUnitsChanged)
+        self.p.child('Y:Units').sigValueChanged.connect(self.on_yAxisLabelUnitsChanged)
+        self.p.child('Legend').sigValueChanged.connect(self.on_legendChanged)
+        self.p.child('Crosshair').sigValueChanged.connect(self.on_crosshairChanged)
+        self.p.child('Data Points').sigValueChanged.connect(self.on_datapointsChanged)
+
+    def on_yAxisLabelUnitsChanged(self):
+        text = self.p.child('Y:Label').value()
+        units = self.p.child('Y:Units').value()
+        self._gr.setYAxisTextAndUnits(text, units)
+    
+    def on_legendChanged(self):
+        self._gr.toggleLegend(self.p.child('Legend').value())
+    def on_crosshairChanged(self):
+        self._gr.toggleCrosshair(self.p.child('Crosshair').value())
+    def on_datapointsChanged(self):
+        self._gr.togglePoints(self.p.child('Data Points').value())
+
+    def params(self):
+        params = [
+            #{'name': 'Label', 'type': 'str', 'value': 'Hydrographs', 'default': 'Hydrographs'},
+            {'name': 'Y:Label', 'type': 'str', 'value': 'Water level', 'default': 'Water level'},
+            {'name': 'Y:Units', 'type': 'str', 'value': 'm AMSL', 'default': 'm AMSL'},
+            {'name': 'Legend', 'type': 'bool', 'value': True, 'default': True, 'readonly': True},
+            {'name': 'Crosshair', 'type': 'bool', 'value': False, 'default': False},
+            {'name': 'Data Points', 'type': 'bool', 'value': False, 'default': False},
+            
+            {'name': 'Plot', 'type': 'action'},
+        ]
+        return params
+
+    def saveState(self):
+        return self.p.saveState()
+    
+    def restoreState(self, state):
+        self.p.restoreState(state)
+
+    def evaluateState(self, state=None):
+        """ function evaluates passed state , reading only necessary parameters,
+            those that can be passed to pandas.read_csv() as **kwargs (see function4arguments)
+
+            user should reimplement this function for each Node"""
+
+        if state is None:
+            state = self.saveState()
+
+
+        if state is None:
+            state = self.saveState()
+        validArgs = [d['name'] for d in self.params()]
+        listWithDicts = evaluateDict(state['children'], functionToDicts=evaluationFunction, log=False, validArgumnets=validArgs)
+        kwargs = dict()
+        for d in listWithDicts:
+            # {'a': None}.items() >>> [('a', None)] => two times indexing
+            kwargs[d.items()[0][0]] = d.items()[0][1]
+        return kwargs
+
+
 
 
 

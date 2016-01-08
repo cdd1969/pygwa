@@ -26,7 +26,7 @@ class makeTimeseriesCurveNode(NodeWithCtrlWidget):
         super(makeTimeseriesCurveNode, self).__init__(name, parent=parent, terminals={'df': {'io': 'in'}, 'pd.Series': {'io': 'out'}, 'Curve': {'io': 'out'}}, color=(150, 150, 250, 150))
         self._ctrlWidget = makeTimeseriesCurveNodeCtrlWidget(parent=self)
         self._plotRequired = False
-        self.item = PlotDataItem()
+        self.item = PlotDataItem(clipToView=False)
 
         
     def process(self, df):
@@ -52,7 +52,7 @@ class makeTimeseriesCurveNode(NodeWithCtrlWidget):
             b = t.astype(np.dtype('datetime64[s]'))
             timeStamps = b.astype(np.int64)-kwargs['tz correct']*60*60
             #   now create curve
-            self.item.setData(timeStamps, df[kwargs['Y:signal']].values, pen=kwargs['color'])
+            self.item.setData(timeStamps, df[kwargs['Y:signal']].values, pen=kwargs['color'], name=kwargs['Y:signal'])
             
             return{'Curve': self.item, 'pd.Series': Package(timeSeries) }
 
