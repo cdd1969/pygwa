@@ -37,8 +37,10 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
 
     def ctrlWidget(self):
         return self._ctrlWidget
+    
     def graphicsWidget(self):
         return self._graphicsWidget
+    
     def items(self):
         return self._items
 
