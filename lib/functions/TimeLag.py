@@ -8,7 +8,8 @@ import datetime
 def timelag_erskine1991_method(df_gw, cn_gw_v, cn_gw_t,
                                df_w,  cn_w_v,  cn_w_t,
                                E,
-                               tlag_tuple=(0, 60, 1)):
+                               tlag_tuple=(0, 60, 1),
+                               log=False):
     '''
     Calculating Timelag after Erskine 1991 approach.
 
@@ -39,6 +40,8 @@ def timelag_erskine1991_method(df_gw, cn_gw_v, cn_gw_t,
                 I will do calculations for all timelags
                 from 0 to 59 minutes with step 1 min
                 (i.e 0 min, 1 min, 2 min, ..., 59 min)
+        log (bool):
+            flag to print output into console
 
     Return:
     -------
@@ -95,16 +98,17 @@ def timelag_erskine1991_method(df_gw, cn_gw_v, cn_gw_t,
         df_GW['current_erskine_to_sum'] = (df_GW[cn_gw_v] - df_GW['current_river_h'])**2
         
         summ = df_GW['current_erskine_to_sum'].sum()
-        print( 'timelag=', tlag_timedelta, ' >>> summ =', summ)
+        if log: print( 'timelag = {0} >>> summ = {1}'.format(tlag_timedelta, summ))
         SUMM_LIST.append(summ)
         TLAG_LIST.append(tlag_timedelta)
 
-
-    print('-'*100)
-    print( '\t minimal SUMM       :', min(SUMM_LIST))
-    print( '\t corresponding TLAG :', TLAG_LIST[SUMM_LIST.index(min(SUMM_LIST))])
-    print( '-'*100)
     timelag = TLAG_LIST[SUMM_LIST.index(min(SUMM_LIST))]
+    
+    if log:
+        print('-'*100)
+        print( '\t minimal SUMM       : {0}'.format(min(SUMM_LIST)))
+        print( '\t corresponding TLAG : {0}'.format(timelag))
+        print( '-'*100)
 
 
 
@@ -114,15 +118,3 @@ def timelag_erskine1991_method(df_gw, cn_gw_v, cn_gw_t,
     del SUMM_LIST
     del TLAG_LIST
     return timelag
-
-
-
-# ///////////////////////////////////////////////////////////
-# ///////////////////////////////////////////////////////////
-# ///////////////////////////////////////////////////////////
-# ///////////////////////////////////////////////////////////
-# ///////////////////////////////////////////////////////////
-
-
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
