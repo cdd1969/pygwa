@@ -101,6 +101,8 @@ def applyInterpolationBasedOnRanges(df, columnName, ranges, suffix='_interpolate
     u""" Function interpolates data within given *ranges* (*ranges* should be
          generated with *createInterpolationRanges()*)
 
+         Interpolation is done with native `pandas.DataFrame.interpolate()` method
+
 
         INPUT:
         ------------------------------------------------------------------------------
