@@ -43,6 +43,7 @@ class serfes1991Node(NodeWithCtrlWidget):
 
             colnames = [col for col in df.columns if isNumpyDatetime(df[col].dtype)]+[None]
             self._ctrlWidget.p.param('datetime').setLimits(colnames)
+            self._ctrlWidget.p.param('datetime').setValue(colnames[0])
 
             # populate (Apply to columns) param, but only on item received, not when we click button
             if not self._ctrlWidget.calculateNAllowed() and not self._ctrlWidget.applyAllowed():

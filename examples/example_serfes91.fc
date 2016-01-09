@@ -1,5 +1,5 @@
 pos: (0.0, 0.0)
-connects: [('Input', 'dataIn', 'PlotWidget.0', 'In'), ('GaussianFilter.0', 'Out', 'Output', 'dataOut'), ('readCSV.1', 'output', u'Serfes Filter.0', 'In'), ('Input', 'dataIn', 'GaussianFilter.0', 'In'), (u'Serfes Filter.0', 'Out', u'QuickView.2', 'In'), (u'Serfes Filter.0', 'Out', u'makeTimeseriesCurve.1', 'df'), ('readCSV.1', 'output', 'QuickView.0', 'In'), (u'Serfes Filter.0', 'Out', u'makeTimeseriesCurve.0', 'df')]
+connects: [(u'Serfes Filter.0', 'Out', u'makeTimeseriesCurve.1', 'df'), ('Input', 'dataIn', 'GaussianFilter.0', 'In'), (u'Serfes Filter.0', 'Out', u'makeTimeseriesCurve.0', 'df'), (u'Serfes Filter.0', 'Out', u'QuickView.2', 'In'), ('Input', 'dataIn', 'PlotWidget.0', 'In'), ('readCSV.1', 'output', 'QuickView.0', 'In'), ('readCSV.1', 'output', u'Serfes Filter.0', 'In'), ('GaussianFilter.0', 'Out', 'Output', 'dataOut')]
 terminals:
     dataOut:
         multi: False
