@@ -55,7 +55,11 @@ def isNumpyDatetime(dtype):
         return False
 
 
-
+def isNumpyNumeric(dtype):
+    if dtype in (int, float, np.float64 , np.int64, np.float32, np.int32):
+        return True
+    else:
+        return False
 
 
 if __name__ == '__main__':
