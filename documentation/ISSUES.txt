@@ -12,19 +12,23 @@ KNOWN BUGS AND ISSUES
     When dataIn is changed, it is onl updated on the upper subplot. To update it at the bottom, you need to
     reconnect the input terminal
 
-3)
+3) (DISMISSED)
     Node: plotTimeseries
     PlotTimeseries currently works only with curves in which X-axes has been built with *datetime* objects
+
+    dismissed comment: I have decided that this should be the only possible behaviour
 
 4)
     Node: plotTimeseries
     PlotTimeseries does not update te colors of the points when a color of a curve is changed after it has been added
     the canvas
 
-5)
+5) (DISMISSED)
     Node: readCSV
     Supports only certain datetime formats. For example, it will fail loading *24:00:00* (only 23:59:59 is
     accepted). To treat those annoying 24:00:00 you may use script */utils/remove_24h.py*
+
+    dismissed comment: it is too much work to do that. let the user take care of that problem himself
 
 6)
     General, Flowchart
@@ -62,3 +66,9 @@ KNOWN BUGS AND ISSUES
     Node: plotGWLvsWL
     Something is wrong with trendlines...
     Not working, sometimes KeyError, sometimes everythin's ok
+
+11)
+    Node: timeseriesPlot/makeTimeseriesCurve
+    When *timeseriesPlot* node is connected to *makeTimeseriesCurve*, and the legend is on
+    whenever the column is changed in *makeTimeseriesCurve* it is not updated
+    in legend...

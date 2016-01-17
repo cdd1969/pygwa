@@ -151,13 +151,7 @@ class serfes1991NodeCtrlWidget(ParameterTree):
         for d in listWithDicts:
             # {'a': None}.items() >>> [('a', None)] => two times indexing
             kwargs[d.items()[0][0]] = d.items()[0][1]
-        
-        for k, v in kwargs.iteritems():
-            if k == 'datetime':
-                kwargs[k] = str(v)  # ve careful with lists. If we have an imported datetime module, and 'datetime' list-entry , it will be evaluated as dtype object! therefore we explicitly convert it to strings
-            if v == 'None':
-                kwargs[k] = None
-
+            
         # now get usecols
         usecols = list()
         for child in self.p.child('Apply to columns').children():
