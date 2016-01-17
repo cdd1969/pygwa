@@ -36,7 +36,7 @@ class pickEqualDatesNode(NodeWithCtrlWidget):
             
             kwargs = self.ctrlWidget().evaluateState()
 
-            print kwargs
+            #print( kwargs)
             if kwargs['datetime <datePattern>'] is None and kwargs['datetime <toPick>'] is None:
                 selector = df1.index.isin(df2.index)
             elif kwargs['datetime <datePattern>'] is not None and kwargs['datetime <toPick>'] is None:

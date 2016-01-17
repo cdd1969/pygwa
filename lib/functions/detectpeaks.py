@@ -66,26 +66,26 @@ def remove_region(peak_value_array, peak_index_array, order=1):
 
     def close_region(ind2bDel, region, log=False):
         middleRegion = int(len(region)/2)
-        if log: print "regionIndices:", region
-        if log: print "middleRegion:", middleRegion
+        if log: print ("regionIndices:", region)
+        if log: print ("middleRegion:", middleRegion)
         region.pop(middleRegion)
-        if log: print "regionIndices after poping middle:", region
+        if log: print( "regionIndices after poping middle:", region)
         # we have removed our region-middle value(the one we want to keep), from the
         # to_be_deleted list with <pop()> method. Thus it will stay
         ind2bDel += region
-        if log: print "indices_to_be_deleted:", ind2bDel
+        if log: print( "indices_to_be_deleted:", ind2bDel)
         # clear and re-init region list
         del region
 
 
 
     for j, (diff_i, diff_v) in enumerate(zip(diffs_i, diffs_v)):
-        ##print '>>> j', j, '>>> i`s', peak_index_array[j], peak_index_array[j+1]
-        ##print '>>> REGION', regionIndices
+        ##print( '>>> j', j, '>>> i`s', peak_index_array[j], peak_index_array[j+1])
+        ##print( '>>> REGION', regionIndices)
         #if diff_v == 0 and diff_i == 1:  # This was the original part. Check (Issue#9)
         if diff_v == 0 and diff_i <= order:  # values at <j> and <j+1> are of same value, difference between them is 0
             if len(regionIndices) == 0 or regionIndices[-1] != j:
-                ##print "appending regionIndices:", j
+                ##print( "appending regionIndices:", j)
                 regionIndices.append(j)
             regionIndices.append(j+1)
 
@@ -106,7 +106,7 @@ def remove_region(peak_value_array, peak_index_array, order=1):
 
         if (j == len(diffs_i)-1) and len(regionIndices) > 1:
             #   - we have reached the last value (so explicitly close our region)
-            ##print 'last index, cosing region'
+            ##print( 'last index, cosing region')
             close_region(indices_to_be_deleted, regionIndices, log=False)
     del diffs_i
     del diffs_v

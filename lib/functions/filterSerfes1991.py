@@ -4,6 +4,7 @@ from __future__ import print_function
 import numpy as np
 import time
 import gc
+import pandas as pd
 
 
 def get_number_of_measurements_per_day(data, datetime=None, log=False):
@@ -107,63 +108,18 @@ def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, verbose=
     if N is None:
         N = get_number_of_measurements_per_day(data, datetime=datetime, log=log)
 
-    nEntries = len(data.index)
-    halfN = int(N/2)
-
-
     if log:
         print ('All column names:', list(data.columns))
         print ('Numeric colums:', numeric_columns)
         print ('i will use following number of entries per day: ', N)
 
-    
-
-    overallProgress = len(numeric_columns)*3  # three averagings...
-    progress = 0
-    data['ind'] = np.arange(nEntries, dtype=np.int32)  # dummy row with row indexes as integer. will be deleted
-
-    # for displaying progress, since this is a very long operation
-    overallProgress = len(numeric_columns)*3  # three averagings...
-    progress = 0
-
-
-    # function that will be applied row-wise
-    def averaging(row):
-        currentIndex = int(row['ind'])
-        val = data.ix[currentIndex-halfN:currentIndex+halfN, col4averaging].mean()
-        return val
-
-    st = time.time()
     for col_name in numeric_columns:
-        if log: print ("Working with numeric column:", col_name)
-        data[col_name+'_averaging1'] = np.nan
-        data[col_name+'_averaging2'] = np.nan
-        data[col_name+'_timeAverage'] = np.nan
-
-        
-        if log: print ("[{0}/{1}]\t Calculating first mean".format(progress, overallProgress))
-        col4averaging = col_name
-        data.loc[halfN:nEntries-halfN, col_name+'_averaging1'] = data.apply(averaging, axis=1)
-        progress += 1
-        
-        if log: print ("[{0}/{1}]\t Calculating second mean".format(progress, overallProgress))
-        col4averaging = col_name+'_averaging1'
-        data.loc[N:nEntries-N, col_name+'_averaging2'] = data.apply(averaging, axis=1)
-        progress += 1
-        
-
-        if log: print ("[{0}/{1}]\t Calculating third mean".format(progress, overallProgress))
-        col4averaging = col_name+'_averaging2'
-        data.loc[N+halfN:nEntries-N-halfN, col_name+'_timeAverage'] = data.apply(averaging, axis=1)
-        progress += 1
+        data[col_name+'_averaging1'] = pd.rolling_mean(data[col_name], window=N, min_periods=N, center=True).values
+        data[col_name+'_averaging2'] = pd.rolling_mean(data[col_name+'_averaging1'], window=N, min_periods=N, center=True).values
+        data[col_name+'_timeAverage'] = pd.rolling_mean(data[col_name+'_averaging2'], window=N, min_periods=N, center=True).values
 
         if not verbose: del data[col_name+'_averaging1']
         if not verbose: del data[col_name+'_averaging2']
-    del data['ind']
-    if log: print ("[{0}/{1}]\t Finished".format(progress, overallProgress))
-    fn = time.time()
-
-    if log: print ('Time averaging took {0} seconds'.format(int(fn-st)))
 
     gc.collect()
     return data
@@ -173,47 +129,3 @@ if __name__ == '__main__':
     import process2pandas
     import pyqtgraph as pg
     app = pg.mkQApp()
-
-
-
-    df = process2pandas.read_hydrographs_into_pandas('/home/nck/prj/FARGE_project_work/data/SLICED_171020141500_130420150600/hydrographs/Farge-ALL_10min.all', datetime_indexes=True, usecols=[0, 1, 2, 3], nrows=None)
-
-    #da = filter_wl_71h_serfes1991(df, datetime='Datetime', N=144, usecols=['GW_2'], log=True)
-    #print (da[0:30])
-    #print (da[700:710])
-    
-    with pg.ProgressDialog("Processing..", 0, 5, busyCursor=False) as dlg:
-        dlg += 1
-        dlg.show()
-        result = filter_wl_71h_serfes1991(df,
-            datetime=None,
-            N=None,
-            usecols=['GW_1'],
-            log=True)
-        dlg += 1
-        if dlg.wasCanceled():
-            raise Exception("Processing canceled by user")
-    
-    """
-    import pyqtgraph.multiprocess as mp
-    proc = mp.QtProcess()  # Start a remote process with its own QApplication
-    rqt = proc._import('PyQt5.QtGui')
-
-    # create a QProgressDialog in the remote process
-    dlg = rqt.QProgressDialog("Processing...", "Cancel", 0, 100)
-
-    # calling methods on this object causes the same method to be called in the remote process
-    dlg.show()
-
-    # set the value on the remote dialog, but do not wait for the process to send back a return value
-    # (since waiting for a return value can be very slow)
-    dlg.setValue(5, _callSync='off')
-
-    # Ask asynchronously whether 'cancel' was clicked.
-    # We could just wait for the response, but again this takes a long time.
-    canceled = dlg.wasCanceled(_callSync='async')
-
-    # Some time later, check to see if the return value has arrived:
-    if canceled.hasResult() and canceled.result() is True:
-        raise Exception('user cancelled processing')
-    """

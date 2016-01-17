@@ -85,7 +85,7 @@ class viewPandasDfCtrlWidget(QtWidgets.QWidget):
         self.update()
 
     def setModels(self):
-        #print "setModels()"
+        #print( "setModels()")
         modelsAreSet = False
         if self.parent().getPandasModel() is not None:
             try:
@@ -101,13 +101,13 @@ class viewPandasDfCtrlWidget(QtWidgets.QWidget):
             except Exception, err:
                 modelTwoIsSet = False
                 traceback.print_exc()
-                print "viewPandasDfCtrlWidget: Unnable to set tableView model"
+                print( "viewPandasDfCtrlWidget: Unnable to set tableView model")
             if modelOneIsSet and modelTwoIsSet:
                 modelsAreSet = True
         self.updateButtons(modelsAreSet)
 
     def updateButtons(self, modelsAreSet=False):
-        #print 'updateButtons() is called with modelsAreSet=', modelsAreSet
+        #print( 'updateButtons() is called with modelsAreSet=', modelsAreSet)
         self.pushButton_viewTable.setEnabled(modelsAreSet)
         self.pushButton_viewPlot.setEnabled(modelsAreSet)
 
@@ -124,13 +124,11 @@ class viewPandasDfCtrlWidget(QtWidgets.QWidget):
     @QtCore.pyqtSlot()  #default signal
     def on_pushButton_viewTable_clicked(self):
         """ open our data in a tableView"""
-        #print "on_pushButton_viewTable_clicked() is called"
         if self.twWindow is None:
             self.twWindow = QtWidgets.QMainWindow()
             self.twWindow.setWindowTitle(self.parent().nodeName+': Table View')
             self.twWindow.setCentralWidget(self.tableView)
             self.twWindow.resize(1000, 800)
-
 
             #self.parent().getPandasModel().update()
             self.twWindow.show()
@@ -194,7 +192,7 @@ class PandasModel(QtCore.QAbstractTableModel):
             raise TypeError("Invalid type of argument <data> detected. Received: {0}. Must be [pd.DataFrame, pd.Series]".format(type(data)))
 
     def setPandasDataframe(self, data):
-        #print 'setPandasDataframe() is called'
+        #print( 'setPandasDataframe() is called')
         try:
             del self._dataPandas
             # no need to call garbage collector, since it will be executed via <update()>
@@ -274,21 +272,21 @@ class PandasModel(QtCore.QAbstractTableModel):
                 #columns.append(item.text())
                 # since i have changed the text of the item to `colname+' ;; <dtype>'`
                 # i need to extract column name once again
-                #print 're', re.search('(.*?)\s;;\sdtype.*', item.text()).group(1)
+                #print( 're', re.search('(.*?)\s;;\sdtype.*', item.text()).group(1))
                 columns.append(self.getItemName(item))
         
         ## if all has been checked => return None
         #if len(columns) == self._headerModel.rowCount():
         #    columns = None
 
-        #print "selectColumns() returning", columns
+        #print( "selectColumns() returning", columns)
         return columns
 
     def getItemName(self, tw_item):
         #columns.append(item.text())
         # since i have changed the text of the item to `colname+' ;; <dtype>'`
         # i need to extract column name once again
-        #print 're', re.search('(.*?)\s;;\sdtype.*', item.text()).group(1)
+        #print( 're', re.search('(.*?)\s;;\sdtype.*', item.text()).group(1))
         return re.search('(.*?)\s;;\sdtype.*', tw_item.text()).group(1)
 
 
@@ -305,17 +303,17 @@ class PandasModel(QtCore.QAbstractTableModel):
 
     @QtCore.pyqtSlot(object)
     def on_tv_itemChanged(self, item):
-        print '>>>', self.getItemName(item)
+        #print( '>>>', self.getItemName(item))
         if item.checkState() == Qt.Checked:
             for i in xrange(self._headerModel.rowCount()):
                 if item is self._headerModel.item(i):
-                    print '>>> index found', i
+                    #print( '>>> index found', i)
                     self._parent.ctrlWidget().tableView.horizontalHeader().showSection(i)
                     break
         else:
             for i in xrange(self._headerModel.rowCount()):
                 if item is self._headerModel.item(i):
-                    print '>>> index found', i
+                    #print( '>>> index found', i)
                     self._parent.ctrlWidget().tableView.horizontalHeader().hideSection(i)
                     break
                 
@@ -346,19 +344,18 @@ class PandasModel(QtCore.QAbstractTableModel):
         self.clear()
 
     def destroy(self):
-        #print 'destroy() is called'
         self._headerModel.clear()
         #del self._headerModel
         try:
             #del self._dataPandas
             pass
         except:
-            print 'self._dataPandas not deleted'
+            print( 'self._dataPandas not deleted')
         try:
             #del self._data
             pass
         except:
-            print 'self._data not deleted'
+            print( 'self._data not deleted')
 
         #self.clear()
         self.endResetModel()

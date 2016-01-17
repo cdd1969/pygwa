@@ -198,24 +198,24 @@ if __name__ == '__main__':
 
     delta_t = datetime.timedelta(hours=24)
     now = datetime.datetime.now()
-    print (now -(now+2*delta_t))
-    print (now -(now+2*delta_t)) < delta_t
-    print abs(now -(now+2*delta_t))
-    print abs(now -(now+2*delta_t)) < delta_t
+    print(now -(now+2*delta_t))
+    print(now -(now+2*delta_t)) < delta_t
+    print(abs(now -(now+2*delta_t)))
+    print(abs(now -(now+2*delta_t)) < delta_t)
     for i in xrange(1, 5, 2):
-        print i
+        print (i)
 
     df = pd.DataFrame(data=np.arange(10)+10, index=np.arange(10)[::-1], columns=['a'])
-    print df
+    print (df)
 
     for i in xrange(1, 5, 2):
-        print i, '>>>', df['a'].iloc[i]
+        print (i, '>>>', df['a'].iloc[i])
 
 
 
     df = pd.DataFrame(data=[True, np.nan, True, True, False, False, True], columns=['a'])
-    print df
-    print df['a'].count()
-    print df['a'].sum()
-    print df.loc[df['a'] == True].size
+    print (df)
+    print (df['a'].count())
+    print (df['a'].sum())
+    print (df.loc[df['a'] == True].size)
     

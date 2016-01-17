@@ -66,17 +66,17 @@ def replace_and_standardize_date(fname, inplace=0):
             newline = p.sub(r'\g<space1>'+newDateStr+r'\g<space2>'+newTimeStr+r'\g<rests>', line)
 
             if inplace == 0:
-                print "\t I have performed datetime conversion:", oldDatetimeStr, '>>>', newDatetimeStr
-                print '\t old line:', line
-                print '\t new line:', newline
-                print '\t old line:', repr(line)
-                print '\t new line:', repr(newline)
+                print("\t I have performed datetime conversion:", oldDatetimeStr, '>>>', newDatetimeStr)
+                print('\t old line:', line)
+                print('\t new line:', newline)
+                print('\t old line:', repr(line))
+                print('\t new line:', repr(newline))
 
             if inplace == 1:
-                print newline
+                print(newline)
         else:
             if inplace == 1:
-                print re.sub(r'\n', '', line)
+                print(re.sub(r'\n', '', line))
 
 
 

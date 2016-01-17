@@ -24,7 +24,6 @@ class selectDfColumnNode(Node):
 
         
     def process(self, Df):
-        print 'process() received In of ', type(Df.unpack())
         pandasData = Df.unpack()  # type pd dataframe
 
         dataHeader = pandasData.columns.values.tolist()

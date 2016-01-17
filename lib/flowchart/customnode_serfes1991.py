@@ -4,12 +4,14 @@ from lib.functions import filterSerfes1991 as serfes
 from pyqtgraph import BusyCursor
 from lib.flowchart.package import Package
 import copy
+import numpy as np
+
 import os, sys
 from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph.flowchart.Node import Node
 from pyqtgraph.parametertree import Parameter, ParameterTree
 from ..functions.evaluatedictionary import evaluateDict, evaluationFunction
-from ..functions.general import isNumpyDatetime
+from ..functions.general import isNumpyDatetime, isNumpyNumeric
 import webbrowser
 from ..functions.general import returnPandasDf
 import gc
@@ -29,13 +31,26 @@ class serfes1991Node(NodeWithCtrlWidget):
         
     def process(self, In):
         gc.collect()
+        # populate USE COLUMNS param, but only on item received, not when we click button
+        if not self._ctrlWidget.calculateNAllowed() and not self._ctrlWidget.applyAllowed():
+            self._ctrlWidget.p.child('Apply to columns').clearChildren()
+        
+
+
         with BusyCursor():
             df = copy.deepcopy(returnPandasDf(In))
             # check out http://docs.scipy.org/doc/numpy-dev/neps/datetime-proposal.html
-            
 
-            colname = [None]+[col for col in df.columns if isNumpyDatetime(df[col].dtype)]
-            self._ctrlWidget.p.param('datetime').setLimits(colname)
+            colnames = [col for col in df.columns if isNumpyDatetime(df[col].dtype)]+[None]
+            self._ctrlWidget.p.param('datetime').setLimits(colnames)
+            self._ctrlWidget.p.param('datetime').setValue(colnames[0])
+
+            # populate (Apply to columns) param, but only on item received, not when we click button
+            if not self._ctrlWidget.calculateNAllowed() and not self._ctrlWidget.applyAllowed():
+                colnames = [col for col in df.columns if isNumpyNumeric(df[col].dtype)]
+                for col_name in colnames:  # cycle through each column...
+                    self._ctrlWidget.p.child('Apply to columns').addChild({'name': col_name, 'type': 'bool', 'value': True})
+
             kwargs = self.ctrlWidget().evaluateState()
 
             if self._ctrlWidget.calculateNAllowed():
@@ -104,9 +119,11 @@ class serfes1991NodeCtrlWidget(ParameterTree):
             {'name': 'datetime', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Location of the datetime objects.\nBy default is `None`, meaning that datetime objects are\nlocated within `pd.DataFrame.index`. If not `None` - pass the\ncolumn-name of dataframe where datetime objects are located.\nThis is needed to determine number of measurements per day.\nNote: this argument is ignored if `N` is not `None` !!!'},
             {'name': 'N', 'type': 'str', 'value': None, 'default': None, 'tip': '<int or None>\nExplicit number of measurements in 24 hours. By\ndefault `N=None`, meaning that script will try to determine\nnumber of measurements per 24 hours based on real datetime\ninformation provided with `datetime` argument'},
             {'name': 'Calculate N', 'type': 'action'},
-            {'name': 'usecols', 'type': 'str', 'value': None, 'default': None, 'tip': '<List[str] or None>\nExplicitly pass the name of the columns\nthat will be evaluated. These columns must have numerical dtype\n(i.e. int32, int64, float32, float64). Default value is `None`\nmeaning that all numerical columns will be processed'},
             {'name': 'verbose', 'type': 'bool', 'value': False, 'default': False, 'tip': 'If `True` - will keep all three iterations\nin the output. If `False` - will save only final (3rd) iteration.\nThis may useful for debugging, or checking this filter.'},
             {'name': 'log', 'type': 'bool', 'value': False, 'default': False, 'tip': 'flag to show some prints in console'},
+            {'name': 'Apply to columns', 'type': 'group', 'children': [
+
+            ]},
             {'name': 'Apply Filter', 'type': 'action'},
 
         ]
@@ -128,18 +145,19 @@ class serfes1991NodeCtrlWidget(ParameterTree):
             state = self.saveState()
 
 
-        listWithDicts = evaluateDict(state['children'], functionToDicts=evaluationFunction, log=False,
-            function4arguments=serfes.filter_wl_71h_serfes1991)
+        validArgs = ['datetime', 'N', 'verbose', 'log']
+        listWithDicts = evaluateDict(state['children'], functionToDicts=evaluationFunction, log=False, validArgumnets=validArgs)
         kwargs = dict()
         for d in listWithDicts:
-            # {'a': None}.items() => [('a', None)] => two times indexing
+            # {'a': None}.items() >>> [('a', None)] => two times indexing
             kwargs[d.items()[0][0]] = d.items()[0][1]
-
-        for k, v in kwargs.iteritems():
-            if k == 'datetime':
-                kwargs[k] = str(v)  # ve careful with lists. If we have an imported datetime module, and 'datetime' list-entry , it will be evaluated as dtype object! therefore we explicitly convert it to strings
-            if v == 'None':
-                kwargs[k] = None
-
+            
+        # now get usecols
+        usecols = list()
+        for child in self.p.child('Apply to columns').children():
+            if child.value() is True:
+                usecols.append(child.name())
+        kwargs['usecols'] = usecols
+        #print('usecols:>>>', usecols)
 
         return kwargs

@@ -45,9 +45,6 @@ class TableView(QtGui.QTableView):
         """Convert entire table (or just selected area) into tab-separated text values"""
         if useSelection:
             selection = self.selectionModel().selection().indexes()
-            #print 'SELECTION:', selection
-            #print 'SELECTION[0]:', selection[0], selection[0].row(), selection[0].column()
-            #print 'SELECTION[-1]:', selection[-1], selection[-1].row(), selection[-1].column()
             topLeft = selection[0]
             bottomRight = selection[-1]
 
@@ -129,8 +126,8 @@ class TableView(QtGui.QTableView):
             try:
                 open(fileName, 'w').write(data)
             except Exception, err:
-                print "File is not created..."
-                print Exception, err
+                print( "File is not created...")
+                print( Exception, err)
         return
 
     def contextMenuEvent(self, ev):

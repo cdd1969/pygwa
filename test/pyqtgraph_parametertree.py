@@ -7,6 +7,7 @@ as well as some customized parameter types
 
 """
 
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 
@@ -125,7 +126,6 @@ def valueChanging(param, value):
     
 # Too lazy for recursion:
 for child in p.children():
-    print(child)
     child.sigValueChanging.connect(valueChanging)
     for ch2 in child.children():
         ch2.sigValueChanging.connect(valueChanging)
@@ -159,7 +159,7 @@ layout.addWidget(QtGui.QLabel("These are two views of the same data. They should
 layout.addWidget(t, 1, 0, 1, 1)
 layout.addWidget(t2, 1, 1, 1, 1)
 win.show()
-win.resize(800, 800)
+win.resize(800,800)
 
 ## test save/restore
 s = p.saveState()

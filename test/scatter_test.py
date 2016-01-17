@@ -33,7 +33,7 @@ def clicked(plot, points):
         p.setPen('b', width=2)
     lastClicked = points
     stop = timeit.default_timer()
-    print stop - start
+    print(stop - start)
     
 ## Test performance of large scatterplots
 

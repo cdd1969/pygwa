@@ -3,11 +3,36 @@ This file contains list of dependencies of pyGWA
 -------------------------------------------------------------------------
 
 QT 5
+    version: 5.4.1
+    license: LGPLv2.1 or LGPLv3
+
 PyQt 5
-py: pyqtgraph (branch <devel>, commit <0976991efda1825d8f92b2462ded613bcadef188>)
-py: pandas (>= 0.17.0)
-py: matplotlib (>= 1.5.0)
-py: openpyxl 1.8.6 (for Node "export to XLS". Note important to install old version!!!!
-    see http://stackoverflow.com/questions/30102232/pandas-can-not-write-to-excel-file,
-    pip install openpyxl==1.8.6)
-py: xlwt (for Node "export to XLS")
+    version: 5.5
+    license: GNU GPLv3
+
+py: pandas
+    version: >= 0.17.0
+    license: BSD
+
+py: matplotlib
+    version: >= 1.5.0
+    license: BSD
+
+py: openpyxl
+    version: 1.8.6
+    license: BSD
+    comment:
+        for Node "export to XLS". Important to install old version!!!!
+        see http://stackoverflow.com/questions/30102232/pandas-can-not-write-to-excel-file,
+        $ sudo pip install openpyxl==1.8.6
+
+py: xlwt
+    license: BSD
+    comment: for Node "export to XLS"
+
+py: pyqtgraph
+    version:
+        0.9.10 - develep
+        branch <devel>, commit <0976991efda1825d8f92b2462ded613bcadef188> --> initial
+        branch <devel>, commit <9e8c2082edf3a5eb81eb50d5180997f7c758579d> --> 07.01.2016
+    license: MIT

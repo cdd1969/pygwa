@@ -49,7 +49,7 @@ def plot_pandas_scatter(df, x=[0], y=[1], saveName=None, xlabel=None, ylabel=Non
     if len(x) != len(y):
         raise ValueError('Number of keys for X and Y dimension should be equal. Got: {0} for X and {1} for y'.format(len(x), len(y)))
     
-    print "plotting scatter data..."
+    print( "plotting scatter data...")
 
     # if no axes has been passed - create figure, and remember that is was created by _ax
     _ax = True
@@ -86,7 +86,7 @@ def plot_pandas_scatter(df, x=[0], y=[1], saveName=None, xlabel=None, ylabel=Non
 
     # now working with trendlines ...
     if trendlinemode:
-        print 'plotting trendlines...'
+        print( 'plotting trendlines...')
         # get colors...
         handles, labels = ax.get_legend_handles_labels()
         colors = list()
@@ -102,7 +102,7 @@ def plot_pandas_scatter(df, x=[0], y=[1], saveName=None, xlabel=None, ylabel=Non
             df = df[np.isfinite(df[Y])]  # Select only rows that are not NaN in column Y
             
 
-            print '\t>>> {0}/{1}'.format(i+1, len(x))
+            print( '\t>>> {0}/{1}'.format(i+1, len(x)))
             # calc the trendline (it is simply a linear fitting)
             z = np.polyfit(df[X], df[Y], 1)
             p = np.poly1d(z)
@@ -212,7 +212,7 @@ def plot_pandas_scatter(df, x=[0], y=[1], saveName=None, xlabel=None, ylabel=Non
 
     if saveName and not _ax:
         fig.savefig(saveName, dpi=300, tight_layout=True)#, format='pdf')
-        print 'saving figure... :', saveName
+        print( 'saving figure... :', saveName)
     if not _ax: plt.show()
 
 
@@ -264,7 +264,7 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
     if len(x) != len(y):
         raise ValueError('Number of keys for X and Y dimension should be equal. Got: {0} for X and {1} for y'.format(len(x), len(y)))
     
-    print "plotting scatter data...", trendlinemode
+    print( "plotting scatter data...", trendlinemode)
     #fig = plt.figure(figsize=(11.69, 8.27))
     fig = plt.figure(figsize=(6, 4), tight_layout=True)
     
@@ -305,7 +305,7 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
 
 
     if trendlinemode in [1, 2]:
-        print 'plotting trendlines...'
+        print( 'plotting trendlines...')
         # get colors...
         handles, labels = ax.get_legend_handles_labels()
         colors = list()
@@ -313,7 +313,7 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
             colors.append(h.get_color())
 
         for i, X, Y, c in zip(xrange(len(x)), x, y, colors):
-            print '\t>>> {0}/{1}'.format(i+1, len(x))
+            print( '\t>>> {0}/{1}'.format(i+1, len(x)))
             
 
             # OVERWRITING STANDART DATA!!!
@@ -370,7 +370,7 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
         '''
             Shifted trendlines to maximum deviation point
         '''
-        print 'plotting trendlines...'
+        print( 'plotting trendlines...')
         # get colors...
         handles, labels = ax.get_legend_handles_labels()
         colors = list()
@@ -378,7 +378,7 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
             colors.append(h.get_color())
 
         for i, X, Y, c in zip(xrange(len(x)), x, y, colors):
-            print '\t>>> {0}/{1}'.format(i+1, len(x))
+            print( '\t>>> {0}/{1}'.format(i+1, len(x)))
 
             # calc the trendline (it is simply a linear fitting)
             z = np.polyfit(df[X], df[Y], 1)  # trendline (2-element numpy array with a, b coeeficients)
@@ -463,7 +463,7 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
     
     if saveName:
         fig.savefig(saveName, dpi=300, tight_layout=True, format='pdf')
-        print 'saving figure... :', saveName
+        print( 'saving figure... :', saveName)
     plt.show()
 
 
@@ -494,7 +494,6 @@ def plot_mean_waterlevel(df, df_names, legend_names, saveName=None, ax=None):
         legend_names - list with strings
         ax           - already created axes.... if not - creates new figure
     """
-    print "plotting timeseries data..."
 
     if not ax:
         fig = plt.figure(tight_layout=True)
@@ -516,7 +515,7 @@ def plot_mean_waterlevel(df, df_names, legend_names, saveName=None, ax=None):
 
         if saveName:
             fig.savefig(saveName, dpi=300, tight_layout=True)#, format='pdf')
-            print 'saving figure... :', saveName
+            print( 'saving figure... :', saveName)
         plt.show()
     else:
         for name in df_names:
@@ -571,10 +570,10 @@ def plot_statistical_analysis(data, data2=None, save=False, figurename='figure.j
     # where indexes are DatetimeIndex. Lets figure it out...
     # The thing is, for calculations we need raw arrays without datetime indexes
     raw_data = data
-    print raw_data
+    print( raw_data)
     if type(data) in [pd.core.frame.DataFrame, pd.core.frame.Series]:
         if type(data.index) is pd.tseries.index.DatetimeIndex:
-            #print 'pd.tseries.index.DatetimeIndex detected'
+            #print( 'pd.tseries.index.DatetimeIndex detected')
             raw_data = data.iloc[:, 0].values  # select all time-entries for first column 
                                                # (note we have ONLY one column in raw_data)
     
@@ -592,7 +591,7 @@ def plot_statistical_analysis(data, data2=None, save=False, figurename='figure.j
         data.plot(ax=ax1, lw=1., legend=None)
         ax1.set_xlabel("")
     except:
-        print "except..."
+        print( "except...")
         ax1.plot(data)
         if xlabel1: ax1.set_xlabel(xlabel1, fontsize=axeslabel_fontsize)
 
@@ -663,7 +662,7 @@ def plot_statistical_analysis(data, data2=None, save=False, figurename='figure.j
     plt.get_current_fig_manager().window.showMaximized()
     if save:
         fig.savefig(figurename, dpi=300)
-        print 'Figure saved:', figurename
+        print( 'Figure saved:', figurename)
         plt.close()
         #plt.show()
     else: plt.show()

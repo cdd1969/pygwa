@@ -55,12 +55,12 @@ def createInterpolationRanges(df, columnName, interpolateMargin=100, log=False):
     N = len(df.index)
     validN = df[columnName].count()
     nanN = (N-validN)
-    if log: print 'createInterpolationRanges(): Column <{0}>: entries - {1}, NaNs - {2}'.format(columnName, N, nanN)
+    if log: print( 'createInterpolationRanges(): Column <{0}>: entries - {1}, NaNs - {2}'.format(columnName, N, nanN))
     
     if nanN > 0:
         # indeces of NaN values
         nanIndeces = np.where(df[columnName].isnull())[0]
-        #print nanIndeces
+        #print( nanIndeces)
 
         # create regions...
         regions = list()
@@ -85,21 +85,23 @@ def createInterpolationRanges(df, columnName, interpolateMargin=100, log=False):
         iMax = N-1
 
         for r in regions:
-            #print r
+            #print( r)
             r[0] = max(iMin, r[0]-interpolateMargin)
             r[1] = min(iMax, r[1]+interpolateMargin)
 
         #for r in regions:
-        #    print r
+        #    print( r)
         return regions
     else:  # no NaN values detected. Interpolation is not needed. Return None
-        if log: print 'createInterpolationRanges(): Column *{0}* has no missing data. Nothing to interpolate. Aborting... '.format(columnName)
+        if log: print( 'createInterpolationRanges(): Column *{0}* has no missing data. Nothing to interpolate. Aborting... '.format(columnName))
         return None
 
 
 def applyInterpolationBasedOnRanges(df, columnName, ranges, suffix='_interpolated', **kwargs):
     u""" Function interpolates data within given *ranges* (*ranges* should be
          generated with *createInterpolationRanges()*)
+
+         Interpolation is done with native `pandas.DataFrame.interpolate()` method
 
 
         INPUT:
@@ -171,7 +173,7 @@ if __name__ == '__main__':
     interpolateMargin = 100
     # find NaN regions - to increase performance
     Regions = createInterpolationRanges(df, cn, interpolateMargin=interpolateMargin)
-    print Regions
+    print( Regions)
     # apply interpolation to NaN regions
     applyInterpolationBasedOnRanges(df, cn, Regions, suffix='_interpolated', method='polynomial', order=15)
     
