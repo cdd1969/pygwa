@@ -4,10 +4,10 @@
 import os, sys
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
 from pyqtgraph.flowchart import Node
-from lib.flowchart.Flowchart import customFlowchart as Flowchart
-from lib.functions.dictionary2qtreewidgetitem import fill_widget
-from lib.flowchart.NodeLibrary import nodelib
-from lib.CustomQCompleter import CustomQCompleter
+from flowchart.Flowchart import customFlowchart as Flowchart
+from functions.dictionary2qtreewidgetitem import fill_widget
+from flowchart.NodeLibrary import nodelib
+from CustomQCompleter import CustomQCompleter
 import PROJECTMETA
 
 
