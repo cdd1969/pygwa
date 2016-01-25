@@ -1,5 +1,8 @@
 # PyGWA
-----
+---
+<img src="https://cloud.githubusercontent.com/assets/14345411/12567590/3eb00da2-c3c0-11e5-8c1b-25a1393ca5bc.png" width="30%"></img> <img src="https://cloud.githubusercontent.com/assets/14345411/12567591/3ecd124e-c3c0-11e5-9a2e-13f1707bc8f9.png" width="30%"></img> <img src="https://cloud.githubusercontent.com/assets/14345411/12567593/3ed3fabe-c3c0-11e5-9fbb-3b8985f4eae0.png" width="30%"></img>
+
+---
 
 Python-based GUI-tool for analysis of the groundwater hydrograph data.
 
@@ -18,10 +21,10 @@ $ python pygwa.py
 - [QT 5][qt5] (5.4.1)
 - [PyQt 5][pyqt5] (5.5)
 - py: [pyqtgraph][pyqtgraph]
-    - version: branch <devel>, commit <9e8c2082edf3a5eb81eb50d5180997f7c758579d>
+    - version: branch *devel*, commit *9e8c2082edf3a5eb81eb50d5180997f7c758579d*
 - py: [pandas][pandas] (>= 0.17.0)
 - py: [matplotlib][mpl] (>= 1.5.0)
-- py: [openpyxl][openpyxl] (1.8.6)
+- py: [openpyxl][openpyxl] (1.8.6, not older!)
 - py: [xlwt][xlwt]
 
 # Documentation
