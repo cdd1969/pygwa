@@ -134,7 +134,7 @@ def applyInterpolationBasedOnRanges(df, columnName, ranges, suffix='_interpolate
     # now finally copy only those values that were missing. This can be useful since we are not sure
     # if interpolation will work perfectly
     for i in np.where(df[columnName].isnull())[0]:
-        df.ix[i, columnNameNew] = df.ix[i, columnNameBak]
+        df[columnNameNew].iloc[i] = df[columnNameBak].iloc[i]
         #print ('I={0}\t[{1}] >>> [{2}]'.format(i, df.ix[i, columnNameNew], df.ix[i, columnNameBak]))
 
     del df[columnNameBak]
