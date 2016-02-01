@@ -32,7 +32,7 @@ There are many example-flowcharts available in */examples* folder. You may find 
 
 Some "Nodes" do have "Help" button in their UI. 
 
-Some tutorials are available [here][examples/Tutorials/tutorials.md].
+Some tutorials are available [here][https://github.com/cdd1969/pygwa/tree/master/examples/Tutorials/tutorials.md].
 
 The documentation itself does not exist yet.
 
