@@ -19,9 +19,9 @@ $ python pygwa.py
 - Program is known to run on Linux
 - [Python 2.7][python2]
 - [QT 5][qt5] (5.4.1)
-- [PyQt 5][pyqt5] (5.5)
+- py: [PyQt 5][pyqt5] (5.5)
 - py: [pyqtgraph][pyqtgraph]
-    - version: branch *devel*, commit *9e8c2082edf3a5eb81eb50d5180997f7c758579d*
+    - version: branch *devel*, commit *fd7644345883d1a5d484c3fe4abcbf06f5c3c3b0*
 - py: [pandas][pandas] (>= 0.17.0)
 - py: [matplotlib][mpl] (>= 1.5.0)
 - py: [openpyxl][openpyxl] (1.8.6, not older!)
