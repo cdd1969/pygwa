@@ -72,3 +72,9 @@ KNOWN BUGS AND ISSUES
     When *timeseriesPlot* node is connected to *makeTimeseriesCurve*, and the legend is on
     whenever the column is changed in *makeTimeseriesCurve* it is not updated
     in legend...
+
+12)
+    GENERAL
+    fix the warning below. Mostly in *process()* method of my custom nodes:
+
+    ```Warning: use of node.terminalName is deprecated; use node['terminalName'] instead.```
