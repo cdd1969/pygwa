@@ -270,7 +270,7 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
     
     ax = fig.add_subplot(111)
     for xi, yi in zip(x, y):
-        df.plot(x=xi, y=yi, ax=ax, marker="o", markersize=6., style='.', markeredgecolor='black', markeredgewidth=0.2, legend=False)
+        df.plot(x=xi, y=yi, ax=ax, marker=marker, markersize=s, style='.', markeredgecolor='black', markeredgewidth=0.2, legend=False)
         #df.plot.scatter(x=xi, y=yi, ax=ax, marker=marker, s=s, legend=False)
 
 
@@ -304,7 +304,7 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
     ax.set_xlim([minx, maxx])
 
 
-    if trendlinemode in [1, 2]:
+    if trendlinemode in [1, 2, 3]:
         print( 'plotting trendlines...')
         # get colors...
         handles, labels = ax.get_legend_handles_labels()
@@ -326,106 +326,56 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
             p = np.poly1d(z)
             
             ideal = z[1] + (z[0] * df[X])
-            r_sq = r_squared(df[Y], ideal)
-            trendline_equation = 'y=%.3fx+(%.3f)'%(z[0], z[1])
-            ax.plot([minx, maxx], p([minx, maxx]), '--', lw=0.8, color=c, label='Trendline\n{0}\nr^2={1:.3f}'.format(trendline_equation, r_sq))
+
+            if trendlinemode == 1:
+                r_sq = r_squared(df[Y], ideal)
+                trendline_equation = 'y=%.3fx+(%.3f)' % (z[0], z[1])
+                ax.plot([minx, maxx], p([minx, maxx]), '--', lw=0.8, color=c, label='Trendline\n{0}\nr^2={1:.3f}'.format(trendline_equation, r_sq))
             
+            elif trendlinemode in [2, 3]:
+                # now find out the maximum deviating point... above the trendline...
+                def ideal(value, z):
+                    return z[1] + (z[0] * float(value))
+                
+                # find deviation from ideal trendline of all points for given column_name X
+                # note that we are interested only in positive (>0) deviations
+                deviation_from_trendline = list()
+                deviation_from_trendline_index = list()
+                
+                for index, currentY in enumerate(df[Y]):
+                    currentX = df[X].iloc[index]
+                    deviation_from_trendline_i = currentY - ideal(currentX, z)
+                    if deviation_from_trendline_i > 0.:  #
+                        deviation_from_trendline.append(deviation_from_trendline_i)
+                        deviation_from_trendline_index.append(index)
+                #print ('Number of deviation that are (>0):', len(deviation_from_trendline))
 
-            # now find out the maximum deviating 5 points... above the trendline...
-            def ideal(value, z):
-                return z[1] + (z[0] * float(value))
-            
-            deviation_from_trendline = list()
-            deviation_from_trendline_index = list()
-            
-            for index, currentY in enumerate(df[Y]):
-                currentX = df.ix[index, X]
-                deviation_from_trendline_i = currentY - ideal(currentX, z)
-                if deviation_from_trendline_i > 0.:  #
-                    deviation_from_trendline.append(deviation_from_trendline_i)
-                    deviation_from_trendline_index.append(index)
+                if trendlinemode == 3:
+                    # overwriting N_DEVIATIONS to one single point
+                    N_DEVIATIONS = 1  # create lines based on N_DEVIATIONS points
+                    # now find 1 maximum deviation...
 
-
-            if trendlinemode == 2:
-                # plot those maximum lines....
-
-                list_indexes = np.argsort( np.array(deviation_from_trendline) )[-N_DEVIATIONS:]  # now find 5 maximum deviations...
+                list_indexes = np.argsort( np.array(deviation_from_trendline) )[-N_DEVIATIONS::]  # now find 5 maximum deviations...
                 dataframe_indexes = [deviation_from_trendline_index[ind] for ind in list_indexes]
 
-                ERRORS = df.ix[dataframe_indexes, :]
-                XERRORS = df.ix[dataframe_indexes, X]
-                YERRORS = df.ix[dataframe_indexes, Y]
-
+                ERRORS  = df.iloc[dataframe_indexes]
+                XERRORS = df[X].iloc[dataframe_indexes]
+                YERRORS = df[Y].iloc[dataframe_indexes]
                 # VISUALIZE POINTS THAT ARE USED FOR CREATING BORDER LINE
                 #ERRORS.plot(x=X, y=Y, ax=ax, marker="x", markersize=16., color='red', style='.', markeredgecolor='black', markeredgewidth=0.2, legend=False)
                 
-                # calc the trendline (it is simply a linear fitting)
-                z = np.polyfit(ERRORS[X], ERRORS[Y], 1)
-                p = np.poly1d(z)
+                # lift trendline up....
+                #   determine dy at current x
+                y_trendline = z[0]*XERRORS.iat[0] + z[1]
+                y_deviation = YERRORS.iat[0]
+                dy = y_deviation - y_trendline
+                z = np.array([z[0], z[1]+dy])  # shifting trendline by dy
                 
-                trendline_equation1 = 'y=%.3fx+(%.3f)'%(z[0], z[1])
-                ax.plot([minx, maxx], p([minx, maxx]), '-', lw=0.8, color=c, label='trendline of {1} maximum \ndeviations above mean trendline\n{0}'.format(trendline_equation1, N_DEVIATIONS))
+                p = np.poly1d(z)  # shifted trendline
+                trendline_equation = 'y=%.3fx+(%.3f)' % (z[0], z[1])
+                ax.plot([minx, maxx], p([minx, maxx]), '--', lw=0.8, color=c, label='Shifted Trendline\n{0}'.format(trendline_equation))
 
-    elif trendlinemode == 3:
-        '''
-            Shifted trendlines to maximum deviation point
-        '''
-        print( 'plotting trendlines...')
-        # get colors...
-        handles, labels = ax.get_legend_handles_labels()
-        colors = list()
-        for h in handles:
-            colors.append(h.get_color())
-
-        for i, X, Y, c in zip(xrange(len(x)), x, y, colors):
-            print( '\t>>> {0}/{1}'.format(i+1, len(x)))
-
-            # calc the trendline (it is simply a linear fitting)
-            z = np.polyfit(df[X], df[Y], 1)  # trendline (2-element numpy array with a, b coeeficients)
-            ideal = z[1] + (z[0] * df[X])
             
-            
-            # now find out the maximum deviating point... above the trendline...
-            def ideal(value, z):
-                return z[1] + (z[0] * float(value))
-            
-            deviation_from_trendline = list()
-            deviation_from_trendline_index = list()
-            
-            for index, currentY in enumerate(df[Y]):
-                currentX = df.ix[index, X]
-                deviation_from_trendline_i = currentY - ideal(currentX, z)
-                if deviation_from_trendline_i > 0.:  #
-                    deviation_from_trendline.append(deviation_from_trendline_i)
-                    deviation_from_trendline_index.append(index)
-
-            # overwriting N_DEVIATIONS to one single point
-            N_DEVIATIONS = 1  # create lines based on N_DEVIATIONS points
-            # now find 1 maximum deviation...
-
-            list_indexes = np.argsort( np.array(deviation_from_trendline) )[-N_DEVIATIONS:]  # now find 5 maximum deviations...
-            dataframe_indexes = [deviation_from_trendline_index[ind] for ind in list_indexes]
-
-            ERRORS = df.ix[dataframe_indexes, :]
-            XERRORS = df.ix[dataframe_indexes, X]
-            YERRORS = df.ix[dataframe_indexes, Y]
-
-            # VISUALIZE POINTS THAT ARE USED FOR CREATING BORDER LINE
-            #ERRORS.plot(x=X, y=Y, ax=ax, marker="x", markersize=16., color='red', style='.', markeredgecolor='black', markeredgewidth=0.2, legend=False)
-            
-            # lift trendline up....
-            #   determine dy at current x
-            y_trendline = z[0]*XERRORS.iat[0] + z[1]
-            y_deviation = YERRORS.iat[0]
-            dy = y_deviation - y_trendline
-            z = np.array([z[0], z[1]+dy])  # shifting trendline by dy
-            
-            p = np.poly1d(z)  # shifted trendline
-            trendline_equation = 'y=%.3fx+(%.3f)' % (z[0], z[1])
-            ax.plot([minx, maxx], p([minx, maxx]), '--', lw=0.8, color=c, label='Shifted Trendline\n{0}'.format(trendline_equation))
-
-
-
     if HYDR_VALS and trendlinemode:
         for key, val in HYDR_VALS.iteritems():
             overhead = z[0]*val + z[1]

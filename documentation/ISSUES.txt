@@ -62,7 +62,7 @@ KNOWN BUGS AND ISSUES
     This problem has been fixed by introducing `order` parameter in <remove_region()>
     function in module lib.functions.detectpeaks
 
-10)
+10) (DONE)
     Node: plotGWLvsWL
     Something is wrong with trendlines...
     Not working, sometimes KeyError, sometimes everythin's ok
