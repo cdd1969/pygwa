@@ -106,7 +106,7 @@
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionHelp"/>
+    <addaction name="actionDocumentation"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
    </widget>
@@ -335,9 +335,12 @@
     <string>Ctrl+Shift+S</string>
    </property>
   </action>
-  <action name="actionHelp">
+  <action name="actionDocumentation">
    <property name="text">
-    <string>Help</string>
+    <string>Documentation</string>
+   </property>
+   <property name="shortcut">
+    <string>F1</string>
    </property>
   </action>
  </widget>

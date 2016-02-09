@@ -69,7 +69,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionSave_As_fc.triggered.connect(self.on_actionSave_As_fc)
         self.actionLoad_fc.triggered.connect(self.on_actionLoad_fc)
         self.actionAbout.triggered.connect(self.on_actionAbout)
-        self.actionHelp.triggered.connect(self.on_actionHelp)
+        self.actionDocumentation.triggered.connect(self.on_actionDocumentation)
         self.actionQuit.triggered.connect(self.closeEvent)
 
         self.uiData.sigCurrentFilenameChanged.connect(self.renameFlowchartTab)
@@ -203,8 +203,8 @@ class MainWindow(QtWidgets.QMainWindow):
             PROJECTMETA.about, PROJECTMETA.__version__, PROJECTMETA.__author__, PROJECTMETA.__contact__))
 
     @QtCore.pyqtSlot()
-    def on_actionHelp(self):
-        pass
+    def on_actionDocumentation(self):
+        QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/cdd1969/pygwa/wiki'))
 
 
     
