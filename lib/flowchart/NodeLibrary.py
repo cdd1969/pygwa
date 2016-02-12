@@ -1,25 +1,21 @@
 # these imports are for creating custom Node-Library
 import pyqtgraph.flowchart.library as fclib
-from customnode_readcsv import readCSVNode
-from customnode_viewpandasdf import viewPandasDfNode
-from customnode_selectdfcolumn import selectDfColumnNode
-from customnode_plottimeseries import plotTimeseriesNode
-from customnode_df2recarray import df2recArrayNode
-from customnode_detectpeaks import detectPeaksNode
-from customnode_detectpeaks_ts import detectPeaksTSNode
-from customnode_interpolateDf import interpolateDfNode
-from customnode_readxls import readXLSNode
-from customnode_toxls import toXLSNode
-from customnode_plot_overheadvsriverwl import plotGWLvsWLNode
-from customnode_serfes1991 import serfes1991Node
-from customnode_pickequaldates import pickEqualDatesNode
-from customnode_datetime2sec import datetime2secondsNode
-from customnode_scatterplotwidget import scatterPlotWidgetNode
-from customnode_tidalefficiency import tidalEfficiencyNode
-from customnode_matchpeaks import matchPeaksNode
-from customnode_pipe import pipeNode
-from customnode_makeTimeseriesCurve import makeTimeseriesCurveNode
-from customnode_timelag import timeLagNode
+from nodes.n00_pipe.node_pipe import pipeNode
+from nodes.n01_quickview.node_viewpandasdf import viewPandasDfNode
+from nodes.n02_readcsv.node_readcsv import readCSVNode
+from nodes.n03_readxls.node_readxls import readXLSNode
+from nodes.n04_writexls.node_toxls import toXLSNode
+from nodes.n05_timeseriescurve.node_makeTimeseriesCurve import makeTimeseriesCurveNode
+from nodes.n06_plottimeseries.node_plottimeseries import plotTimeseriesNode
+from nodes.n07_interpolate.node_interpolateDf import interpolateDfNode
+from nodes.n08_detectpeaks.node_detectpeaks import detectPeaksTSNode
+from nodes.n09_selectdates.node_pickequaldates import pickEqualDatesNode
+from nodes.n10_matchpeaks.node_matchpeaks import matchPeaksNode
+from nodes.n11_tidalefficiency.node_tidalefficiency import tidalEfficiencyNode
+from nodes.n12_timelag.node_timelag import timeLagNode
+from nodes.n13_serfes.node_serfes1991 import serfes1991Node
+from nodes.n14_overheadplot.node_plot_overheadvsriverwl import plotGWLvsWLNode
+from nodes.n15_scatterplotwigdet.node_scatterplotwidget import scatterPlotWidgetNode
 
 
 def nodelib():
@@ -42,7 +38,7 @@ def nodelib():
     flowchartLib.addNodeType(plotGWLvsWLNode, [('Display',)])
     flowchartLib.addNodeType(makeTimeseriesCurveNode, [('Display',)])
 
-    flowchartLib.addNodeType(detectPeaksNode, [('Processing',)])
+    #flowchartLib.addNodeType(detectPeaksNode, [('Processing',)])
     flowchartLib.addNodeType(detectPeaksTSNode, [('Processing',)])
     flowchartLib.addNodeType(interpolateDfNode, [('Processing',)])
     flowchartLib.addNodeType(serfes1991Node, [('Processing',)])
@@ -51,9 +47,9 @@ def nodelib():
     flowchartLib.addNodeType(tidalEfficiencyNode, [('Processing',)])
     flowchartLib.addNodeType(timeLagNode, [('Processing',)])
 
-    flowchartLib.addNodeType(df2recArrayNode, [('Data conversion',)])
-    flowchartLib.addNodeType(datetime2secondsNode, [('Data conversion',)])
-    flowchartLib.addNodeType(selectDfColumnNode, [('Data',)])
+    #flowchartLib.addNodeType(df2recArrayNode, [('Data conversion',)])
+    #flowchartLib.addNodeType(datetime2secondsNode, [('Data conversion',)])
+    #flowchartLib.addNodeType(selectDfColumnNode, [('Data',)])
     flowchartLib.addNodeType(pipeNode, [('Appearance',)])
 
 

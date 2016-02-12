@@ -1,14 +1,13 @@
 ''' MODULE CONTAINING PLOTTING FUNCTIONS...
 '''
 
-import os
-import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 import scipy
 import seaborn as sns
 import pandas as pd
+
 
 def r_squared(actual, ideal):
     ''' Calculate coefficient of determination (R2)

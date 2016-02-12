@@ -1,8 +1,6 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
 import inspect
-from datetime import datetime  #this is requred to use <readCSV_Node> parse_dates argument, since it usually has datetime
-
 
 
 def evaluationFunction(dictionary, function4arguments=None, validArgumnets=None, log=False):
