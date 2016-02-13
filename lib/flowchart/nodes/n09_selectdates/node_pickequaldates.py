@@ -1,14 +1,13 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
 import gc
-from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph import BusyCursor
 from pyqtgraph.parametertree import Parameter, ParameterTree
 
 from lib.flowchart.package import Package
-from ....functions.general import isNumpyDatetime
-from ....functions.general import returnPandasDf
-from ....common.NodeWithCtrlWidget import NodeWithCtrlWidget
+from lib.functions.general import isNumpyDatetime
+from lib.functions.general import returnPandasDf
+from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
 
 
 class pickEqualDatesNode(NodeWithCtrlWidget):

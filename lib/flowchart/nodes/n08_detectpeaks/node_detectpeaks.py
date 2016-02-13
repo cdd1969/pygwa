@@ -4,11 +4,11 @@
 from pyqtgraph import BusyCursor
 from pyqtgraph.parametertree import Parameter, ParameterTree
 
-from ...package import Package
-from ....common.NodeWithCtrlWidget import NodeWithCtrlWidget
-from ....functions.general import returnPandasDf, isNumpyDatetime
-from ....functions.evaluatedictionary import evaluateDict, evaluationFunction
-from ....functions.detectpeaks import detectPeaks_ts
+from lib.flowchart.package import Package
+from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
+from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
+from lib.functions.general import returnPandasDf, isNumpyDatetime
+from lib.functions.detectpeaks import detectPeaks_ts
 
 
 class detectPeaksTSNode(NodeWithCtrlWidget):

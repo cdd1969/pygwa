@@ -1,15 +1,14 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
 
-import os
 from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph.parametertree import Parameter, ParameterTree
 from pyqtgraph import BusyCursor
 import pandas as pd
 
-from ....common.NodeWithCtrlWidget import NodeWithCtrlWidget
-from ....functions.general import returnPandasDf
-from ....functions.evaluatedictionary import evaluateDict, evaluationFunction
+from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
+from lib.functions.general import returnPandasDf
+from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
 
 
 

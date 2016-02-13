@@ -13,11 +13,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-from ...package import Package
+from lib.flowchart.package import Package
 
-from ....common.NodeWithCtrlWidget import NodeWithCtrlWidget
-from ....functions.interpolate import applyInterpolationBasedOnRanges, createInterpolationRanges
-from ....functions.evaluatedictionary import evaluateDict, evaluationFunction
+from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
+from lib.functions.interpolate import applyInterpolationBasedOnRanges, createInterpolationRanges
+from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
 
 
 

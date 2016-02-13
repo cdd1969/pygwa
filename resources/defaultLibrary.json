@@ -1,0 +1,20 @@
+{   
+    "_info": "Keys starting with underscore `_` is omitted. All other keys are read. The key of the item does not matter, but the value represents the relative path to the node to be registered. The relative path is from the pygwa base directory (directory where file `pygwa.py` is located",
+
+    "00": "lib/flowchart/nodes/n00_pipe/pipe.node",
+    "01": "lib/flowchart/nodes/n01_quickview/quickview.node",
+    "02": "lib/flowchart/nodes/n02_readcsv/readcsv.node",
+    "03": "lib/flowchart/nodes/n03_readxls/readxls.node",
+    "04": "lib/flowchart/nodes/n04_writexls/writexls.node",
+    "05": "lib/flowchart/nodes/n05_timeseriescurve/maketimeseriescurve.node",
+    "06": "lib/flowchart/nodes/n06_plottimeseries/plottimeseries.node",
+    "07": "lib/flowchart/nodes/n07_interpolate/interpolate.node",
+    "08": "lib/flowchart/nodes/n08_detectpeaks/detectpeaks.node",
+    "09": "lib/flowchart/nodes/n09_selectdates/selectdates.node",
+    "10": "lib/flowchart/nodes/n10_matchpeaks/matchpeaks.node",
+    "11": "lib/flowchart/nodes/n11_tidalefficiency/tidalefficiency.node",
+    "12": "lib/flowchart/nodes/n12_timelag/timelag.node",
+    "13": "lib/flowchart/nodes/n13_serfes/serfes.node",
+    "14": "lib/flowchart/nodes/n14_overheadplot/overheadplot.node",
+    "15": "lib/flowchart/nodes/n15_scatterplotwigdet/scatterplotwidget.node"
+}

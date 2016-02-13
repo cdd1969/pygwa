@@ -6,9 +6,9 @@ from pyqtgraph.parametertree import Parameter, ParameterTree
 from pyqtgraph import BusyCursor
 import pandas as pd
 
-from ...package import Package
-from ....functions.evaluatedictionary import evaluateDict, evaluationFunction
-from ....common.NodeWithCtrlWidget import NodeWithCtrlWidget
+from lib.flowchart.package import Package
+from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
+from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
 
 
 class readCSVNode(NodeWithCtrlWidget):

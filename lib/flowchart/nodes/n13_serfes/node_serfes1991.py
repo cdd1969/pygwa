@@ -9,10 +9,10 @@ import gc
 
 from lib.flowchart.package import Package
 from lib.functions import filterSerfes1991 as serfes
-from ....functions.evaluatedictionary import evaluateDict, evaluationFunction
-from ....functions.general import isNumpyDatetime, isNumpyNumeric
-from ....functions.general import returnPandasDf
-from ....common.NodeWithCtrlWidget import NodeWithCtrlWidget
+from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
+from lib.functions.general import isNumpyDatetime, isNumpyNumeric
+from lib.functions.general import returnPandasDf
+from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
 
 
 

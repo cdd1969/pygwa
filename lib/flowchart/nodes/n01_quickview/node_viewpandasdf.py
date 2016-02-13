@@ -1,5 +1,7 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
+
+import os
 from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from PyQt5.QtCore import Qt, qDebug
 from pyqtgraph.flowchart.Node import Node
@@ -13,7 +15,7 @@ import matplotlib.pyplot as plt
 
 import traceback
 import gc
-from ....common.TableView import TableView
+from lib.common.TableView import TableView
 
 
 
@@ -71,7 +73,7 @@ class viewPandasDfNode(Node):
 class viewPandasDfCtrlWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(viewPandasDfCtrlWidget, self).__init__()
-        uic.loadUi('./lib/flowchart/nodes/n01_quickview/node_viewpandasdf.ui', self)
+        uic.loadUi(os.path.join(os.path.dirname(__file__), 'node_viewpandasdf.ui'), self)
         self._parent = parent
         self.initUI()
         self.pushButton_viewPlot.setEnabled(False)
@@ -133,7 +135,7 @@ class viewPandasDfCtrlWidget(QtWidgets.QWidget):
             
             self.pushButton_viewTable.setChecked(True)
         else:
-            if not self.pushButton_viewTable.isChecked():  # This is obviously a bug! Returns 
+            if not self.pushButton_viewTable.isChecked():  # This is obviously a bug! Returns
                 self.twWindow.hide()
                 self.pushButton_viewTable.setChecked(False)
             else:

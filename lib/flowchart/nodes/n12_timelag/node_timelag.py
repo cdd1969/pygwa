@@ -4,10 +4,10 @@
 from pyqtgraph.parametertree import Parameter, ParameterTree
 from pyqtgraph import BusyCursor
 
-from ....functions.evaluatedictionary import evaluateDict, evaluationFunction
-from ....common.NodeWithCtrlWidget import NodeWithCtrlWidget
-from ....functions.TimeLag import timelag_erskine1991_method
-from ....functions.general import returnPandasDf, isNumpyDatetime
+from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
+from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
+from lib.functions.TimeLag import timelag_erskine1991_method
+from lib.functions.general import returnPandasDf, isNumpyDatetime
 
 
 

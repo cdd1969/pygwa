@@ -6,9 +6,9 @@ from pyqtgraph.parametertree import Parameter, ParameterTree
 import pyqtgraph.parametertree.parameterTypes as pTypes
 import numpy as np
 
-from ....common.NodeWithCtrlWidget import NodeWithCtrlWidget
-from ....common.ScatterPlotWidget import ScatterPlotWidget
-from ....functions.general import returnPandasDf
+from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
+from lib.common.ScatterPlotWidget import ScatterPlotWidget
+from lib.functions.general import returnPandasDf
 
 
 class scatterPlotWidgetNode(NodeWithCtrlWidget):

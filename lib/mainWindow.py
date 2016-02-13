@@ -2,21 +2,23 @@
 # -*- coding: utf-8 -*-
 
 import os, sys
+import traceback
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
 from pyqtgraph.flowchart import Node
-from flowchart.Flowchart import customFlowchart as Flowchart
 
 from functions.dictionary2qtreewidgetitem import fill_widget
-from flowchart.NodeLibrary import nodelib
+from flowchart.NodeLibrary import nodelib, registerNode, readNodeFile
+from flowchart.Flowchart import customFlowchart as Flowchart
 from common.CustomQCompleter import CustomQCompleter
 import PROJECTMETA
+from lib import projectPath
 
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         #self.setupUi(self)
-        uic.loadUi('resources/mainwindow.ui', self)
+        uic.loadUi(projectPath('resources/mainwindow.ui'), self)
         self.uiData = uiData(self)
         self.connectActions()
         #self.connectSignals()
@@ -69,8 +71,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionSave_fc.triggered.connect(self.on_actionSave_fc)
         self.actionSave_As_fc.triggered.connect(self.on_actionSave_As_fc)
         self.actionLoad_fc.triggered.connect(self.on_actionLoad_fc)
+        self.actionAdd_item_to_library.triggered.connect(self.on_actionAdd_item_to_library)
+
         self.actionAbout.triggered.connect(self.on_actionAbout)
         self.actionDocumentation.triggered.connect(self.on_actionDocumentation)
+
         self.actionQuit.triggered.connect(self.closeEvent)
 
         self.uiData.sigCurrentFilenameChanged.connect(self.renameFlowchartTab)
@@ -197,6 +202,18 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.uiData.setCurrentFileName(fn)
                 self.uiData.setChangesUnsaved(False)
                 #self.statusBar().showMessage("File loaded: "+fn)
+
+    @QtCore.pyqtSlot()
+    def on_actionAdd_item_to_library(self):
+        fname = QtGui.QFileDialog.getOpenFileName(self, caption="Load Node Registration File", filter="(*.node)")[0]
+        if not fname:
+            return
+        try:
+            data = readNodeFile(fname)
+            registerNode(self.uiData.flowchartLib(), fname)
+            QtWidgets.QMessageBox.information(self, "Add Item to Node Library", "Node <b>`{0}`</b> has been successflly added to the Library. Node information has been loaded from file <i>{1}</i>".format(data['classname'], fname))
+        except Exception, err:
+            traceback.print_exc()
 
     @QtCore.pyqtSlot()
     def on_actionAbout(self):
@@ -341,7 +358,7 @@ class uiData(QtCore.QObject):
         self.initLibrary()
         self._currentFileName  = None
         self._changesUnsaved  = True
-        self._standardFileName = os.path.join(os.getcwd(), 'resources/defaultFlowchart.dfc')
+        self._standardFileName = projectPath('resources/defaultFlowchart.dfc')
 
 
 
@@ -399,7 +416,7 @@ class uiData(QtCore.QObject):
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
-    app.setWindowIcon(QtGui.QIcon('resources/icon.gif'))
+    app.setWindowIcon(QtGui.QIcon(projectPath('resources/icon.gif')))
     ex = MainWindow()
     ex.show()
 

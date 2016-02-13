@@ -1,0 +1,6 @@
+{
+    "filename":  "node_viewpandasdf.py",
+    "classname": "viewPandasDfNode",
+    "libpath": ["Display", "Widgets"],
+    "override": true
+}

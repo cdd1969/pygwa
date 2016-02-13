@@ -5,10 +5,10 @@ from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph.parametertree import Parameter, ParameterTree
 from pyqtgraph import BusyCursor
 
-from ....functions.evaluatedictionary import evaluateDict, evaluationFunction
-from ....functions import plot_pandas
-from ....functions.general import returnPandasDf
-from ....common.NodeWithCtrlWidget import NodeWithCtrlWidget
+from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
+from lib.functions import plot_pandas
+from lib.functions.general import returnPandasDf
+from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
 
 
 class plotGWLvsWLNode(NodeWithCtrlWidget):

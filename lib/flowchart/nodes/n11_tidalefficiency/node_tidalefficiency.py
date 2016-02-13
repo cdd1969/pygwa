@@ -6,10 +6,10 @@ from pyqtgraph import BusyCursor
 import numpy as np
 
 from pyqtgraph.parametertree import Parameter, ParameterTree
-from ....common.NodeWithCtrlWidget import NodeWithCtrlWidget
-from ....functions.evaluatedictionary import evaluateDict, evaluationFunction
-from ....functions.TidalEfficiency import tidalEfficiency_method1, tidalEfficiency_method2, tidalEfficiency_method3
-from ....functions.general import returnPandasDf, isNumpyDatetime
+from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
+from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
+from lib.functions.TidalEfficiency import tidalEfficiency_method1, tidalEfficiency_method2, tidalEfficiency_method3
+from lib.functions.general import returnPandasDf, isNumpyDatetime
 
 
 

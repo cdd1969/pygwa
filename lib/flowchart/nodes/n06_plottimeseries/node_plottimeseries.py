@@ -1,7 +1,6 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
 
-import os, sys
 import datetime
 import gc
 
@@ -13,9 +12,9 @@ from pyqtgraph import functions as fn
 from pyqtgraph import BusyCursor
 from pyqtgraph.parametertree import Parameter, ParameterTree
 
-from ....functions.evaluatedictionary import evaluateDict, evaluationFunction
-from ....common.NodeWithCtrlWidget import NodeWithCtrlWidget
-from ....common.DateAxisItem import DateAxisItem
+from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
+from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
+from lib.common.DateAxisItem import DateAxisItem
 
 
 class plotTimeseriesNode(NodeWithCtrlWidget):
