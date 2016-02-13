@@ -7,7 +7,7 @@ from PyQt5 import QtWidgets, QtGui, uic, QtCore
 from pyqtgraph.flowchart import Node
 
 from functions.dictionary2qtreewidgetitem import fill_widget
-from flowchart.NodeLibrary import nodelib, registerNode, readNodeFile
+from flowchart.NodeLibrary import readNodeFile
 from flowchart.Flowchart import customFlowchart as Flowchart
 from common.CustomQCompleter import CustomQCompleter
 import PROJECTMETA
@@ -15,6 +15,7 @@ from lib import projectPath
 
 
 class MainWindow(QtWidgets.QMainWindow):
+
     def __init__(self):
         super(MainWindow, self).__init__()
         #self.setupUi(self)
@@ -42,13 +43,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # init FlowChart
         self.initFlowchart()
 
-        #init node selector tab, set autocompletion etc
-        #self._nodeNameCompleter = QtWidgets.QCompleter(self)
-        self._nodeNameCompleter = CustomQCompleter(self)
-        self._nodeNameCompleter.setModel(self.uiData.nodeNamesModel())
-        self._nodeNameCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
-        self.lineEdit_nodeSelect.setCompleter(self._nodeNameCompleter)
-        self.lineEdit_nodeSelect.setPlaceholderText('Type Node Name Here')
+
 
         # connect on select QTreeWidgetItem > se text in QLineEdit
         self.treeWidget.itemActivated.connect(self.on_nodeLibTreeWidget_itemActivated)
@@ -63,9 +58,23 @@ class MainWindow(QtWidgets.QMainWindow):
         label_2.setStyleSheet(css)
         self.dockWidget_2.setTitleBarWidget(label_2)
 
+        #init node selector tab, set autocompletion etc
+        #self._nodeNameCompleter = QtWidgets.QCompleter(self)
+        self._nodeNameCompleter = CustomQCompleter(self)
+        self._nodeNameCompleter.setModel(self.uiData.nodeNamesModel())
+        self._nodeNameCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        self.lineEdit_nodeSelect.setCompleter(self._nodeNameCompleter)
+        self.lineEdit_nodeSelect.setPlaceholderText('Type Node Name Here')
         # set tree view of node library
         fill_widget(self.treeWidget, self.uiData.nodeNamesTree())
-    
+
+    def resetNodeLibraryWidgets(self):
+        #init node selector tab, set autocompletion etc
+        #self._nodeNameCompleter = QtWidgets.QCompleter(self)
+        self.uiData.nodeNamesModel().setStringList(self.uiData.nodeNamesList())
+        # set tree view of node library
+        fill_widget(self.treeWidget, self.uiData.nodeNamesTree())
+
     def connectActions(self):
         self.actionNew_fc.triggered.connect(self.on_actionNew_fc)
         self.actionSave_fc.triggered.connect(self.on_actionSave_fc)
@@ -102,7 +111,7 @@ class MainWindow(QtWidgets.QMainWindow):
                             terminals={
                               'dataIn': {'io': 'in'},
                               'dataOut': {'io': 'out'}},
-                            library=self.uiData.flowchartLib())
+                            library=self.uiData.fclib())
         
         # connecting standard signals of the flowchart
         self.connectFCSignals()
@@ -210,10 +219,16 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         try:
             data = readNodeFile(fname)
-            registerNode(self.uiData.flowchartLib(), fname)
+        except Exception, err:
+            QtWidgets.QMessageBox.warning(self, "Add Item to Node Library", "Cannot load information from file <i>{0}</i> <br><br> {1}".format(fname, traceback.print_exc()))
+            return
+        try:
+            self.uiData.fclib().registerExternalNode(fname)
+            self.resetNodeLibraryWidgets()
             QtWidgets.QMessageBox.information(self, "Add Item to Node Library", "Node <b>`{0}`</b> has been successflly added to the Library. Node information has been loaded from file <i>{1}</i>".format(data['classname'], fname))
         except Exception, err:
-            traceback.print_exc()
+            QtWidgets.QMessageBox.warning(self, "Add Item to Node Library", "Cannot load Node <b>`{0}`</b> from file <i>{1}</i> <br><br> {2}".format(data['classname'], data['filename'], traceback.print_exc()))
+            
 
     @QtCore.pyqtSlot()
     def on_actionAbout(self):
@@ -344,6 +359,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 
+from lib.flowchart.NodeLibrary import customNodeLibrary
+
+
 
 class uiData(QtCore.QObject):
     """ class to collect all our user-interface settings,
@@ -363,24 +381,22 @@ class uiData(QtCore.QObject):
 
 
     def initLibrary(self):
-        self._flowchartLib = nodelib()
+        self._flowchartLib = customNodeLibrary()
+        self._flowchartLib.buildDefault(projectPath('resources/defaultLibrary.json'))
 
         # create a StringListModel of registered node names, it will be used for auto completion
-        self._nodeNamesList  = self._flowchartLib.nodeList.keys()
+        #self._nodeNamesList  = self._flowchartLib.nodeList.keys()
         self._nodeNamesModel = QtCore.QStringListModel(self)
-        self._nodeNamesModel.setStringList(self._nodeNamesList)
-        
-        # create a TreeModel of registered node names, it will be used for auto completion
-        self._nodeNamesTree = self._flowchartLib.nodeTree
+        self._nodeNamesModel.setStringList(self._flowchartLib.getNodeList())
 
     def nodeNamesList(self):
-        return self._nodeNamesList
+        return self._flowchartLib.getNodeList()
 
     def nodeNamesModel(self):
         return self._nodeNamesModel
 
     def nodeNamesTree(self):
-        return self._nodeNamesTree
+        return self._flowchartLib.getNodeTree()
 
     def currentFileName(self):
         return self._currentFileName
@@ -410,7 +426,7 @@ class uiData(QtCore.QObject):
     def standardFileName(self):
         return self._standardFileName
 
-    def flowchartLib(self):
+    def fclib(self):
         return self._flowchartLib
 
 

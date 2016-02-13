@@ -21,16 +21,16 @@ from lib.common.TableView import TableView
 
 
 
-class viewPandasDfNode(Node):
+class QuickViewNode(Node):
     """View dataframe in TableView/Matplotlib-plot"""
     nodeName = "QuickView"
 
 
     def __init__(self, name, parent=None):
-        super(viewPandasDfNode, self).__init__(name, terminals={'In': {'io': 'in'}})
+        super(QuickViewNode, self).__init__(name, terminals={'In': {'io': 'in'}})
         self.graphicsItem().setBrush(fn.mkBrush(150, 150, 250, 200))
         self._pandasModel = None
-        self._ctrlWidget = viewPandasDfCtrlWidget(self)
+        self._ctrlWidget = QuickViewCtrlWidget(self)
         
     def process(self, In):
         with BusyCursor():
@@ -70,10 +70,10 @@ class viewPandasDfNode(Node):
 
 
 
-class viewPandasDfCtrlWidget(QtWidgets.QWidget):
+class QuickViewCtrlWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
-        super(viewPandasDfCtrlWidget, self).__init__()
-        uic.loadUi(os.path.join(os.path.dirname(__file__), 'node_viewpandasdf.ui'), self)
+        super(QuickViewCtrlWidget, self).__init__()
+        uic.loadUi(os.path.join(os.path.dirname(__file__), 'node_quickview.ui'), self)
         self._parent = parent
         self.initUI()
         self.pushButton_viewPlot.setEnabled(False)
@@ -94,14 +94,14 @@ class viewPandasDfCtrlWidget(QtWidgets.QWidget):
             except Exception, err:
                 modelOneIsSet = False
                 traceback.print_exc()
-                print "viewPandasDfCtrlWidget: Unnable to set listView model"
+                print "QuickViewCtrlWidget: Unnable to set listView model"
             try:
                 self.tableView.setModel(self.parent().getPandasModel())
                 modelTwoIsSet = True
             except Exception, err:
                 modelTwoIsSet = False
                 traceback.print_exc()
-                print( "viewPandasDfCtrlWidget: Unnable to set tableView model")
+                print( "QuickViewCtrlWidget: Unnable to set tableView model")
             if modelOneIsSet and modelTwoIsSet:
                 modelsAreSet = True
         self.updateButtons(modelsAreSet)

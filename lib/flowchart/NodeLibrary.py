@@ -1,9 +1,106 @@
 # these imports are for creating custom Node-Library
-import pyqtgraph.flowchart.library as fclib
 import os
 import json
+from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
+from pyqtgraph.flowchart.Node import Node
+
+
 from lib.functions.importFromURI import importFromURI
-from lib import projectPath
+
+
+
+def isNodeClass(cls):
+    try:
+        if not issubclass(cls, Node):
+            return False
+    except:
+        return False
+    return hasattr(cls, 'nodeName')
+
+
+
+class customNodeLibrary(NodeLibrary):
+    """
+    This class is an extension of pyqtgraph.flowchart.NodeLibrary class:
+
+    Additions:
+        - getNodeList()
+        - registerExternalNode()
+        - buildDefault()
+    """
+
+    def __init__(self):
+        #super(customNodeLibrary, self).__init__()
+        NodeLibrary.__init__(self)  # super is not working because calss NodeLibrary is OldStyle. NewStyle would add inheritance from `object` like this NodeLibrary(object)
+
+    def getNodeList(self):
+        return self.nodeList.keys()
+
+    def buildDefault(self, json_lib=None, include_pyqtgraph=False):
+        """ Method build default library
+
+        Args:
+        -----
+            json_lib (str or None):
+                URI of the JSON file with links to default nodes
+                The file has format:
+                    { "_comment": "underscore is ignored",
+                      "key1" : "path/to/noderegister/file1.node",
+                      "key2" : "path/to/noderegister/file2.node",
+                    }
+                Keys are not important (keys starting with underscore
+                will be ignored)
+
+                If `None` - no file is read
+
+            include_pyqtgraph (bool):
+                flag to inculude default pyqtgraph node library
+        """
+        if json_lib:
+            with open(json_lib) as lib_file:
+                data = json.load(lib_file)
+    
+            for k, nodeRegFile in data.iteritems():
+                if not k.startswith('_'):
+                    self.registerExternalNode(nodeRegFile)
+
+        if include_pyqtgraph:
+            # Add all nodes to the default library
+            from pyqtgraph.flowchart.library import Data, Display, Filters, Operators
+            for mod in [Data, Display, Filters, Operators]:
+                nodes = [getattr(mod, name) for name in dir(mod) if isNodeClass(getattr(mod, name))]
+                for node in nodes:
+                    self.addNodeType(node, [(mod.__name__.split('.')[-1],)])
+        else:
+            # Add all nodes to the default library
+            from pyqtgraph.flowchart.library import Data
+            from pyqtgraph.flowchart.library import Display
+            for mod, node in zip((Data, Display), (Data.EvalNode, Display.PlotCurve)):
+                self.addNodeType(node, [(mod.__name__.split('.')[-1],)])
+
+
+    def registerExternalNode(self, fname):
+        """ Procedure registers node. The
+        node is described in file `fname`.
+        Args:
+        -----
+            fname (str):
+                path to the *.node file (file must has JSON syntax)
+        """
+        data = readNodeFile(fname)
+        nodeClass = importNodeClass(data, absl=True)
+        self.addNodeType(nodeClass, [tuple(data['libpath'])], override=data.get('override', True))
+
+
+
+
+
+
+
+
+
+
+
 
 
 def readNodeFile(fname):
@@ -65,41 +162,3 @@ def importNodeClass(data, absl=False):
         print ('Warning! module {0} doesnot have attribute {1}'.format(module, data['classname']))
     nodeClass = getattr(module, data['classname'])
     return nodeClass
-
-
-def registerNode(library, fname):
-    """ Procedure registers node in a given `library`. The
-    node is described in file `fname`.
-
-    Args:
-    -----
-        library (pyqtgraph.NodeLibrary):
-            library to which the node will be registered
-
-        fname (str):
-            path to the *.node file (file must has JSON syntax)
-    """
-    data = readNodeFile(fname)
-    nodeClass = importNodeClass(data, absl=True)
-    library.addNodeType(nodeClass, [tuple(data['libpath'])], override=data.get('override', True))
-
-
-def nodelib():
-    del fclib.NODE_TREE['Filters']  # remove Filters from the list of available nodes
-    del fclib.NODE_TREE['Operators']  # remove Operators from the list of available nodes
-    del fclib.NODE_TREE['Display']['CanvasWidget']  # remove Operators from the list of available nodes
-    del fclib.NODE_TREE['Display']['PlotWidget']  # remove Operators from the list of available nodes
-    del fclib.NODE_TREE['Display']['ScatterPlot']  # remove Operators from the list of available nodes
-    #del fclib.NODE_TREE['Filter']['PythonEval']  # remove PythonEval from the list of available nodes
-
-    
-    flowchartLib = fclib.LIBRARY.copy()  # start with the default node set
-
-    with open(projectPath('resources/defaultLibrary.json')) as lib_file:
-        data = json.load(lib_file)
-    
-    for k, nodeRegFile in data.iteritems():
-        if not k.startswith('_'):
-            registerNode(flowchartLib, nodeRegFile)
-
-    return flowchartLib

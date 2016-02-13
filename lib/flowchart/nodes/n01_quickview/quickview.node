@@ -1,6 +1,6 @@
 {
-    "filename":  "node_viewpandasdf.py",
-    "classname": "viewPandasDfNode",
+    "filename":  "node_quickview.py",
+    "classname": "QuickViewNode",
     "libpath": ["Display", "Widgets"],
     "override": true
 }
