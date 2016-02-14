@@ -5,7 +5,7 @@ from pyqtgraph import functions as fn
 
 
 class pipeNode(Node):
-    """Transmits the data further without processing !!!"""
+    """Transmits the data further without processing"""
     nodeName = "pipe"
 
 

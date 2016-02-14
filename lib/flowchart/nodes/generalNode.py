@@ -12,11 +12,12 @@ class newNodeWithCtrlWidget(Node):
     """ This is an abstract class to build other nodes.
     """
 
-    sigStateChanged = QtCore.Signal(object)
+    sigUIStateChanged = QtCore.Signal(object)
 
 
     def __init__(self, name, color=(200, 200, 200, 150), ui=None, **kwargs):
         self._parent = kwargs.get('parent', None)
+        kwargs['terminals'] = kwargs.get('terminals', {'In': {'io': 'in'}, 'Out': {'io': 'out'}})
         if 'parent' in kwargs.keys():
             kwargs.pop('parent')
         super(newNodeWithCtrlWidget, self).__init__(name, **kwargs)
@@ -44,9 +45,10 @@ class newNodeWithCtrlWidget(Node):
         if update:
             self.update()
 
-    def changed(self):
-        self.update()
-        self.sigStateChanged.emit(self)
+    def changed(self, update=False):
+        if update:
+            self.update()
+        self.sigUIStateChanged.emit(self)
 
 
 class newNodeCtrlWidget(ParameterTree):
@@ -67,9 +69,9 @@ class newNodeCtrlWidget(ParameterTree):
         self._savedState = self.saveState()
 
     def initSignalConnections(self):
+        update_parent = True
         for child in self.p.children(recursive=True, ignore_groups=True):
-            if hasattr(child, 'sigValueChanged'):
-                child.sigValueChanged.connect(self._parent.changed)
+            child.sigStateChanged.connect(lambda: self._parent.changed(update_parent))
 
     def initUserSignalConnections(self):
         """ This method should be reimplemented by user when creating custom node,

@@ -34,12 +34,12 @@ def importFromURI(uri, absl=False):
         
     no_ext = os.path.join(path, mname)
         
-    if os.path.exists(no_ext + '.pyc'):
-        try:
-            return imp.load_compiled(mname, no_ext + '.pyc')
-        except Exception, err:
-            print ('Warning! Cannot load compiled module {0}'.format(no_ext + '.pyc'), err)
-            traceback.print_exc()
+    #if os.path.exists(no_ext + '.pyc'):
+    #    try:
+    #        return imp.load_compiled(mname, no_ext + '.pyc')
+    #    except Exception, err:
+    #        print ('Warning! Cannot load compiled module {0}'.format(no_ext + '.pyc'), err)
+    #        traceback.print_exc()
     if os.path.exists(no_ext + '.py'):
         try:
             return imp.load_source(mname, no_ext + '.py')

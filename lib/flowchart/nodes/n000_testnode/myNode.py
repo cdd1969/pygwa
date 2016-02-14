@@ -5,7 +5,11 @@ class myNode(newNodeWithCtrlWidget):
     '''This is test docstring'''
     nodeName = 'myTestNode'
     uiTemplate = [{'name': 'HNO3', 'type': 'list', 'value': 'Closest Time'},
-                    {'name': 'H2', 'type': 'str', 'value': '?/?', 'readonly': True}]
+                    {'name': 'C2H5OH', 'type': 'bool', 'value': 0},
+                    {'name': 'H20', 'type': 'str', 'value': '?/?'}]
 
     def __init__(self, name, **kwargs):
-        super(myNode, self).__init__(name, **kwargs)
+        super(myNode, self).__init__(name, terminals={'In': {'io': 'in'}, 'Out': {'io': 'out'}}, **kwargs)
+
+    def process(self, In):
+        print ('processing')
