@@ -3,88 +3,19 @@
 
 import os
 from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.parametertree import Parameter, ParameterTree
 from pyqtgraph import BusyCursor
 import pandas as pd
 
 from lib.flowchart.package import Package
-from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
-from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
+from lib.functions.general import getCallableArgumentList
+from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 
 
 
 class readXLSNode(NodeWithCtrlWidget):
     """Read data from spreadsheet"""
     nodeName = "readXLS"
-
-
-    def __init__(self, name, parent=None):
-        super(readXLSNode, self).__init__(name, parent=parent, terminals={'output': {'io': 'out'}}, color=(100, 250, 100, 150))
-        self._ctrlWidget = readXLSNodeCtrlWidget(self)
-
-        
-    def process(self, display=True):
-        kwargs = self.ctrlWidget().evaluateState()
-        with BusyCursor():
-            df = pd.read_excel(**kwargs)
-        return {'output': Package(df)}
-
-
-
-
-
-class readXLSNodeCtrlWidget(ParameterTree):
-    
-    def __init__(self, parent=None):
-        super(readXLSNodeCtrlWidget, self).__init__()
-        self._parent = parent
-
-        params = self.params()
-        ## Create tree of Parameter objects
-        self.p = Parameter.create(name='params', type='group', children=params)
-
-        ## set parameter tree to <self> (parameterTreeWidget)
-        self.setParameters(self.p, showTop=False)
-        self.initConnections()
-        # save default state
-        self._savedState = self.saveState()
-
-    def initConnections(self):
-        self.p.child('Load File').sigActivated.connect(self.on_loadfile_clicked)
-        self.p.child('Select File').sigActivated.connect(self.on_selectFile_clicked)
-        self.p.child('Select File').sigValueChanged.connect(self.on_selectFile_valueChanged)
-
-    @QtCore.pyqtSlot()  #default signal
-    def on_loadfile_clicked(self):
-        self._parent.update()
-
-    @QtCore.pyqtSlot()  #default signal
-    def on_selectFile_clicked(self):
-        fname = None
-        filters = "Excel files (*.xls *.xlsx *.xlrd);;All files (*.*)"
-        fname = unicode(QtGui.QFileDialog.getOpenFileName(self, 'Open Spreadsheet Data File', filter=filters)[0])
-        if fname:
-            self.p.child('Select File').setValue(fname)
-            #self.itemWidget(self.p.child('Select File'), 0).setTooltip(fname)
-    
-    @QtCore.pyqtSlot(object)  #default signal
-    def on_selectFile_valueChanged(self, value):
-        button  = self.p.child('Select File').items.items()[0][0].button
-        fname = self.p.child('Select File').value()
-
-        if fname is not None and os.path.isfile(fname):
-            button.setFlat(True)
-            button.setToolTip('File is selected: {0}'.format(fname))
-            button.setStatusTip('File is selected: {0}'.format(fname))
-        else:
-            button.setFlat(False)
-            button.setToolTip('Select File')
-            button.setStatusTip('Select File')
-
-
-
-    def params(self):
-        params = [
+    uiTemplate = [
             {'name': 'Select File', 'type': 'action', 'value': None},
             {'name': 'Parameters', 'type': 'group', 'children': [
                 {'name': 'sheetname', 'type': 'str', 'value': 0, 'default': 0, 'tip': '<string, int, mixed list of strings/ints, or None, default 0>\nStrings are used for sheet names, Integers are used in zero-indexed sheet positions.\nLists of strings/integers are used to request multiple sheets.\nSpecify `None` to get all sheets.\nstr|int -> DataFrame is returned. list|None -> Dict of DataFrames is returned, with \nkeys representing sheets.\nAvailable Cases\n - Defaults to 0 -> 1st sheet as a DataFrame\n - 1 -> 2nd sheet as a DataFrame\n - "Sheet1" -> 1st sheet as a DataFrame\n - [0,1,"Sheet5"] -> 1st, 2nd & 5th sheet as a dictionary of DataFrames\n - None -> All sheets as a dictionary of DataFrames'},
@@ -101,39 +32,65 @@ class readXLSNodeCtrlWidget(ParameterTree):
             ]},
             {'name': 'Load File', 'type': 'action'},
         ]
-        return params
 
-    def saveState(self):
-        return self.p.saveState()
+    def __init__(self, name, parent=None):
+        super(readXLSNode, self).__init__(name, parent=parent, terminals={'output': {'io': 'out'}}, color=(100, 250, 100, 150))
     
-    def restoreState(self, state):
-        self.p.restoreState(state)
+    def _createCtrlWidget(self, **kwargs):
+        return readXLSNodeCtrlWidget(**kwargs)
+        
+    def process(self, display=True):
+        kwargs = self.ctrlWidget().prepareInputArguments()
+        print kwargs
+        with BusyCursor():
+            df = pd.read_excel(**kwargs)
+        return {'output': Package(df)}
 
-    def evaluateState(self, state=None):
-        """ function evaluates passed state , reading only necessary parameters,
-            those that can be passed to pandas.read_csv() as **kwargs (see function4arguments)
 
-            user should reimplement this function for each Node"""
 
-        if state is None:
-            state = self.saveState()
 
-        # ------------------------------------------------------
-        # if we wont use manually set params, then collect all params values
-        listWithDicts = evaluateDict(state['children'], functionToDicts=evaluationFunction, log=False,
-            function4arguments=pd.read_excel)
+
+class readXLSNodeCtrlWidget(NodeCtrlWidget):
+    
+    def __init__(self, **kwargs):
+        super(readXLSNodeCtrlWidget, self).__init__(update_on_statechange=False, **kwargs)
+
+    def initUserSignalConnections(self):
+        self.param('Load File').sigActivated.connect(self._parent.update)
+        self.param('Select File').sigActivated.connect(self.on_selectFile_clicked)
+        self.param('Select File').sigValueChanged.connect(self.on_selectFile_valueChanged)
+
+    @QtCore.pyqtSlot()  #default signal
+    def on_selectFile_clicked(self):
+        fname = None
+        filters = "Excel files (*.xls *.xlsx *.xlrd);;All files (*.*)"
+        fname = unicode(QtGui.QFileDialog.getOpenFileName(self, 'Open Spreadsheet Data File', filter=filters)[0])
+        if fname:
+            self.param('Select File').setValue(fname)
+
+    
+    @QtCore.pyqtSlot(object)  #default signal
+    def on_selectFile_valueChanged(self, value):
+        button  = self.param('Select File').items.items()[0][0].button
+        fname = self.param('Select File').value()
+
+        if fname is not None and os.path.isfile(fname):
+            button.setToolTip('File is selected: {0}'.format(fname))
+            button.setStatusTip('File is selected: {0}'.format(fname))
+        else:
+            button.setToolTip('Select File')
+            button.setStatusTip('Select File')
+    
+    def prepareInputArguments(self):
+        valid_arg_list = getCallableArgumentList(pd.read_excel, get='args')
         kwargs = dict()
-        for d in listWithDicts:
-            # {'a': None}.items() = [('a', None)] => two times indexing
-            kwargs[d.items()[0][0]] = d.items()[0][1]
 
-        try:
-            Additional_kwargs = eval(state['children']['Parameters']['children']['Additional parameters']['value'])
-            if isinstance(Additional_kwargs, dict):
-                for key, val in Additional_kwargs.iteritems():
-                    kwargs[key] = val
-        except:
-            pass
-        kwargs['io'] = state['children']['Select File']['value']
+        for param in self.params():
+            if param.name() in valid_arg_list and self.p.evaluateValue(param.value()) != '':
+                kwargs[param.name()] = self.p.evaluateValue(param.value())
 
+        kwargs['io'] = self.paramValue('Select File')
         return kwargs
+
+
+

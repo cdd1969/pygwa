@@ -131,7 +131,7 @@ class readCSVNodeCtrlWidget(NodeCtrlWidget):
             kwargs = dict()
 
             for param in self.params():
-                if param.name() in valid_arg_list:
+                if param.name() in valid_arg_list and self.p.evaluateValue(param.value()) != '':
                     kwargs[param.name()] = self.p.evaluateValue(param.value())
 
             #if kwargs['date_parser'] is not None:
