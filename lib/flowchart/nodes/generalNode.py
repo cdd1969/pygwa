@@ -21,12 +21,17 @@ class NodeWithCtrlWidget(Node):
         if 'parent' in kwargs.keys():
             kwargs.pop('parent')
         super(NodeWithCtrlWidget, self).__init__(name, **kwargs)
+        self._init_at_first()
         self.graphicsItem().setBrush(fn.mkBrush(color))
 
         if ui is None:
             ui = getattr(self, 'uiTemplate', [])
         self._ctrlWidget = self._createCtrlWidget(parent=self, ui=ui)
 
+    def _init_at_first(self):
+        ''' Reimplemented this method to init something at very beginning'''
+        pass
+        
     def _createCtrlWidget(self, **kwargs):
         ''' Reimplemented this method to connect custom control widgets.
         For default NodeCtrlWidget **kwargs must contain...
@@ -54,6 +59,7 @@ class NodeWithCtrlWidget(Node):
             self.update()
 
     def changed(self, update=False):
+        print 'changed... update=', update
         if update:
             self.update()
         self.sigUIStateChanged.emit(self)
@@ -114,3 +120,9 @@ class NodeCtrlWidget(ParameterTree):
     def paramValue(self, *names, **opts):
         ''' alias to p.childValue()'''
         return self.p.childValue(*names, **opts)
+
+    def prepareInputArguments(self, ignore_groups=False):
+        kwargs = dict()
+        for p in self.params(ignore_groups=ignore_groups):
+            kwargs[p.name()] = p.value()
+        return kwargs

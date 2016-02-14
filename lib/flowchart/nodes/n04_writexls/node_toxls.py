@@ -12,7 +12,7 @@ from lib.functions.general import returnPandasDf, getCallableArgumentList
 
 class toXLSNode(NodeWithCtrlWidget):
     """Write data to spreadsheet or copy to clipboard"""
-    nodeName = "toXLS"
+    nodeName = "writeXLS"
     uiTemplate = [
             {'name': 'Parameters', 'type': 'group', 'children': [
                 {'name': 'sheet_name', 'type': 'str', 'value': 'Sheet1', 'default': 'Sheet1', 'tip': '<string, default "Sheet1">\nName of sheet which will contain DataFrame'},

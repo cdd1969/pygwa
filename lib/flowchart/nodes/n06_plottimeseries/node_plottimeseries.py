@@ -10,31 +10,35 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph import functions as fn
 from pyqtgraph import BusyCursor
-from pyqtgraph.parametertree import Parameter, ParameterTree
-
-from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
-from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
+from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.common.DateAxisItem import DateAxisItem
 
 
 class plotTimeseriesNode(NodeWithCtrlWidget):
     """Convinient widget for visualizing timeseries"""
     nodeName = "TimeseriesPlot"
-
+    uiTemplate = [
+        {'name': 'Y:Label', 'type': 'str', 'value': 'Water level', 'default': 'Water level'},
+        {'name': 'Y:Units', 'type': 'str', 'value': 'm AMSL', 'default': 'm AMSL'},
+        {'name': 'Legend', 'type': 'bool', 'value': True, 'default': True, 'readonly': True},
+        {'name': 'Crosshair', 'type': 'bool', 'value': False, 'default': False},
+        {'name': 'Data Points', 'type': 'bool', 'value': False, 'default': False},
+        
+        {'name': 'Plot', 'type': 'action'},
+        ]
     sigItemReceived    = QtCore.Signal(object, object)  #(id(item), item)
     #sigRegItemReceived = QtCore.Signal(object)  #already registered item received (id(item))
 
-    def __init__(self, name, parent=None):
-        super(plotTimeseriesNode, self).__init__(name, terminals={'Items': {'io': 'in', 'multi': True}})
-        self.graphicsItem().setBrush(fn.mkBrush(150, 150, 250, 200))
-        self._graphicsWidget = plotTimeseriesGraphicsWidget(self)
-        self._ctrlWidget = plotTimeseriesNodeCtrlWidget(self)
-        #self.items = set()   #set to save incoming items
-        self._items = dict()
+    def __init__(self, name, parent=None, **kwargs):
+        super(plotTimeseriesNode, self).__init__(name, terminals={'Items': {'io': 'in', 'multi': True}}, color=(150, 150, 250, 200), **kwargs)
         self.sigItemReceived.connect(self.on_sigItemReceived)
 
-    def ctrlWidget(self):
-        return self._ctrlWidget
+    def _init_at_first(self):
+        self._graphicsWidget = plotTimeseriesGraphicsWidget(self)
+        self._items = dict()
+
+    def _createCtrlWidget(self, **kwargs):
+        return plotTimeseriesNodeCtrlWidget(**kwargs)
     
     def graphicsWidget(self):
         return self._graphicsWidget
@@ -216,7 +220,7 @@ class plotTimeseriesGraphicsWidget(QtGui.QWidget):
 
     @QtCore.pyqtSlot(bool)
     def toggleLegend(self, enable):
-        print('toggleLegend', enable)
+        #print('toggleLegend', enable)
         if enable:
             #self.p1.addItem(self.legend)
             # dont know how to restore legend...
@@ -228,7 +232,7 @@ class plotTimeseriesGraphicsWidget(QtGui.QWidget):
 
     @QtCore.pyqtSlot(bool)
     def toggleCrosshair(self, enable):
-        print('toggleCrosshair', enable)
+        #print('toggleCrosshair', enable)
         if enable:
             #cross hair
             self.p1.addItem(self.vLine, ignoreBounds=True)
@@ -239,7 +243,7 @@ class plotTimeseriesGraphicsWidget(QtGui.QWidget):
 
     @QtCore.pyqtSlot(bool)
     def togglePoints(self, enable):
-        print('togglePoints', enable)
+        #print('togglePoints', enable)
         with BusyCursor():
             for item in self.parent().items().values():
                 # we want to toggle points only on upper subplot => index [0]
@@ -290,82 +294,37 @@ class plotTimeseriesGraphicsWidget(QtGui.QWidget):
 
 
 
-class plotTimeseriesNodeCtrlWidget(ParameterTree):
+class plotTimeseriesNodeCtrlWidget(NodeCtrlWidget):
     
-    def __init__(self, parent=None):
-        super(plotTimeseriesNodeCtrlWidget, self).__init__()
-        self._parent = parent
-
+    def __init__(self, **kwargs):
+        super(plotTimeseriesNodeCtrlWidget, self).__init__(**kwargs)
         self._gr = self._parent.graphicsWidget()
-        params = self.params()
-        ## Create tree of Parameter objects
-        self.p = Parameter.create(name='params', type='group', children=params)
-
-        ## set parameter tree to <self> (parameterTreeWidget)
-        self.setParameters(self.p, showTop=False)
-        self.initConnections()
-        # save default state
-        self._savedState = self.saveState()
         self.on_yAxisLabelUnitsChanged()  #on init, it is important that WINDOW is already inited
 
-    def initConnections(self):
-        self.p.child('Plot').sigActivated.connect(self._gr.win.show)
-        #self.p.child('Label').sigValueChanged.connect(self._gr.setLabel)
-        self.p.child('Y:Label').sigValueChanged.connect(self.on_yAxisLabelUnitsChanged)
-        self.p.child('Y:Units').sigValueChanged.connect(self.on_yAxisLabelUnitsChanged)
-        self.p.child('Legend').sigValueChanged.connect(self.on_legendChanged)
-        self.p.child('Crosshair').sigValueChanged.connect(self.on_crosshairChanged)
-        self.p.child('Data Points').sigValueChanged.connect(self.on_datapointsChanged)
+        self.param('Plot').sigActivated.connect(self._gr.win.show)
+        #self.param('Label').sigValueChanged.connect(self._gr.setLabel)
+        self.param('Y:Label').sigValueChanged.connect(self.on_yAxisLabelUnitsChanged)
+        self.param('Y:Units').sigValueChanged.connect(self.on_yAxisLabelUnitsChanged)
+        self.param('Legend').sigValueChanged.connect(self.on_legendChanged)
+        self.param('Crosshair').sigValueChanged.connect(self.on_crosshairChanged)
+        self.param('Data Points').sigValueChanged.connect(self.on_datapointsChanged)
 
     def on_yAxisLabelUnitsChanged(self):
-        text = self.p.child('Y:Label').value()
-        units = self.p.child('Y:Units').value()
+        text  = self.param('Y:Label').value()
+        units = self.param('Y:Units').value()
         self._gr.setYAxisTextAndUnits(text, units)
     
     def on_legendChanged(self):
-        self._gr.toggleLegend(self.p.child('Legend').value())
+        self._gr.toggleLegend(self.param('Legend').value())
     
     def on_crosshairChanged(self):
-        self._gr.toggleCrosshair(self.p.child('Crosshair').value())
+        self._gr.toggleCrosshair(self.param('Crosshair').value())
     
     def on_datapointsChanged(self):
-        self._gr.togglePoints(self.p.child('Data Points').value())
+        self._gr.togglePoints(self.param('Data Points').value())
 
-    def params(self):
-        params = [
-            #{'name': 'Label', 'type': 'str', 'value': 'Hydrographs', 'default': 'Hydrographs'},
-            {'name': 'Y:Label', 'type': 'str', 'value': 'Water level', 'default': 'Water level'},
-            {'name': 'Y:Units', 'type': 'str', 'value': 'm AMSL', 'default': 'm AMSL'},
-            {'name': 'Legend', 'type': 'bool', 'value': True, 'default': True, 'readonly': True},
-            {'name': 'Crosshair', 'type': 'bool', 'value': False, 'default': False},
-            {'name': 'Data Points', 'type': 'bool', 'value': False, 'default': False},
-            
-            {'name': 'Plot', 'type': 'action'},
-        ]
-        return params
-
-    def saveState(self):
-        return self.p.saveState()
-    
-    def restoreState(self, state):
-        self.p.restoreState(state)
-
-    def evaluateState(self, state=None):
-        """ function evaluates passed state , reading only necessary parameters,
-            those that can be passed to pandas.read_csv() as **kwargs (see function4arguments)
-
-            user should reimplement this function for each Node"""
-
-        if state is None:
-            state = self.saveState()
-
-
-        if state is None:
-            state = self.saveState()
-        validArgs = [d['name'] for d in self.params()]
-        listWithDicts = evaluateDict(state['children'], functionToDicts=evaluationFunction, log=False, validArgumnets=validArgs)
+    def prepareInputArguments(self):
         kwargs = dict()
-        for d in listWithDicts:
-            # {'a': None}.items() >>> [('a', None)] => two times indexing
-            kwargs[d.items()[0][0]] = d.items()[0][1]
+        for p in self.params():
+            kwargs[p.name()] = p.value()
         return kwargs

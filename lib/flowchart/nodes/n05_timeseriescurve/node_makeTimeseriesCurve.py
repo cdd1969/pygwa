@@ -1,16 +1,13 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
 
-from pyqtgraph.parametertree import Parameter, ParameterTree
 from pyqtgraph import BusyCursor, PlotDataItem
 import numpy as np
 import pandas as pd
 
 from lib.flowchart.package import Package
-from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
-from lib.functions.general import returnPandasDf, isNumpyDatetime
-from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
-
+from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
+from lib.functions.general import returnPandasDf, isNumpyDatetime, isNumpyNumeric
 
 
 class makeTimeseriesCurveNode(NodeWithCtrlWidget):
@@ -18,29 +15,33 @@ class makeTimeseriesCurveNode(NodeWithCtrlWidget):
     and pd.Series with datetime stored in Index
     """
     nodeName = "makeTimeseriesCurve"
+    uiTemplate = [
+        {'name': 'Y:signal', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Signal Data-Values (Y-axis)'},
+        {'name': 'X:datetime', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Datetime Values (X-axis)'},
+        {'name': 'tz correct', 'type': 'float', 'value': 0, 'default': 0, 'suffix': ' hours', 'tip': '<float>\nONLY FOR CURVE!!!\nTimezone correction\nNumber of hours to add/substract from result. Due to missing\ntimezone settings it may be nessesary to use this parameter.\nCheck the results manually with *TimeseriesPlot* Node'},
+        {'name': 'color', 'type': 'color', 'tip': 'Curve color'},
 
+    
+        ]
 
     def __init__(self, name, parent=None):
         super(makeTimeseriesCurveNode, self).__init__(name, parent=parent, terminals={'df': {'io': 'in'}, 'pd.Series': {'io': 'out'}, 'Curve': {'io': 'out'}}, color=(150, 150, 250, 150))
-        self._ctrlWidget = makeTimeseriesCurveNodeCtrlWidget(parent=self)
         self._plotRequired = False
         self.item = PlotDataItem(clipToView=False)
-
+    
+    def _createCtrlWidget(self, **kwargs):
+        return makeTimeseriesCurveNodeCtrlWidget(**kwargs)
         
     def process(self, df):
         df  = returnPandasDf(df)
 
-        colname = [col for col in df.columns if not isNumpyDatetime(df[col].dtype)]
-        self._ctrlWidget.p.param('Y:signal').setLimits(colname)
-        colname = [None]+[col for col in df.columns if isNumpyDatetime(df[col].dtype)]
-        self._ctrlWidget.p.param('X:datetime').setLimits(colname)
-
-
-        kwargs = self._ctrlWidget.evaluateState()
-
+        colname = [col for col in df.columns if isNumpyNumeric(df[col].dtype)]
+        self._ctrlWidget.param('Y:signal').setLimits(colname)
+        colname = [col for col in df.columns if isNumpyDatetime(df[col].dtype)]
+        self._ctrlWidget.param('X:datetime').setLimits(colname)
 
         with BusyCursor():
-            kwargs = self.ctrlWidget().evaluateState()
+            kwargs = self.ctrlWidget().prepareInputArguments()
             t = df[kwargs['X:datetime']].values
             # part 1
             timeSeries = pd.DataFrame(data=df[kwargs['Y:signal']].values, index=t, columns=[kwargs['Y:signal']])
@@ -52,64 +53,29 @@ class makeTimeseriesCurveNode(NodeWithCtrlWidget):
             #   now create curve
             self.item.setData(timeStamps, df[kwargs['Y:signal']].values, pen=kwargs['color'], name=kwargs['Y:signal'])
             
-            return{'Curve': self.item, 'pd.Series': Package(timeSeries) }
+        return{'Curve': self.item, 'pd.Series': Package(timeSeries) }
 
 
 
 
 
 
-class makeTimeseriesCurveNodeCtrlWidget(ParameterTree):
+class makeTimeseriesCurveNodeCtrlWidget(NodeCtrlWidget):
     
-    def __init__(self, parent=None):
-        super(makeTimeseriesCurveNodeCtrlWidget, self).__init__()
-        self._parent = parent
+    def __init__(self, **kwargs):
+        super(makeTimeseriesCurveNodeCtrlWidget, self).__init__(**kwargs)
 
-        params = self.params()
-        ## Create tree of Parameter objects
-        self.p = Parameter.create(name='params', type='group', children=params)
+    def initUserSignalConnections(self):
+        pass
+        #self.param('tz correct').sigValueChanged.connect(self._parent.update)
+        #self.param('Y:signal').sigValueChanged.connect(self._parent.update)
+        #self.param('X:datetime').sigValueChanged.connect(self._parent.update)
+        #self.param('color').sigValueChanged.connect(self._parent.update)
 
-        ## set parameter tree to <self> (parameterTreeWidget)
-        self.setParameters(self.p, showTop=False)
-        self.initConnections()
-        # save default state
-        self._savedState = self.saveState()
-
-    def initConnections(self):
-        self.p.child('tz correct').sigValueChanged.connect(self._parent.update)
-        self.p.child('Y:signal').sigValueChanged.connect(self._parent.update)
-        self.p.child('X:datetime').sigValueChanged.connect(self._parent.update)
-        self.p.child('color').sigValueChanged.connect(self._parent.update)
-    
-    def params(self):
-        params = [
-            {'name': 'Y:signal', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Signal Data-Values (Y-axis)'},
-            {'name': 'X:datetime', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Datetime Values (X-axis)'},
-            {'name': 'tz correct', 'type': 'float', 'value': 0, 'default': 0, 'suffix': ' hours', 'tip': '<float>\nONLY FOR CURVE!!!\nTimezone correction\nNumber of hours to add/substract from result. Due to missing\ntimezone settings it may be nessesary to use this parameter.\nCheck the results manually with *TimeseriesPlot* Node'},
-            {'name': 'color', 'type': 'color', 'tip': 'Curve color'},
-
-        
-            ]
-        return params
-
-    def saveState(self):
-        return self.p.saveState()
-    
-    def restoreState(self, state):
-        self.p.restoreState(state)
-
-    def evaluateState(self, state=None):
-        """ function evaluates passed state , reading only necessary parameters,
-            those that can be passed to pandas.read_csv() as **kwargs
-
-            user should reimplement this function for each Node"""
-
-        if state is None:
-            state = self.saveState()
-        listWithDicts = evaluateDict(state['children'], functionToDicts=evaluationFunction, log=False, validArgumnets=['Y:signal', 'X:datetime', 'tz correct', 'color'])
+    def prepareInputArguments(self):
         kwargs = dict()
-        for d in listWithDicts:
-            # {'a': None}.items() >>> [('a', None)] => two times indexing
-            kwargs[d.items()[0][0]] = d.items()[0][1]
-
+        kwargs['Y:signal'] = self.paramValue('Y:signal', datatype=(str, unicode))
+        kwargs['X:datetime'] = self.paramValue('X:datetime', datatype=(str, unicode))
+        kwargs['tz correct'] = self.paramValue('tz correct', datatype=(int, float))
+        kwargs['color'] = self.param('color').value()
         return kwargs
