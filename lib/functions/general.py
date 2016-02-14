@@ -20,7 +20,6 @@ def returnPandasDf(obj, raiseException=False):
                 # now `Input` is surely pd.DataFrame or pd.Series
                 #... process `Input`
 
-
         Args:
         ------
             obj : object of any dtype, but it is expected to recieve pd.DataFrame
@@ -64,6 +63,13 @@ def isNumpyNumeric(dtype):
 
 
 def flatten_dict(d, sep='.'):
+    '''Function return flattened nested dictionary.
+    Nested keys are connected with `sep` symbol(or string).
+    For example with `sep='.'`:
+        {'foo': 1, 'bar': {'foo': 2, 'bar': 3}}
+            >>>
+        {'foo': 1, 'bar.foo': 2, 'bar.bar': 3}
+    '''
     def items():
         for key, value in d.items():
             if isinstance(value, dict):

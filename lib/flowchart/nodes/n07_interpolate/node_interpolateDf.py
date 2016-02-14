@@ -5,50 +5,41 @@ import gc
 import copy
 import pyqtgraph.parametertree.parameterTypes as pTypes
 from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.parametertree import Parameter, ParameterTree
 from pyqtgraph import BusyCursor
-from pyqtgraph.flowchart.Node import Node
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
 
 from lib.flowchart.package import Package
 
-from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
+from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.interpolate import applyInterpolationBasedOnRanges, createInterpolationRanges
 from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
+from lib.functions.general import returnPandasDf
 
 
 
 
 class interpolateDfNode(NodeWithCtrlWidget):
     """Interpolate missing data in given DataFrame"""
-    nodeName = "interpolateDf"
+    nodeName = "interpolate"
 
 
-    def __init__(self, name, parent=None):
-        super(interpolateDfNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}, 'Out': {'io': 'out'}}, color=(250, 250, 150, 150))
-        self._ctrlWidget = interpolateDfNodeCtrlWidget(parent=self)
+    def __init__(self, name, parent=None, **kwargs):
+        super(interpolateDfNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}, 'Out': {'io': 'out'}}, color=(250, 250, 150, 150), **kwargs)
         self._columnsToUpdate = list()
 
+    def _createCtrlWidget(self, **kwargs):
+        return interpolateDfNodeCtrlWidget(**kwargs)
         
     def process(self, In):
-        if not isinstance(In, Package) or not isinstance(In.unpack(), pd.DataFrame):
-            self.In.setValueAcceptable(False)
-            if In is None:
-                self.deleteAllColumns()
-                return {'Out': None}
-            raise Exception("Input must be a <Package> with <pandas.DataDrame>. Received: {0}".format(type(In)))
-
-
-        df = In.unpack()
-        #kwargs = self._ctrlWidget.evaluateState()
-        #vals, indices = detectPeaks(In, **kwargs)
+        df = returnPandasDf(In)
+        if df is None:
+            self._ctrlWidget.p.clearChildren()
+            return
 
         receivedColumns = df.columns
         currentColumns = [item.name() for item in self._ctrlWidget.p.children()]
-        currentColumns.remove('Help')  # we have this Extra button
         
         # First take care of ParameterTree Widget.Remove missing and add new ParameterGroups
         for colName in receivedColumns:
@@ -77,8 +68,8 @@ class interpolateDfNode(NodeWithCtrlWidget):
             for colName in self._columnsToUpdate:
                 validN = df_out[colName].count()
                 nanN = (nN-validN)
-                self._ctrlWidget.p.child(colName).nEntries.setValue(nN)
-                self._ctrlWidget.p.child(colName).nNansBefore.setValue(nanN)
+                self._ctrlWidget.param(colName).nEntries.setValue(nN)
+                self._ctrlWidget.param(colName).nNansBefore.setValue(nanN)
                 
                 if nanN > 0:
                     #print( 'Updating ...', colName)
@@ -92,8 +83,6 @@ class interpolateDfNode(NodeWithCtrlWidget):
                         for key, val in params['**kwargs'].iteritems():
                             realKwargs[key] = val
                     #print( '>>>', colName, 'Real KWARGS >>>', realKwargs)
-
-
                     ranges2treat = createInterpolationRanges(df_out, colName, interpolateMargin=params['interpolateMargin'])
                     
                     #print( '>>>', colName, 'ranges >>>', ranges2treat)
@@ -107,22 +96,9 @@ class interpolateDfNode(NodeWithCtrlWidget):
                     nNansAfter = 0
                 self._ctrlWidget.p.child(colName).nNansAfter.setValue(nNansAfter)
 
-
-            
-
         self._columnsToUpdate = list()
         gc.collect()
         return {'Out': Package(df_out)}
-
-    def ctrlWidget(self):
-        return self._ctrlWidget
-
-    def saveState(self):
-        """overriding standard Node method to extend it with saving ctrlWidget state"""
-        state = Node.saveState(self)
-        # saving additional state of the control widget
-        state['crtlWidget'] = self.ctrlWidget().saveState()
-        return state
         
     def restoreState(self, state):
         """overriding standard Node method to extend it with restoring ctrlWidget state"""
@@ -179,65 +155,38 @@ class interpolateDfNode(NodeWithCtrlWidget):
 
 
 
-class interpolateDfNodeCtrlWidget(ParameterTree):
+class interpolateDfNodeCtrlWidget(NodeCtrlWidget):
     
-    def __init__(self, parent=None):
-        super(interpolateDfNodeCtrlWidget, self).__init__()
-        self._parent = parent
-
-        params = self.params()
-        ## Create tree of Parameter objects
-        self.p = Parameter.create(name='params', type='group', children=params)
-
-        ## set parameter tree to <self> (parameterTreeWidget)
-        self.setParameters(self.p, showTop=False)
-        self.initConnections()
-        # save default state
-        self._savedState = self.saveState()
-
-    def initConnections(self):
-        #self.p.sigValueChanged.connect(self._parent.updateColumns)
-        #self.p.child('split').sigValueChanged.connect(self._parent.updateWithoutArgs)
-        pass
-
-    def params(self):
-        params = []
-        return params
+    def __init__(self, **kwargs):
+        super(interpolateDfNodeCtrlWidget, self).__init__(**kwargs)
 
     def addDfColumn(self, columnName):
         columnParam = columnInterpolateGroupParameter(name=columnName)
         self.p.addChild(columnParam)
         
-        self.p.child(columnName).child('interpolateMargin').sigValueChanged.connect(self._parent.updateColumns)
-        self.p.child(columnName).child('method').sigValueChanged.connect(self._parent.updateColumns)
-        self.p.child(columnName).child('order').sigValueChanged.connect(self._parent.updateColumns)
-        self.p.child(columnName).child('**kwargs').sigValueChanged.connect(self._parent.updateColumns)
-        self.p.child(columnName).child('Plot').sigActivated.connect(self._parent.plot)
+        self.param(columnName, 'interpolateMargin').sigValueChanged.connect(self._parent.updateColumns)
+        self.param(columnName, 'method').sigValueChanged.connect(self._parent.updateColumns)
+        self.param(columnName, 'order').sigValueChanged.connect(self._parent.updateColumns)
+        self.param(columnName, '**kwargs').sigValueChanged.connect(self._parent.updateColumns)
+        self.param(columnName, 'Plot').sigActivated.connect(self._parent.plot)
 
 
     def removeDfColumn(self, columnName):
-        self.p.child(columnName).child('interpolateMargin').sigValueChanged.disconnect()
-        self.p.child(columnName).child('method').sigValueChanged.disconnect()
-        self.p.child(columnName).child('order').sigValueChanged.disconnect()
-        self.p.child(columnName).child('**kwargs').sigValueChanged.disconnect()
+        self.param(columnName, 'interpolateMargin').sigValueChanged.disconnect()
+        self.param(columnName, 'method').sigValueChanged.disconnect()
+        self.param(columnName, 'order').sigValueChanged.disconnect()
+        self.param(columnName, '**kwargs').sigValueChanged.disconnect()
         #self.p.child(columnName).child('Plot').sigActivated.disconnect(self._parent.plot)
-        self.p.removeChild(self.p.child(columnName))
+        self.p.removeChild(self.param(columnName))
         #del self.p.child(columnName)
-
-
-
-    def saveState(self):
-        return self.p.saveState()
     
-    def restoreState(self, state):
-
-        # here i wold have to probably add constructor of the missing params
-        #print ('-----------------------')
-        #print ('restroing state:', state['name'])
-        #print ('-----------------------')
-
-        #self.restoreState(state)
-        pass
+    #def restoreState(self, state): #
+    #    # here i wold have to probably add constructor of the missing params
+    #    #print ('-----------------------')
+    #    #print ('restroing state:', state['name'])
+    #    #print ('-----------------------') #
+    #    #self.restoreState(state)
+    #    pass
 
     def evaluateState(self, state=None, columnName=''):
         """ function evaluates passed state , reading only necessary parameters,
