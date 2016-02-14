@@ -8,7 +8,7 @@ from pyqtgraph.parametertree import ParameterTree
 from lib.common.Parameter import customParameter
 
 
-class newNodeWithCtrlWidget(Node):
+class NodeWithCtrlWidget(Node):
     """ This is an abstract class to build other nodes.
     """
 
@@ -20,12 +20,20 @@ class newNodeWithCtrlWidget(Node):
         kwargs['terminals'] = kwargs.get('terminals', {'In': {'io': 'in'}, 'Out': {'io': 'out'}})
         if 'parent' in kwargs.keys():
             kwargs.pop('parent')
-        super(newNodeWithCtrlWidget, self).__init__(name, **kwargs)
+        super(NodeWithCtrlWidget, self).__init__(name, **kwargs)
         self.graphicsItem().setBrush(fn.mkBrush(color))
 
         if ui is None:
             ui = getattr(self, 'uiTemplate', [])
-        self._ctrlWidget = newNodeCtrlWidget(parent=self, ui=ui)
+        self._ctrlWidget = self._createCtrlWidget(parent=self, ui=ui)
+
+    def _createCtrlWidget(self, **kwargs):
+        ''' Reimplemented this method to connect custom control widgets.
+        For default NodeCtrlWidget **kwargs must contain...
+            1) kwargs['parent']
+            2) kwargs['ui']
+            '''
+        return NodeCtrlWidget(**kwargs)
 
     def ctrlWidget(self):
         return self._ctrlWidget
@@ -51,10 +59,10 @@ class newNodeWithCtrlWidget(Node):
         self.sigUIStateChanged.emit(self)
 
 
-class newNodeCtrlWidget(ParameterTree):
+class NodeCtrlWidget(ParameterTree):
     
-    def __init__(self, parent=None, ui=None):
-        super(newNodeCtrlWidget, self).__init__()
+    def __init__(self, parent=None, ui=[], update_on_statechange=True):
+        super(NodeCtrlWidget, self).__init__()
         self._parent = parent
         self._ui = ui
 
@@ -63,13 +71,12 @@ class newNodeCtrlWidget(ParameterTree):
         ## set parameter tree to <self> (parameterTreeWidget)
         self.setParameters(self.p, showTop=False)
         # connect parameter signals
-        self.initSignalConnections()
+        self.initSignalConnections(update_parent=update_on_statechange)
         self.initUserSignalConnections()
         # save default state
         self._savedState = self.saveState()
 
-    def initSignalConnections(self):
-        update_parent = True
+    def initSignalConnections(self, update_parent=True):
         for child in self.p.children(recursive=True, ignore_groups=True):
             child.sigStateChanged.connect(lambda: self._parent.changed(update_parent))
 

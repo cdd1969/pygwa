@@ -1,8 +1,9 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
 import pandas as pd
-from ..flowchart import package
+from lib.flowchart import package
 import numpy as np
+import inspect
 
 
 def returnPandasDf(obj, raiseException=False):
@@ -73,6 +74,7 @@ def flatten_dict(d, sep='.'):
 
     return dict(items())
 
+
 def walkdict(d, key):
     stack = d.items()
     while stack:
@@ -84,9 +86,29 @@ def walkdict(d, key):
                 return v
 
 
+def getCallableArgumentList(func, get='all'):
+    '''
+    inspect.getargspec(func)
+    Get the names and default values of a Python function’s arguments. A tuple of four things is returned: (args, varargs, keywords, defaults). args is a list of the argument names (it may contain nested lists). varargs and keywords are the names of the * and ** arguments or None. defaults is a tuple of default argument values or None if there are no default arguments; if this tuple has n elements, they correspond to the last n elements listed in args.
+
+    Changed in version 2.6: Returns a named tuple ArgSpec(args, varargs, keywords, defaults).
+
+    '''
+    if not hasattr(func, '__call__'):
+        raise ValueError('Argument `func` passed is not callable. Received type: {0}'.format(type(func)))
+
+    if get == 'args':
+        return inspect.getargspec(func).args
+    elif get == 'varargs':
+        return inspect.getargspec(func).varargs
+    elif get == 'keywords':
+        return inspect.getargspec(func).keywords
+    elif get == 'defaults':
+        return inspect.getargspec(func).defaults
+    else:
+        return inspect.getargspec(func)
 
 
 if __name__ == '__main__':
-    import numpy as np
     a = 1
     print (isNumpyDatetime(type(a)))

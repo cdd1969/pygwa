@@ -1,7 +1,7 @@
-from lib.flowchart.nodes.generalNode import newNodeWithCtrlWidget
+from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget
 
 
-class myNode(newNodeWithCtrlWidget):
+class myNode(NodeWithCtrlWidget):
     '''This is test docstring'''
     nodeName = 'myTestNode'
     uiTemplate = [{'name': 'HNO3', 'type': 'list', 'value': 'Closest Time'},
