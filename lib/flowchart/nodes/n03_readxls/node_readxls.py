@@ -41,7 +41,6 @@ class readXLSNode(NodeWithCtrlWidget):
         
     def process(self, display=True):
         kwargs = self.ctrlWidget().prepareInputArguments()
-        print kwargs
         with BusyCursor():
             df = pd.read_excel(**kwargs)
         return {'output': Package(df)}
@@ -63,7 +62,7 @@ class readXLSNodeCtrlWidget(NodeCtrlWidget):
     @QtCore.pyqtSlot()  #default signal
     def on_selectFile_clicked(self):
         fname = None
-        filters = "Excel files (*.xls *.xlsx *.xlrd);;All files (*.*)"
+        filters = "Excel Spreadsheet (*.xls *.xlsx *.xlrd);; All files (*.*)"
         fname = unicode(QtGui.QFileDialog.getOpenFileName(self, 'Open Spreadsheet Data File', filter=filters)[0])
         if fname:
             self.param('Select File').setValue(fname)
@@ -91,6 +90,3 @@ class readXLSNodeCtrlWidget(NodeCtrlWidget):
 
         kwargs['io'] = self.paramValue('Select File')
         return kwargs
-
-
-
