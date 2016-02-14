@@ -56,14 +56,6 @@ class customNodeLibrary(NodeLibrary):
             include_pyqtgraph (bool):
                 flag to inculude default pyqtgraph node library
         """
-        if json_lib:
-            with open(json_lib) as lib_file:
-                data = json.load(lib_file)
-    
-            for k, nodeRegFile in data.iteritems():
-                if not k.startswith('_'):
-                    self.registerExternalNode(nodeRegFile)
-
         if include_pyqtgraph:
             # Add all nodes to the default library
             from pyqtgraph.flowchart.library import Data, Display, Filters, Operators
@@ -77,6 +69,15 @@ class customNodeLibrary(NodeLibrary):
             from pyqtgraph.flowchart.library import Display
             for mod, node in zip((Data, Display), (Data.EvalNode, Display.PlotCurve)):
                 self.addNodeType(node, [(mod.__name__.split('.')[-1],)])
+        
+        if json_lib:
+            with open(json_lib) as lib_file:
+                data = json.load(lib_file)
+    
+            for k, nodeRegFile in data.iteritems():
+                if not k.startswith('_'):
+                    self.registerExternalNode(nodeRegFile)
+
 
 
     def registerExternalNode(self, fname):
@@ -123,9 +124,9 @@ def readNodeFile(fname):
     # >>> Read *.node File
     fname = os.path.abspath(fname)
     if not os.path.exists(fname):
-        raise EOFError('File doesnt exist {1}'.format(fname))
+        raise EOFError('File doesnt exist {0}'.format(fname))
     if os.path.splitext(fname)[1] != '.node':
-        raise EOFError('Invalid extension. Must be `.node`. Received {1}'.format(fname))
+        raise EOFError('Invalid extension. Must be `.node`. Received {0}'.format(fname))
     
     with open(fname) as node_file:
         data = json.load(node_file)

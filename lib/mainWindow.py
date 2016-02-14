@@ -382,7 +382,7 @@ class uiData(QtCore.QObject):
 
     def initLibrary(self):
         self._flowchartLib = customNodeLibrary()
-        self._flowchartLib.buildDefault(projectPath('resources/defaultLibrary.json'))
+        self._flowchartLib.buildDefault(projectPath('resources/defaultLibrary.json'), include_pyqtgraph=True)
 
         # create a StringListModel of registered node names, it will be used for auto completion
         #self._nodeNamesList  = self._flowchartLib.nodeList.keys()

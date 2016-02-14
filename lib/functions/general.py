@@ -62,6 +62,30 @@ def isNumpyNumeric(dtype):
         return False
 
 
+def flatten_dict(d, sep='.'):
+    def items():
+        for key, value in d.items():
+            if isinstance(value, dict):
+                for subkey, subvalue in flatten_dict(value).items():
+                    yield key + sep + subkey, subvalue
+            else:
+                yield key, value
+
+    return dict(items())
+
+def walkdict(d, key):
+    stack = d.items()
+    while stack:
+        k, v = stack.pop()
+        if isinstance(v, dict):
+            stack.extend(v.iteritems())
+        else:
+            if k == key:
+                return v
+
+
+
+
 if __name__ == '__main__':
     import numpy as np
     a = 1
