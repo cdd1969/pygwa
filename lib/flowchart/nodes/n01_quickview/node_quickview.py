@@ -1,30 +1,25 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-
 import os
 from PyQt5 import QtWidgets, uic, QtCore, QtGui
-from PyQt5.QtCore import Qt, qDebug
+from PyQt5.QtCore import Qt
 from pyqtgraph.flowchart.Node import Node
 from pyqtgraph import functions as fn
 from pyqtgraph import BusyCursor
-import re
 
+import re
+import gc
+import traceback
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-import traceback
-import gc
 from lib.common.TableView import TableView
-
-
-
 
 
 class QuickViewNode(Node):
     """View dataframe in TableView/Matplotlib-plot"""
     nodeName = "QuickView"
-
 
     def __init__(self, name, parent=None):
         super(QuickViewNode, self).__init__(name, terminals={'In': {'io': 'in'}})
@@ -40,7 +35,6 @@ class QuickViewNode(Node):
             if In is not None:
                 self._pandasModel = PandasModel(In.unpack(), parent=self)
             self.ctrlWidget().update()
-
 
     def getPandasModel(self):
         return self._pandasModel
@@ -60,13 +54,6 @@ class QuickViewNode(Node):
         Node.restoreState(self, state)
         # additionally restore state of the control widget
         #self.ctrlWidget().restoreState(state['crtlWidget'])
-
-
-
-
-
-
-
 
 
 
@@ -110,8 +97,6 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
         #print( 'updateButtons() is called with modelsAreSet=', modelsAreSet)
         self.pushButton_viewTable.setEnabled(modelsAreSet)
         self.pushButton_viewPlot.setEnabled(modelsAreSet)
-
-
 
     def update(self):
         try:
@@ -160,13 +145,6 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
 
     def parent(self):
         return self._parent
-
-
-
-
-
-
-
 
 
 

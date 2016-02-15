@@ -1,6 +1,5 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-
 from pyqtgraph import BusyCursor, PlotDataItem
 import numpy as np
 import pandas as pd
@@ -20,8 +19,6 @@ class makeTimeseriesCurveNode(NodeWithCtrlWidget):
         {'name': 'X:datetime', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Datetime Values (X-axis)'},
         {'name': 'tz correct', 'type': 'float', 'value': 0, 'default': 0, 'suffix': ' hours', 'tip': '<float>\nONLY FOR CURVE!!!\nTimezone correction\nNumber of hours to add/substract from result. Due to missing\ntimezone settings it may be nessesary to use this parameter.\nCheck the results manually with *TimeseriesPlot* Node'},
         {'name': 'color', 'type': 'color', 'tip': 'Curve color'},
-
-    
         ]
 
     def __init__(self, name, parent=None):
@@ -52,25 +49,13 @@ class makeTimeseriesCurveNode(NodeWithCtrlWidget):
             timeStamps = b.astype(np.int64)-kwargs['tz correct']*60*60
             #   now create curve
             self.item.setData(timeStamps, df[kwargs['Y:signal']].values, pen=kwargs['color'], name=kwargs['Y:signal'])
-            
         return{'Curve': self.item, 'pd.Series': Package(timeSeries) }
 
 
 
-
-
-
 class makeTimeseriesCurveNodeCtrlWidget(NodeCtrlWidget):
-    
     def __init__(self, **kwargs):
         super(makeTimeseriesCurveNodeCtrlWidget, self).__init__(**kwargs)
-
-    def initUserSignalConnections(self):
-        pass
-        #self.param('tz correct').sigValueChanged.connect(self._parent.update)
-        #self.param('Y:signal').sigValueChanged.connect(self._parent.update)
-        #self.param('X:datetime').sigValueChanged.connect(self._parent.update)
-        #self.param('color').sigValueChanged.connect(self._parent.update)
 
     def prepareInputArguments(self):
         kwargs = dict()

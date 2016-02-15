@@ -64,7 +64,6 @@ class serfes1991Node(NodeWithCtrlWidget):
 
 
 class serfes1991NodeCtrlWidget(NodeCtrlWidget):
-    
     def __init__(self, **kwargs):
         super(serfes1991NodeCtrlWidget, self).__init__(update_on_statechange=False , **kwargs)
         self._applyAllowed = False

@@ -72,7 +72,6 @@ class tidalEfficiencyNodeCtrlWidget(NodeCtrlWidget):
         super(tidalEfficiencyNodeCtrlWidget, self).__init__(**kwargs)
 
     def initSignalConnections(self, update_parent=True):
-        print self.params()
         new_update_parent = {
             'action': 'disconnect',
             'parameters': self.param('E = ')}

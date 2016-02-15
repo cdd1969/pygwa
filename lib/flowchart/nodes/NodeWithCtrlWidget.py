@@ -4,8 +4,6 @@ from pyqtgraph.flowchart.Node import Node
 from pyqtgraph import functions as fn
 
 
-
-
 class NodeWithCtrlWidget(Node):
     """ This class simply reduces 3 methods from my custom Nodes
         and saves around 30 lines :)

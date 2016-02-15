@@ -106,6 +106,7 @@ class customParameter(pyqtgraphParameter):
 
             datatype = opts.get('datatype', None)
             evaluate = opts.get('evaluate', True)
+            log = opts.get('log', False)
             child = self.child(*names)
             if hasattr(child, 'value') and callable(getattr(child, 'value')):
                 childVal = child.value()
@@ -113,7 +114,7 @@ class customParameter(pyqtgraphParameter):
                 raise KeyError('Parameter {0} does not have `.value()` method'.format(child))
                 
             if evaluate:
-                return self.evaluateValue(childVal, datatype=datatype)
+                return self.evaluateValue(childVal, datatype=datatype, log=log)
             else:
                 childValEval = childVal
 
@@ -125,10 +126,10 @@ class customParameter(pyqtgraphParameter):
             if isinstance(childValEval, allowed_datatypes):
                 return childValEval
             else:
-                print ('Warning! Parameter {0} has value {1} of invalid type {2}. Must be one of these type : {4}. Will convert to unicode and return {3}'.format(child, childValEval, type(childValEval), unicode(childValEval), allowed_datatypes))
+                if log: print ('Warning! Parameter {0} has value {1} of invalid type {2}. Must be one of these type : {4}. Will convert to unicode and return {3}'.format(child, childValEval, type(childValEval), unicode(childValEval), allowed_datatypes))
                 return unicode(childValEval)
 
-    def evaluateValue(self, value, datatype=None):
+    def evaluateValue(self, value, datatype=None, log=False):
         """
         if `datatype=list` - will try to compare `dtype(value)` with `list`. If it is not - will return
                             `unicode(value)`
@@ -136,7 +137,7 @@ class customParameter(pyqtgraphParameter):
         try:
             valueEval = eval(value)
         except:
-            print ('Warning! Cannot evaluate value {0} is of type {1}.'.format(value, type(value)))
+            if log: print ('Warning! Cannot evaluate value {0} is of type {1}.'.format(value, type(value)))
             valueEval = value
 
         if datatype:
@@ -147,5 +148,5 @@ class customParameter(pyqtgraphParameter):
         if isinstance(valueEval, allowed_datatypes):
             return valueEval
         else:
-            print ('Warning! Value {0} is of invalid type {1}. Must be one of these type : {3}. Will convert to unicode and return {2}'.format(valueEval, type(valueEval), unicode(valueEval), allowed_datatypes))
+            if log: print ('Warning! Value {0} is of invalid type {1}. Must be one of these type : {3}. Will convert to unicode and return {2}'.format(valueEval, type(valueEval), unicode(valueEval), allowed_datatypes))
             return unicode(valueEval)

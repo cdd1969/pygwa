@@ -1,12 +1,9 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-
 from pyqtgraph import BusyCursor
-from pyqtgraph.parametertree import Parameter, ParameterTree
 
 from lib.flowchart.package import Package
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
-from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
 from lib.functions.general import returnPandasDf, isNumpyDatetime, isNumpyNumeric
 from lib.functions.detectpeaks import detectPeaks_ts
 
@@ -27,8 +24,7 @@ class detectPeaksTSNode(NodeWithCtrlWidget):
             {'name': 'hMargin', 'type': 'int', 'value': 1, 'default': 1, 'limits': (0, int(10e6)), 'tip': 'Number of hours, safety margin when comparing period length.\nSee formula below:\nT/2 - hMargin < T_i/2 < T/2 + hMargin'},
             {'name': 'Warnings', 'type': 'str', 'value': '?', 'default': '?', 'tip': 'Number of period-check warnings detected after detecting peaks.\nWarnings are raised where period condition is not met.\tHit `Plot` button to visualize errors', 'readonly': True},
         ]},
-        {'name': 'Plot', 'type': 'action'},
-        ]
+        {'name': 'Plot', 'type': 'action'}]
 
     def __init__(self, name, parent=None):
         super(detectPeaksTSNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}, 'peaks': {'io': 'out'}}, color=(250, 250, 150, 150))
@@ -60,11 +56,7 @@ class detectPeaksTSNode(NodeWithCtrlWidget):
         self._plotRequired = False
 
 
-
-
-
 class detectPeaksTSNodeCtrlWidget(NodeCtrlWidget):
-    
     def __init__(self, **kwargs):
         super(detectPeaksTSNodeCtrlWidget, self).__init__(update_on_statechange=False, **kwargs)
 
@@ -74,7 +66,6 @@ class detectPeaksTSNodeCtrlWidget(NodeCtrlWidget):
             'parameters': self.param('Period Check Params', 'Warnings')}
         super(detectPeaksTSNodeCtrlWidget, self).initSignalConnections(new_update_parent)
         self.param('Plot').sigActivated.connect(self._parent.plot)
-
 
     def prepareInputArguments(self):
         kwargs = dict()

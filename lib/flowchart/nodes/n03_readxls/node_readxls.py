@@ -1,6 +1,5 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-
 import os
 from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph import BusyCursor
@@ -9,7 +8,6 @@ import pandas as pd
 from lib.flowchart.package import Package
 from lib.functions.general import getCallableArgumentList
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
-
 
 
 class readXLSNode(NodeWithCtrlWidget):
@@ -47,8 +45,6 @@ class readXLSNode(NodeWithCtrlWidget):
 
 
 
-
-
 class readXLSNodeCtrlWidget(NodeCtrlWidget):
     
     def __init__(self, **kwargs):
@@ -67,7 +63,6 @@ class readXLSNodeCtrlWidget(NodeCtrlWidget):
         if fname:
             self.param('Select File').setValue(fname)
 
-    
     @QtCore.pyqtSlot(object)  #default signal
     def on_selectFile_valueChanged(self, value):
         button  = self.param('Select File').items.items()[0][0].button

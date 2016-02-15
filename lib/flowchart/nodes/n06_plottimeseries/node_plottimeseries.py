@@ -1,10 +1,7 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-
 import datetime
 import gc
-
-
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
@@ -52,7 +49,6 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
             if 'plotItems' in self._items[remoteTerm].keys():
                 self.removeItem(self._items[remoteTerm])
                 del self._items[remoteTerm]
-
 
     def process(self, Items):
         for term, vals in Items.items():
@@ -143,7 +139,6 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
             for plotItem in self._items[iId]['plotItems']:
                 plotItem.setPen(pen)
 
-
     def removeItem(self, item):
         try:
             if 'plotItems' in item.keys() and isinstance(item['plotItems'], list) and len(item['plotItems']) == 2:
@@ -165,7 +160,6 @@ class plotTimeseriesGraphicsWidget(QtGui.QWidget):
         self.initUI()
         self.connectSignals()
         self.items = dict()
-
 
     def initUI(self):
         win = pg.GraphicsLayoutWidget()
@@ -201,13 +195,11 @@ class plotTimeseriesGraphicsWidget(QtGui.QWidget):
         self.initCrosshair()
         self.win = win
 
-
     def connectSignals(self):
         self.zoomRegion.sigRegionChanged.connect(self.on_zoomRegion_changed)
         self.p1.sigRangeChanged.connect(self.updateZoomRegion)
 
         self.proxy = pg.SignalProxy(self.p1.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
-
 
     def parent(self):
         return self._parent
@@ -217,7 +209,6 @@ class plotTimeseriesGraphicsWidget(QtGui.QWidget):
         self.hLine = pg.InfiniteLine(angle=0, movable=False)
         self.toggleCrosshair(False)
     
-
     @QtCore.pyqtSlot(bool)
     def toggleLegend(self, enable):
         #print('toggleLegend', enable)
@@ -227,8 +218,6 @@ class plotTimeseriesGraphicsWidget(QtGui.QWidget):
             pass
         else:
             self.legend.scene().removeItem(self.legend)
-
-
 
     @QtCore.pyqtSlot(bool)
     def toggleCrosshair(self, enable):
@@ -289,13 +278,7 @@ class plotTimeseriesGraphicsWidget(QtGui.QWidget):
 
 
 
-
-
-
-
-
 class plotTimeseriesNodeCtrlWidget(NodeCtrlWidget):
-    
     def __init__(self, **kwargs):
         super(plotTimeseriesNodeCtrlWidget, self).__init__(**kwargs)
         self._gr = self._parent.graphicsWidget()

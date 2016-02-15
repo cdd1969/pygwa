@@ -20,7 +20,6 @@ class matchPeaksNode(NodeWithCtrlWidget):
                 {'name': 'window', 'type': 'float', 'value': 0, 'default': 0, 'limits': (0, int(10e6)), 'tip': 'Is read only if `use_window` is checked!\nNumber of hours to determine time-window'},
             ]},
             {'name': 'MATCHED/PEAKS', 'type': 'str', 'value': '?/?', 'readonly': True},
-        
             ]
 
     def __init__(self, name, parent=None):
@@ -37,7 +36,6 @@ class matchPeaksNode(NodeWithCtrlWidget):
         colname = [col for col in df_w.columns if isNumpyDatetime(df_w[col].dtype)]
         self._ctrlWidget.param('Closest Time', 'Match Column').setLimits(colname)
 
-
         kwargs = self._ctrlWidget.prepareInputArguments()
         with BusyCursor():
             mode = kwargs.pop('Match Option')
@@ -52,7 +50,6 @@ class matchPeaksNode(NodeWithCtrlWidget):
 
 
 class matchPeaksNodeCtrlWidget(NodeCtrlWidget):
-    
     def __init__(self, **kwargs):
         super(matchPeaksNodeCtrlWidget, self).__init__(**kwargs)
 

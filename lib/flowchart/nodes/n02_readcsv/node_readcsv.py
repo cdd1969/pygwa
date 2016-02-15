@@ -1,11 +1,9 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-
 from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph import BusyCursor
 import pandas as pd
 import os
-
 
 from lib.flowchart.package import Package
 from lib.functions.general import getCallableArgumentList
@@ -51,26 +49,12 @@ class readCSVNode(NodeWithCtrlWidget):
     
     def _createCtrlWidget(self, **kwargs):
         return readCSVNodeCtrlWidget(**kwargs)
-
-        
+ 
     def process(self, display=True):
         kwargs = self.ctrlWidget().prepareInputArguments()
-        #print kwargs
         with BusyCursor():
             df = pd.read_csv(**kwargs)
-
         return {'Out': Package(df)}
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -85,7 +69,6 @@ class readCSVNodeCtrlWidget(NodeCtrlWidget):
         self.param('Select File').sigActivated.connect(self.on_selectFile_clicked)
         self.param('Select File').sigValueChanged.connect(self.on_selectFile_valueChanged)
         self.param('Load CSV parameters', 'Advanced parameters', 'Manually set parameters').sigValueChanged.connect(self.on_manuallySetParams_checked)
-
 
     @QtCore.pyqtSlot()  #default signal
     def on_selectFile_clicked(self):

@@ -18,7 +18,6 @@ class interpolateDfNode(NodeWithCtrlWidget):
     """Interpolate missing data in given DataFrame"""
     nodeName = "interpolate"
 
-
     def __init__(self, name, parent=None, **kwargs):
         super(interpolateDfNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}, 'Out': {'io': 'out'}}, color=(250, 250, 150, 150), **kwargs)
         self._columnsToUpdate = list()
@@ -54,7 +53,6 @@ class interpolateDfNode(NodeWithCtrlWidget):
                 #print( 'UPDATING FROM OUTPUT')
                 df = self.outputs()['Out'].value().unpack()
         
-
         nN = len(df.index)
         with BusyCursor():
             df_out = copy.deepcopy(df)
@@ -144,11 +142,6 @@ class interpolateDfNode(NodeWithCtrlWidget):
             print ("Error: Cannot plot.", Exception, err)
 
 
-
-
-
-
-
 class interpolateDfNodeCtrlWidget(NodeCtrlWidget):
     
     def __init__(self, **kwargs):
@@ -163,7 +156,6 @@ class interpolateDfNodeCtrlWidget(NodeCtrlWidget):
         self.param(columnName, 'order').sigValueChanged.connect(self._parent.updateColumns)
         self.param(columnName, '**kwargs').sigValueChanged.connect(self._parent.updateColumns)
         self.param(columnName, 'Plot').sigActivated.connect(self._parent.plot)
-
 
     def removeDfColumn(self, columnName):
         self.param(columnName, 'interpolateMargin').sigValueChanged.disconnect()
@@ -191,9 +183,6 @@ class interpolateDfNodeCtrlWidget(NodeCtrlWidget):
         return kwargs
 
 
-
-
-
 class columnInterpolateGroupParameter(pTypes.GroupParameter):
     """ this parameter will be added for each column of the received
         DataDrame, so we can set different interpolation options for each
@@ -217,4 +206,3 @@ class columnInterpolateGroupParameter(pTypes.GroupParameter):
         self.nEntries = self.param('Entries')
         self.nNansBefore = self.param('NaNs before')
         self.nNansAfter = self.param('NaNs after')
-

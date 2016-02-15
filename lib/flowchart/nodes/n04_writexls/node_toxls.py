@@ -1,13 +1,11 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-
 from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph import BusyCursor
 import pandas as pd
 
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.general import returnPandasDf, getCallableArgumentList
-
 
 
 class toXLSNode(NodeWithCtrlWidget):
