@@ -16,7 +16,8 @@ KNOWN BUGS AND ISSUES
     Node: plotTimeseries
     PlotTimeseries currently works only with curves in which X-axes has been built with *datetime* objects
 
-    dismissed comment: I have decided that this should be the only possible behaviour
+    UPD:
+        I have decided that this should be the only possible behaviour
 
 4)
     Node: plotTimeseries
@@ -34,6 +35,9 @@ KNOWN BUGS AND ISSUES
     General, Flowchart
     The changes in the Node-parameters doesnt provoke the *unsavedChanges* status. Currently it it toggled
     only when : a) node is added b) node is removed c) node is renamed
+
+    UPD 15.02:
+        Partly fixed, but now some unwanted signals `sigUIChanged` are emitted when data is processed
 
 7)
     Function, Statistical Analysis
