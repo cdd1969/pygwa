@@ -1,59 +1,62 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph import BusyCursor
-from pyqtgraph.parametertree import Parameter, ParameterTree
-import copy
 import gc
-
+import copy
+from pyqtgraph.Qt import QtCore
+from pyqtgraph import BusyCursor
 
 from lib.flowchart.package import Package
 from lib.functions import filterSerfes1991 as serfes
-from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
 from lib.functions.general import isNumpyDatetime, isNumpyNumeric
 from lib.functions.general import returnPandasDf
-from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
-
+from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 
 
 class serfes1991Node(NodeWithCtrlWidget):
     """Apply Serfes Filter to hydrograph (see Sefes 1991)"""
     nodeName = "Serfes Filter"
-
+    uiTemplate = [
+        {'name': 'datetime', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Location of the datetime objects.\nBy default is `None`, meaning that datetime objects are\nlocated within `pd.DataFrame.index`. If not `None` - pass the\ncolumn-name of dataframe where datetime objects are located.\nThis is needed to determine number of measurements per day.\nNote: this argument is ignored if `N` is not `None` !!!'},
+        {'name': 'N', 'type': 'str', 'value': None, 'default': None, 'tip': '<int or None>\nExplicit number of measurements in 24 hours. By\ndefault `N=None`, meaning that script will try to determine\nnumber of measurements per 24 hours based on real datetime\ninformation provided with `datetime` argument'},
+        {'name': 'Calculate N', 'type': 'action'},
+        {'name': 'verbose', 'type': 'bool', 'value': False, 'default': False, 'tip': 'If `True` - will keep all three iterations\nin the output. If `False` - will save only final (3rd) iteration.\nThis may useful for debugging, or checking this filter.'},
+        {'name': 'log', 'type': 'bool', 'value': False, 'default': False, 'tip': 'flag to show some prints in console'},
+        {'name': 'Apply to columns', 'type': 'group', 'children': []},
+        {'name': 'Apply Filter', 'type': 'action'},
+        ]
 
     def __init__(self, name, parent=None):
-        super(serfes1991Node, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}, 'Out': {'io': 'out'}}, color=(250, 250, 150, 150))
-        self._ctrlWidget = serfes1991NodeCtrlWidget(self)
+        super(serfes1991Node, self).__init__(name, parent=parent, color=(250, 250, 150, 150))
 
+    def _createCtrlWidget(self, **kwargs):
+        return serfes1991NodeCtrlWidget(**kwargs)
         
     def process(self, In):
         gc.collect()
         # populate USE COLUMNS param, but only on item received, not when we click button
         if not self._ctrlWidget.calculateNAllowed() and not self._ctrlWidget.applyAllowed():
-            self._ctrlWidget.p.child('Apply to columns').clearChildren()
+            self._ctrlWidget.param('Apply to columns').clearChildren()
         
-
-
         with BusyCursor():
             df = copy.deepcopy(returnPandasDf(In))
             # check out http://docs.scipy.org/doc/numpy-dev/neps/datetime-proposal.html
 
             colnames = [col for col in df.columns if isNumpyDatetime(df[col].dtype)]+[None]
-            self._ctrlWidget.p.param('datetime').setLimits(colnames)
-            self._ctrlWidget.p.param('datetime').setValue(colnames[0])
+            self._ctrlWidget.param('datetime').setLimits(colnames)
+            self._ctrlWidget.param('datetime').setValue(colnames[0])
 
             # populate (Apply to columns) param, but only on item received, not when we click button
             if not self._ctrlWidget.calculateNAllowed() and not self._ctrlWidget.applyAllowed():
                 colnames = [col for col in df.columns if isNumpyNumeric(df[col].dtype)]
                 for col_name in colnames:  # cycle through each column...
-                    self._ctrlWidget.p.child('Apply to columns').addChild({'name': col_name, 'type': 'bool', 'value': True})
+                    self._ctrlWidget.param('Apply to columns').addChild({'name': col_name, 'type': 'bool', 'value': True})
 
-            kwargs = self.ctrlWidget().evaluateState()
+            kwargs = self.ctrlWidget().prepareInputArguments()
+            print kwargs
 
             if self._ctrlWidget.calculateNAllowed():
                 N = serfes.get_number_of_measurements_per_day(df, datetime=kwargs['datetime'], log=kwargs['log'])
-                self._ctrlWidget.p.param('N').setValue(N)
-
+                self._ctrlWidget.param('N').setValue(N)
 
             if self._ctrlWidget.applyAllowed():
                 result = serfes.filter_wl_71h_serfes1991(df, **kwargs)
@@ -61,31 +64,16 @@ class serfes1991Node(NodeWithCtrlWidget):
 
 
 
-
-
-
-
-class serfes1991NodeCtrlWidget(ParameterTree):
+class serfes1991NodeCtrlWidget(NodeCtrlWidget):
     
-    def __init__(self, parent=None):
-        super(serfes1991NodeCtrlWidget, self).__init__()
-        self._parent = parent
-
-        params = self.params()
-        ## Create tree of Parameter objects
-        self.p = Parameter.create(name='params', type='group', children=params)
-
-        ## set parameter tree to <self> (parameterTreeWidget)
-        self.setParameters(self.p, showTop=False)
-        self.initConnections()
-        # save default state
-        self._savedState = self.saveState()
+    def __init__(self, **kwargs):
+        super(serfes1991NodeCtrlWidget, self).__init__(update_on_statechange=False , **kwargs)
         self._applyAllowed = False
         self._calculateNAllowed = False
 
-    def initConnections(self):
-        self.p.child('Apply Filter').sigActivated.connect(self.on_apply_clicked)
-        self.p.child('Calculate N').sigActivated.connect(self.on_calculateN_clicked)
+    def initUserSignalConnections(self):
+        self.param('Apply Filter').sigActivated.connect(self.on_apply_clicked)
+        self.param('Calculate N').sigActivated.connect(self.on_calculateN_clicked)
     
     def applyAllowed(self):
         return self._applyAllowed
@@ -105,50 +93,18 @@ class serfes1991NodeCtrlWidget(ParameterTree):
         self._parent.update()
         self._calculateNAllowed = False
 
-    def params(self):
-        params = [
-            {'name': 'datetime', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Location of the datetime objects.\nBy default is `None`, meaning that datetime objects are\nlocated within `pd.DataFrame.index`. If not `None` - pass the\ncolumn-name of dataframe where datetime objects are located.\nThis is needed to determine number of measurements per day.\nNote: this argument is ignored if `N` is not `None` !!!'},
-            {'name': 'N', 'type': 'str', 'value': None, 'default': None, 'tip': '<int or None>\nExplicit number of measurements in 24 hours. By\ndefault `N=None`, meaning that script will try to determine\nnumber of measurements per 24 hours based on real datetime\ninformation provided with `datetime` argument'},
-            {'name': 'Calculate N', 'type': 'action'},
-            {'name': 'verbose', 'type': 'bool', 'value': False, 'default': False, 'tip': 'If `True` - will keep all three iterations\nin the output. If `False` - will save only final (3rd) iteration.\nThis may useful for debugging, or checking this filter.'},
-            {'name': 'log', 'type': 'bool', 'value': False, 'default': False, 'tip': 'flag to show some prints in console'},
-            {'name': 'Apply to columns', 'type': 'group', 'children': [
 
-            ]},
-            {'name': 'Apply Filter', 'type': 'action'},
-
-        ]
-        return params
-
-    def saveState(self):
-        return self.p.saveState()
-    
-    def restoreState(self, state):
-        self.p.restoreState(state)
-
-    def evaluateState(self, state=None):
-        """ function evaluates passed state , reading only necessary parameters,
-            those that can be passed to pandas.read_csv() as **kwargs (see function4arguments)
-
-            user should reimplement this function for each Node"""
-
-        if state is None:
-            state = self.saveState()
-
-
+    def prepareInputArguments(self):
         validArgs = ['datetime', 'N', 'verbose', 'log']
-        listWithDicts = evaluateDict(state['children'], functionToDicts=evaluationFunction, log=False, validArgumnets=validArgs)
         kwargs = dict()
-        for d in listWithDicts:
-            # {'a': None}.items() >>> [('a', None)] => two times indexing
-            kwargs[d.items()[0][0]] = d.items()[0][1]
-            
+        for param in self.params(ignore_groups=True):
+            if param.name() in validArgs:
+                kwargs[param.name()] = self.p.evaluateValue(param.value())
+        
         # now get usecols
         usecols = list()
-        for child in self.p.child('Apply to columns').children():
+        for child in self.param('Apply to columns').children():
             if child.value() is True:
                 usecols.append(child.name())
         kwargs['usecols'] = usecols
-        #print('usecols:>>>', usecols)
-
         return kwargs

@@ -2,11 +2,9 @@
 # -*- coding: utf-8 -*-
 from pyqtgraph import BusyCursor
 
-from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.TimeLag import timelag_erskine1991_method
 from lib.functions.general import returnPandasDf, isNumpyDatetime
-
 
 
 class timeLagNode(NodeWithCtrlWidget):
@@ -69,8 +67,6 @@ class timeLagNode(NodeWithCtrlWidget):
         
             self._ctrlWidget.param('tlag = ').setValue(str(tlag))
         return {'tlag': tlag}
-
-
 
 
 class timeLagNodeCtrlWidget(NodeCtrlWidget):
