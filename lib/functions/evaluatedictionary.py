@@ -110,7 +110,6 @@ def evaluationFunction(dictionary, function4arguments=None, validArgumnets=None,
                 if log: print( Exception, err, '. Received:', dictionary['name'], '=', dictionary['value'],  '>>> I will set value without evaluation')
                 val = dictionary['value']
 
-
         stateArgs[dictionary['name']] = val
     return stateArgs
 
