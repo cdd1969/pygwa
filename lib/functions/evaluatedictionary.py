@@ -1,8 +1,6 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
 import inspect
-from datetime import datetime  #this is requred to use <readCSV_Node> parse_dates argument, since it usually has datetime
-
 
 
 def evaluationFunction(dictionary, function4arguments=None, validArgumnets=None, log=False):
@@ -111,7 +109,6 @@ def evaluationFunction(dictionary, function4arguments=None, validArgumnets=None,
             except Exception, err:
                 if log: print( Exception, err, '. Received:', dictionary['name'], '=', dictionary['value'],  '>>> I will set value without evaluation')
                 val = dictionary['value']
-
 
         stateArgs[dictionary['name']] = val
     return stateArgs

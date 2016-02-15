@@ -2,7 +2,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import time
 
 
 def createInterpolationRanges(df, columnName, interpolateMargin=100, log=False):

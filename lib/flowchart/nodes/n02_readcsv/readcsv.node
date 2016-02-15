@@ -1,0 +1,6 @@
+{
+    "filename":  "node_readcsv.py",
+    "classname": "readCSVNode",
+    "libpath": ["Input/Output"],
+    "override": true
+}

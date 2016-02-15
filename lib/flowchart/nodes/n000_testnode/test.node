@@ -1,0 +1,6 @@
+{
+    "filename":  "myNode.py",
+    "classname": "myNode",
+    "libpath": ["Appearance"],
+    "override": true
+}

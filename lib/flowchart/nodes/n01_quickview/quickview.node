@@ -1,0 +1,6 @@
+{
+    "filename":  "node_quickview.py",
+    "classname": "QuickViewNode",
+    "libpath": ["Display", "Widgets"],
+    "override": true
+}
