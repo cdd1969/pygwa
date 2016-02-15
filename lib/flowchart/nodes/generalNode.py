@@ -60,14 +60,14 @@ class NodeWithCtrlWidget(Node):
     
     @QtCore.pyqtSlot()
     def changed(self, update=False):
-        print 'changed... update=', update
         if update:
             self.update()
         self.sigUIStateChanged.emit(self)
 
 
 class NodeCtrlWidget(ParameterTree):
-    
+    ''' This is an abstract class to accompany Nodeclass `NodeWithCtrlWidget`'''
+     
     def __init__(self, parent=None, ui=[], update_on_statechange=True):
         super(NodeCtrlWidget, self).__init__()
         self._parent = parent
@@ -83,7 +83,7 @@ class NodeCtrlWidget(ParameterTree):
         # save default state
         self._savedState = self.saveState()
 
-    def initSignalConnections(self, update_parent=True):
+    def initSignalConnections(self, update_parent=True, ignore_actions=True):
         ''' Function searches for all parameters (nested params are included)
         within `self.p` recursively. Group parameters are omitted. Then all pa-
         rameters that are found, are connected with `self._parent.changed()`
@@ -96,6 +96,10 @@ class NodeCtrlWidget(ParameterTree):
 
         Args:
         -----
+            ignore_actions (bool):
+                flag to ignore `action` parameters (i.e. pushbuttons) emitting
+                parent's `Node.UIStateChanged` signal
+                
             update_parent (True, False, dict):
                 This parameter allows control on which parameters
                 will be (not) connected to the `self._parent.changed` slot,
@@ -141,7 +145,7 @@ class NodeCtrlWidget(ParameterTree):
                 # explicitly convert it to length=1 list to use `in` statement further
                 update_parent['parameters'] = [update_parent['parameters']]
 
-            for child in self.p.children(recursive=True, ignore_groups=True):
+            for child in self.p.children(recursive=True, ignore_groups=True, ignore_actions=ignore_actions):
                 if child in update_parent['parameters']:
                     child.sigStateChanged.connect(lambda: self._parent.changed(not(default_action)))
                 else:
@@ -150,7 +154,7 @@ class NodeCtrlWidget(ParameterTree):
         elif isinstance(update_parent, bool):
             # we have bool, treat params all together
             default_action = update_parent
-            for child in self.p.children(recursive=True, ignore_groups=True):
+            for child in self.p.children(recursive=True, ignore_groups=True, ignore_actions=ignore_actions):
                 child.sigStateChanged.connect(lambda: self._parent.changed(default_action))
         else:
             raise TypeError('Invalid type {0} of parameter `update_parent`. Must be `bool` or `dict`'.format(type(update_parent)))

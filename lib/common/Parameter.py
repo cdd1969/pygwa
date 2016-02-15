@@ -44,7 +44,7 @@ class customParameter(pyqtgraphParameter):
         super(customParameter, self).__init__(**opts)
 
 
-    def children(self, child2observe=None, recursive=False, ignore_groups=False):
+    def children(self, child2observe=None, recursive=False, ignore_groups=False, ignore_actions=True):
         """Return a list of this parameter's children.
 
         In contrast to standard pyqtgraph method, it can list all nested children
@@ -61,6 +61,22 @@ class customParameter(pyqtgraphParameter):
             If `child2observe`, `recursive`, `ignore_groups` are `False`:
                 self.children() is the original method of pyqtgraphParameter.children()
 
+        Args:
+        -----
+            child2observe(pyqtgraph.Parameter or None):
+                optional keyword to search children not in `self` but in
+                passed `Parameter` (eventhough it may be not the children `self`)
+                If `None` will seach in `self`
+            
+            recursive (bool):
+                flag to search all levels of nested widget (True) instead of
+                searching the top-level (False)
+            
+            ignore_actions (bool):
+                flag to ignore `action` parameters (i.e. pushbuttons)
+            
+            ignore_groups (bool):
+                flag to ignore `group` parameters
         """
         if child2observe is None:
             child2observe = self
@@ -72,6 +88,8 @@ class customParameter(pyqtgraphParameter):
                     children += self.children(child2observe=child, recursive=recursive)
         if ignore_groups:
             children = [child for child in children if not child.isType('group')]
+        if ignore_actions:
+            children = [child for child in children if not child.isType('action')]
         return children
 
 

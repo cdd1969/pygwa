@@ -72,6 +72,7 @@ class readXLSNodeCtrlWidget(NodeCtrlWidget):
     def on_selectFile_valueChanged(self, value):
         button  = self.param('Select File').items.items()[0][0].button
         fname = self.param('Select File').value()
+        self._parent.sigUIStateChanged.emit(self)
 
         if fname is not None and os.path.isfile(fname):
             button.setToolTip('File is selected: {0}'.format(fname))

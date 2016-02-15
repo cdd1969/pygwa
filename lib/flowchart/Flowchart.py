@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from pyqtgraph.flowchart.Flowchart import Flowchart
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtGui, QtCore
 from pyqtgraph import configfile as configfile
 import sys, traceback
 
@@ -10,7 +10,6 @@ class customFlowchart(Flowchart):
         - save/load now blocks mainwindow
         - input/output nodes are hidden
     """
-
     def __init__(self, parent=None, **kwargs):
         Flowchart.__init__(self, **kwargs)
         self.parent = parent
@@ -60,3 +59,9 @@ class customFlowchart(Flowchart):
         fileName = unicode(fileName)
         configfile.writeConfigFile(self.saveState(), fileName)
         self.sigFileSaved.emit(fileName)
+
+
+    def addNode(self, node, name, pos=None):
+        super(customFlowchart, self).addNode(node, name, pos=pos)
+        if hasattr(node, 'sigUIStateChanged'):  #only my custom nodes do have this signal
+            node.sigUIStateChanged.connect(lambda: self.sigChartChanged.emit(self, 'uiChanged', node))

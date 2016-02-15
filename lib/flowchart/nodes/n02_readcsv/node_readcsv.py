@@ -78,7 +78,7 @@ class readCSVNodeCtrlWidget(NodeCtrlWidget):
     
     def __init__(self, **kwargs):
         super(readCSVNodeCtrlWidget, self).__init__(update_on_statechange=False, **kwargs)
-
+    
 
     def initUserSignalConnections(self):
         self.param('Load File').sigActivated.connect(self._parent.update)
@@ -99,6 +99,7 @@ class readCSVNodeCtrlWidget(NodeCtrlWidget):
     def on_selectFile_valueChanged(self, value):
         button  = self.param('Select File').items.items()[0][0].button
         fname = self.param('Select File').value()
+        self._parent.sigUIStateChanged.emit(self)
 
         if fname is not None and os.path.isfile(fname):
             button.setToolTip('File is selected: {0}'.format(fname))

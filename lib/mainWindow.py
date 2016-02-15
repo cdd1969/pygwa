@@ -265,8 +265,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(object, str, object)
     def on_sigChartChanged(self, emitter, action, node):
-        #print( "on_sigChartChanged() is called")
-        #print( self, emitter, action, node)
+        print( "on_sigChartChanged() is called")
+        print( self, emitter, action, node)
         self.uiData.setChangesUnsaved(True)
 
         if action == 'add':
@@ -290,6 +290,9 @@ class MainWindow(QtWidgets.QMainWindow):
             #print( 'on_sigChartChanged(): rename')
             if self.stackNodeCtrlStackedWidget.currentWidget() is node.ctrlWidget():
                 self.label_nodeCtrlName.setText("Node: <"+node.name()+">")
+        
+        elif action == 'uiChanged':
+            pass
         else:
             msg = 'on_sigChartChanged(): Undefined action recieved <{0}>'.format(action)
             raise KeyError(msg)
