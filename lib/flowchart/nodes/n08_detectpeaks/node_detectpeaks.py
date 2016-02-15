@@ -66,7 +66,7 @@ class detectPeaksTSNode(NodeWithCtrlWidget):
 class detectPeaksTSNodeCtrlWidget(NodeCtrlWidget):
     
     def __init__(self, **kwargs):
-        super(detectPeaksTSNodeCtrlWidget, self).__init__(**kwargs)
+        super(detectPeaksTSNodeCtrlWidget, self).__init__(update_on_statechange=False, **kwargs)
 
     def initSignalConnections(self, update_parent=True):
         new_update_parent = {

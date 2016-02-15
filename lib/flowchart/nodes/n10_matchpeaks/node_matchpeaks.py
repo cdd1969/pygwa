@@ -6,7 +6,7 @@ from pyqtgraph.parametertree import Parameter, ParameterTree
 
 from lib.flowchart.package import Package
 from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
-from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
+from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.detectpeaks import match_peaks
 from lib.functions.general import returnPandasDf, isNumpyDatetime
 
@@ -18,9 +18,10 @@ class matchPeaksNode(NodeWithCtrlWidget):
 
     def __init__(self, name, parent=None):
         super(matchPeaksNode, self).__init__(name, parent=parent, terminals={'W_peaks': {'io': 'in'}, 'GW_peaks': {'io': 'in'}, 'matched': {'io': 'out'}}, color=(250, 250, 150, 150))
-        self._ctrlWidget = matchPeaksNodeCtrlWidget(parent=self)
         self._plotRequired = False
-
+    
+    def _createCtrlWidget(self, **kwargs):
+        return matchPeaksNodeCtrlWidget(**kwargs)
         
     def process(self, W_peaks, GW_peaks):
         N_md = '?'
@@ -28,7 +29,7 @@ class matchPeaksNode(NodeWithCtrlWidget):
         df_gw = returnPandasDf(GW_peaks)
 
         colname = [None]+[col for col in df_w.columns if isNumpyDatetime(df_w[col].dtype)]
-        self._ctrlWidget.p.child('Closest Time').child('Match Column').setLimits(colname)
+        self._ctrlWidget.param('Closest Time').child('Match Column').setLimits(colname)
 
 
         kwargs = self._ctrlWidget.evaluateState()
@@ -39,7 +40,7 @@ class matchPeaksNode(NodeWithCtrlWidget):
                 
             N_md = matched_peaks['md_N'].count()
             
-        self._ctrlWidget.p.child('MATCHED/PEAKS').setValue('{0}/{1}'.format(N_md, len(df_w)))
+        self._ctrlWidget.param('MATCHED/PEAKS').setValue('{0}/{1}'.format(N_md, len(df_w)))
         return {'matched': Package(matched_peaks)}
 
 
@@ -66,12 +67,12 @@ class matchPeaksNodeCtrlWidget(ParameterTree):
 
         self.p.sigValueChanged.connect(self._parent.update)
 
-        self.p.child('Match Option').sigValueChanged.connect(self._parent.update)
+        self.param('Match Option').sigValueChanged.connect(self._parent.update)
 
-        self.p.child('Closest Time').child('Match Column').sigValueChanged.connect(self._parent.update)
-        self.p.child('Closest Time').child('side').sigValueChanged.connect(self._parent.update)
-        self.p.child('Closest Time').child('use_window').sigValueChanged.connect(self._parent.update)
-        self.p.child('Closest Time').child('window').sigValueChanged.connect(self._parent.update)
+        self.param('Closest Time').child('Match Column').sigValueChanged.connect(self._parent.update)
+        self.param('Closest Time').child('side').sigValueChanged.connect(self._parent.update)
+        self.param('Closest Time').child('use_window').sigValueChanged.connect(self._parent.update)
+        self.param('Closest Time').child('window').sigValueChanged.connect(self._parent.update)
 
 
     
