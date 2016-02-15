@@ -52,7 +52,6 @@ class serfes1991Node(NodeWithCtrlWidget):
                     self._ctrlWidget.param('Apply to columns').addChild({'name': col_name, 'type': 'bool', 'value': True})
 
             kwargs = self.ctrlWidget().prepareInputArguments()
-            print kwargs
 
             if self._ctrlWidget.calculateNAllowed():
                 N = serfes.get_number_of_measurements_per_day(df, datetime=kwargs['datetime'], log=kwargs['log'])

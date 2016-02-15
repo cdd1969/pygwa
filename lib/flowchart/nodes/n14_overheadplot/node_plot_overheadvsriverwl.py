@@ -1,88 +1,18 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
 
-from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.parametertree import Parameter, ParameterTree
+from pyqtgraph.Qt import QtCore
 from pyqtgraph import BusyCursor
 
-from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
 from lib.functions import plot_pandas
-from lib.functions.general import returnPandasDf
-from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
+from lib.functions.general import returnPandasDf, getCallableArgumentList, isNumpyNumeric
+from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 
 
 class plotGWLvsWLNode(NodeWithCtrlWidget):
-    """Plot Growundwater-level VS River water-level (matplotlib)"""
-    nodeName = "plotGWLvsWL"
-
-
-    def __init__(self, name, parent=None):
-        super(plotGWLvsWLNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}}, color=(150, 150, 250, 150))
-        self._ctrlWidget = plotGWLvsWLNodeCtrlWidget(self)
-
-        
-    def process(self, In):
-        df = returnPandasDf(In)
-        if df is not None:
-            # when we recieve a new dataframe into terminal - update possible selection list
-            if not self._ctrlWidget.plotAllowed():
-                colname = [col for col in df.columns]
-                self._ctrlWidget.p.param('Y: Well GWL').setLimits(colname)
-                self._ctrlWidget.p.param('X: River WL').setLimits(colname)
-            if self._ctrlWidget.plotAllowed():
-                kwargs = self.ctrlWidget().evaluateState()
-                with BusyCursor():
-
-                    if self._ctrlWidget.p['plot overheads'] is True:
-                        y_name = kwargs['y'][0]
-                        x_name = kwargs['x'][0]
-                        overhead_name = y_name+' - '+x_name
-                        df[overhead_name] = df[y_name]-df[x_name]
-                        kwargs['y'] = [overhead_name]
-                    
-                    plot_pandas.plot_pandas_scatter_special1(df, **kwargs)
-                    
-                    if self._ctrlWidget.p['plot overheads'] is True:
-                        del df[overhead_name]
-        return
-
-
-
-
-
-
-class plotGWLvsWLNodeCtrlWidget(ParameterTree):
-    
-    def __init__(self, parent=None):
-        super(plotGWLvsWLNodeCtrlWidget, self).__init__()
-        self._parent = parent
-
-        params = self.params()
-        ## Create tree of Parameter objects
-        self.p = Parameter.create(name='params', type='group', children=params)
-
-        ## set parameter tree to <self> (parameterTreeWidget)
-        self.setParameters(self.p, showTop=False)
-        self.initConnections()
-        # save default state
-        self._savedState = self.saveState()
-        self._plotAllowed = False
-
-    def initConnections(self):
-        self.p.child('Plot').sigActivated.connect(self.on_plot_clicked)
-
-    @QtCore.pyqtSlot()  #default signal
-    def on_plot_clicked(self):
-        self._plotAllowed = True
-        self._parent.update()
-        self._plotAllowed = False
-
-    def plotAllowed(self):
-        return self._plotAllowed
-
-
-    def params(self):
-        params = [
+    """Plot Growundwater-level VS River water-level (matplotlib) or so-called overhead"""
+    nodeName = "Plot Overhead"
+    uiTemplate = [
             {'name': 'X: River WL', 'type': 'list', 'value': 'None', 'default': None, 'values': [None], 'tip': 'Name of the column with river waterlevel data.\nWill be plotted on X-axis'},
             {'name': 'Y: Well GWL', 'type': 'list', 'value': 'None', 'default': None, 'values': [None], 'tip': 'Name of the column with well groundwater-level\ndata. It will be plotted on Y-axis'},
             {'name': 'plot overheads', 'type': 'bool', 'value': False, 'default': False, 'tip': 'If checked, will substract X-values from Y-values element-wise (Yvalues-Xvalues) before\nplotting. This means that so called "overheads" will be plotted on Y-axis and not the\nactual groundwater-levels.\nIf not checked - plots real values of Y-column'},
@@ -106,35 +36,70 @@ class plotGWLvsWLNodeCtrlWidget(ParameterTree):
             ]},
             {'name': 'Plot', 'type': 'action'},
         ]
-        return params
 
-    def saveState(self):
-        return self.p.saveState()
-    
-    def restoreState(self, state):
-        self.p.restoreState(state)
+    def __init__(self, name, parent=None):
+        super(plotGWLvsWLNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}}, color=(150, 150, 250, 150))
 
-    def evaluateState(self, state=None):
-        """ function evaluates passed state , reading only necessary parameters,
-            those that can be passed to pandas.read_csv() as **kwargs (see function4arguments)
-            user should reimplement this function for each Node"""
+    def _createCtrlWidget(self, **kwargs):
+        return plotGWLvsWLNodeCtrlWidget(**kwargs)
+        
+    def process(self, In):
+        df = returnPandasDf(In)
+        if df is not None:
+            # when we recieve a new dataframe into terminal - update possible selection list
+            if not self._ctrlWidget.plotAllowed():
+                colname = [col for col in df.columns if isNumpyNumeric(df[col].dtype)]
+                self._ctrlWidget.param('Y: Well GWL').setLimits(colname)
+                self._ctrlWidget.param('X: River WL').setLimits(colname)
+            
+            if self._ctrlWidget.plotAllowed():
+                kwargs = self.ctrlWidget().prepareInputArguments()
+                
+                with BusyCursor():
+                    if self._ctrlWidget.param('plot overheads').value() is True:
+                        y_name = kwargs['y'][0]
+                        x_name = kwargs['x'][0]
+                        overhead_name = y_name+' - '+x_name
+                        df[overhead_name] = df[y_name]-df[x_name]
+                        kwargs['y'] = [overhead_name]
+                    
+                    plot_pandas.plot_pandas_scatter_special1(df, **kwargs)
+                    
+                    if self._ctrlWidget.param('plot overheads').value() is True:
+                        del df[overhead_name]
+        return
 
-        if state is None:
-            state = self.saveState()
 
 
-        listWithDicts = evaluateDict(state['children'], functionToDicts=evaluationFunction, log=False,
-            function4arguments=plot_pandas.plot_pandas_scatter_special1)
+class plotGWLvsWLNodeCtrlWidget(NodeCtrlWidget):
+    def __init__(self, **kwargs):
+        super(plotGWLvsWLNodeCtrlWidget, self).__init__(update_on_statechange=False, **kwargs)
+        self._plotAllowed = False
+
+    def initUserSignalConnections(self):
+        self.param('Plot').sigActivated.connect(self.on_plot_clicked)
+
+    @QtCore.pyqtSlot()
+    def on_plot_clicked(self):
+        self._plotAllowed = True
+        self._parent.update()
+        self._plotAllowed = False
+
+    def plotAllowed(self):
+        return self._plotAllowed
+
+    def prepareInputArguments(self):
+        validArgs = getCallableArgumentList(plot_pandas.plot_pandas_scatter_special1, get='args')
+        validArgs += ['X: River WL', 'Y: Well GWL']
         kwargs = dict()
-        for d in listWithDicts:
-            # {'a': None}.items() => [('a', None)] => two times indexing
-            kwargs[d.items()[0][0]] = d.items()[0][1]
+        for param in self.params(ignore_groups=True):
+            if param.name() in validArgs:
+                kwargs[param.name()] = self.p.evaluateValue(param.value())
 
-        kwargs['x'] = [state['children']['X: River WL']['value']]
-        kwargs['y'] = [state['children']['Y: Well GWL']['value']]
-        if kwargs['trendlinemode'] == 'None': kwargs['trendlinemode'] = None
-        if kwargs['title'] in [None, 'None']: kwargs['title'] = None
-        if kwargs['xlabel'] in [None, 'None']: kwargs['xlabel'] = state['children']['X: River WL']['value']
-        if kwargs['ylabel'] in [None, 'None']: kwargs['ylabel'] = state['children']['Y: Well GWL']['value']
+        kwargs['x'] = [kwargs.pop('X: River WL')]
+        kwargs['y'] = [kwargs.pop('Y: Well GWL')]
+
+        if kwargs['xlabel'] in [None, 'None']: kwargs['xlabel'] = kwargs['x']
+        if kwargs['ylabel'] in [None, 'None']: kwargs['ylabel'] = kwargs['y']
 
         return kwargs

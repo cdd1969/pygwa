@@ -5,7 +5,7 @@ import numpy as np
 
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.TidalEfficiency import tidalEfficiency_method1, tidalEfficiency_method2, tidalEfficiency_method3
-from lib.functions.general import returnPandasDf, isNumpyDatetime
+from lib.functions.general import returnPandasDf, isNumpyDatetime, isNumpyNumeric
 
 
 class tidalEfficiencyNode(NodeWithCtrlWidget):
@@ -35,7 +35,7 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
         self._ctrlWidget.param('E = ').setValue(str(E))
         
         with BusyCursor():
-            colname = [col for col in df.columns if not isNumpyDatetime(df[col].dtype)]
+            colname = [col for col in df.columns if isNumpyNumeric(df[col].dtype)]
             self._ctrlWidget.param('river').setLimits(colname)
             self._ctrlWidget.param('gw').setLimits(colname)
             colname = [col for col in df.columns if isNumpyDatetime(df[col].dtype)]
