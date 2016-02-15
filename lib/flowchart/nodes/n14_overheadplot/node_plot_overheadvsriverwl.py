@@ -1,6 +1,5 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-
 from pyqtgraph.Qt import QtCore
 from pyqtgraph import BusyCursor
 
@@ -67,7 +66,6 @@ class plotGWLvsWLNode(NodeWithCtrlWidget):
                     
                     if self._ctrlWidget.param('plot overheads').value() is True:
                         del df[overhead_name]
-        return
 
 
 

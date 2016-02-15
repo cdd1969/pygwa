@@ -1,12 +1,10 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-
-from pyqtgraph.Qt import QtCore, QtGui
-from pyqtgraph.parametertree import Parameter, ParameterTree
-import pyqtgraph.parametertree.parameterTypes as pTypes
 import numpy as np
+from pyqtgraph.Qt import QtCore
+import pyqtgraph.parametertree.parameterTypes as pTypes
 
-from lib.flowchart.nodes.NodeWithCtrlWidget import NodeWithCtrlWidget
+from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.common.ScatterPlotWidget import ScatterPlotWidget
 from lib.functions.general import returnPandasDf
 
@@ -14,12 +12,13 @@ from lib.functions.general import returnPandasDf
 class scatterPlotWidgetNode(NodeWithCtrlWidget):
     """Explore data with a scatter plot widget"""
     nodeName = "ScatterPlot"
-
+    uiTemplate = [ {'name': 'Plot', 'type': 'action'}]
 
     def __init__(self, name, parent=None):
         super(scatterPlotWidgetNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}}, color=(150, 150, 250, 200))
-        self._ctrlWidget = scatterPlotWidgetNodeCtrlWidget(parent=self)
-
+    
+    def _createCtrlWidget(self, **kwargs):
+        return scatterPlotWidgetNodeCtrlWidget(**kwargs)
         
     def process(self, In):
         if isinstance(In, np.recarray):
@@ -35,16 +34,15 @@ class scatterPlotWidgetNode(NodeWithCtrlWidget):
 
         for colName in receivedColumns:
             self._ctrlWidget.addDfColumn(colName)
-            self._ctrlWidget.p.child(colName).child('name').setValue(colName)
+            self._ctrlWidget.param(colName, 'name').setValue(colName)
 
         self._ctrlWidget.spw().setData(In)
         self._ctrlWidget.setFields()
         return
 
-        
     def restoreState(self, state):
         """overriding standard Node method to extend it with restoring ctrlWidget state"""
-        NodeWithCtrlWidget.restoreState(self, state, update=True)
+        super(scatterPlotWidgetNode, self).restoreState(state, update=True)
 
     @QtCore.pyqtSlot(object, object)
     def updateColumns(self, sender, value):
@@ -53,7 +51,6 @@ class scatterPlotWidgetNode(NodeWithCtrlWidget):
         # so the name of the column is the name of the parent parameter group
         cn  = sender.parent().name()
         self._columnsToUpdate.append(cn)
-
         self.update()
 
     def deleteAllColumns(self):
@@ -62,46 +59,23 @@ class scatterPlotWidgetNode(NodeWithCtrlWidget):
         for colName in currentColumns:
             self._ctrlWidget.removeDfColumn(colName)
 
-
     def close(self):
         self._ctrlWidget.spw().hide()
         self._ctrlWidget.spw().close()
-
         NodeWithCtrlWidget.close(self)
-        
 
 
-
-
-
-
-class scatterPlotWidgetNodeCtrlWidget(ParameterTree):
+class scatterPlotWidgetNodeCtrlWidget(NodeCtrlWidget):
     
-    def __init__(self, parent=None):
-        super(scatterPlotWidgetNodeCtrlWidget, self).__init__()
-        self._parent = parent
-
-        params = self.params()
-        ## Create tree of Parameter objects
-        self.p = Parameter.create(name='params', type='group', children=params)
-
-        ## set parameter tree to <self> (parameterTreeWidget)
-        self.setParameters(self.p, showTop=False)
-        self.initConnections()
-        # save default state
-        self._savedState = self.saveState()
-
+    def __init__(self, **kwargs):
+        super(scatterPlotWidgetNodeCtrlWidget, self).__init__(update_on_statechange=False, **kwargs)
         self._spw = ScatterPlotWidget(self)
 
+    def initUserSignalConnections(self):
+        self.param('Plot').sigActivated.connect(self.on_plot_clicked)
 
     def spw(self):
         return self._spw
-
-
-    def initConnections(self):
-        self.p.child('Plot').sigActivated.connect(self.on_plot_clicked)
-
-    
 
     @QtCore.pyqtSlot()  #default signal
     def on_plot_clicked(self):
@@ -111,57 +85,33 @@ class scatterPlotWidgetNodeCtrlWidget(ParameterTree):
         else:
             self._spw.hide()
 
-    
     @QtCore.pyqtSlot(object)  #default signal
     def on_param_valueChanged(self, sender):
         self.setFields()
-
-    
-    def params(self):
-        params = [
-            {'name': 'Plot', 'type': 'action'},
-            ]
-
-        return params
 
     def addDfColumn(self, columnName):
         columnParam = columnScatterPlotWidgetGroupParameter(name=columnName)
         self.p.addChild(columnParam)
         
-        self.p.child(columnName).child('name').sigValueChanged.connect(self.on_param_valueChanged)
-        self.p.child(columnName).child('units').sigValueChanged.connect(self.on_param_valueChanged)
- 
-
+        self.param(columnName, 'name').sigValueChanged.connect(self.on_param_valueChanged)
+        self.param(columnName, 'units').sigValueChanged.connect(self.on_param_valueChanged)
 
     def removeDfColumn(self, columnName):
-        self.p.child(columnName).child('name').sigValueChanged.disconnect()
-        self.p.child(columnName).child('units').sigValueChanged.disconnect()
-        self.p.removeChild(self.p.child(columnName))
-
-
-    def saveState(self):
-        return self.p.saveState()
+        self.param(columnName, 'name').sigValueChanged.disconnect()
+        self.param(columnName, 'units').sigValueChanged.disconnect()
+        self.p.removeChild(self.param(columnName))
     
     def restoreState(self, state):
-
         # here i wold have to probably add constructor of the missing params
         #self.restoreState(state)
         pass
 
-    def evaluateState(self, state=None):
-        """ function evaluates passed state , reading only necessary parameters,
-            those that can be passed to pandas.read_csv() as **kwargs
-
-            user should re-implement this function for each Node"""
-
-        if state is None:
-            state = self.saveState()
+    def evaluateState(self):
         fields = list()
-        for child in self.p.children():
-            if child.name() not in ['Help', 'Plot']:
-                field = (child.name(), {'units': child.param('units').value()})
+        for child in self.params(recursive=False):
+            if child.name() != 'Plot':
+                field = (child.name(), {'units': child.child('units').value()})
                 fields.append(field)
-        
         return fields
 
     def setFields(self, fields=None):
@@ -170,12 +120,9 @@ class scatterPlotWidgetNodeCtrlWidget(ParameterTree):
         self._spw.setFields(fields)
 
 
-
-
 class columnScatterPlotWidgetGroupParameter(pTypes.GroupParameter):
     """ this parameter will be added for each column of the received
         DataDrame
-
     """
     def __init__(self, shortType=True, **opts):
         opts['type'] = 'bool'
