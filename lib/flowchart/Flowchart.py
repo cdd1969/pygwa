@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from pyqtgraph.flowchart.Flowchart import Flowchart
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtGui, QtCore
 from pyqtgraph import configfile as configfile
+import sys, traceback
 
 
 class customFlowchart(Flowchart):
@@ -9,7 +10,6 @@ class customFlowchart(Flowchart):
         - save/load now blocks mainwindow
         - input/output nodes are hidden
     """
-
     def __init__(self, parent=None, **kwargs):
         Flowchart.__init__(self, **kwargs)
         self.parent = parent
@@ -23,20 +23,26 @@ class customFlowchart(Flowchart):
                 startDir = self.filePath
             if startDir is None:
                 startDir = '.'
-            fname = QtGui.QFileDialog.getOpenFileName(self.parent, caption="Load Flowchart..", directory=startDir, filter="Flowchart (*.fc)")[0]
+            fname = QtGui.QFileDialog.getOpenFileName(self.parent, caption="Load Flowchart", directory=startDir, filter="Flowchart (*.fc)")[0]
             if fname:
                 fileName = fname
             else:
                 return
         fileName = unicode(fileName)
-        state = configfile.readConfigFile(fileName)
-        self.restoreState(state, clear=True)
-        self.viewBox.autoRange()
-        #self.emit(QtCore.SIGNAL('fileLoaded'), fileName)
-        self.sigFileLoaded.emit(fileName)
+        try:
+            state = configfile.readConfigFile(fileName)
+            self.restoreState(state, clear=True)
+            self.viewBox.autoRange()
+            #self.emit(QtCore.SIGNAL('fileLoaded'), fileName)
+            self.sigFileLoaded.emit(fileName)
 
-        self.inputNode.graphicsItem().hide()
-        self.outputNode.graphicsItem().hide()
+            self.inputNode.graphicsItem().hide()
+            self.outputNode.graphicsItem().hide()
+        except Exception, err:
+            traceback.print_exc()
+            self.clear()
+            QtGui.QMessageBox.warning(self.parent, "Load Flowchart", "Cannot load flowchart from file <i>{0}</i>".format(fileName))
+            return
     
     def saveFile(self, fileName=None, startDir=None, suggestedFileName='flowchart.fc'):
         if fileName is None:
@@ -53,3 +59,9 @@ class customFlowchart(Flowchart):
         fileName = unicode(fileName)
         configfile.writeConfigFile(self.saveState(), fileName)
         self.sigFileSaved.emit(fileName)
+
+
+    def addNode(self, node, name, pos=None):
+        super(customFlowchart, self).addNode(node, name, pos=pos)
+        if hasattr(node, 'sigUIStateChanged'):  #only my custom nodes do have this signal
+            node.sigUIStateChanged.connect(lambda: self.sigChartChanged.emit(self, 'uiChanged', node))

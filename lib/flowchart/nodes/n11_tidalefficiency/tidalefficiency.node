@@ -1,0 +1,6 @@
+{
+    "filename":  "node_tidalefficiency.py",
+    "classname": "tidalEfficiencyNode",
+    "libpath": ["Processing"],
+    "override": true
+}

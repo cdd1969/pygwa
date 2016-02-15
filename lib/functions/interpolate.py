@@ -2,7 +2,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import time
 
 
 def createInterpolationRanges(df, columnName, interpolateMargin=100, log=False):
@@ -124,23 +123,10 @@ def applyInterpolationBasedOnRanges(df, columnName, ranges, suffix='_interpolate
     if ranges is None:  # nothing to interpolate
         return
     columnNameNew = columnName+suffix
-    columnNameBak = columnName+suffix+'_bak'
     df[columnNameNew] = df[columnName]
-    df[columnNameBak] = df[columnName]
 
     for r in ranges:
-        df[columnNameBak] = df[columnName][r[0]:r[1]].interpolate(**kwargs)
-
-    # now finally copy only those values that were missing. This can be useful since we are not sure
-    # if interpolation will work perfectly
-    for i in np.where(df[columnName].isnull())[0]:
-        df[columnNameNew][i] = df[columnNameBak][i]
-
-    del df[columnNameBak]
-
-
-
-
+        df[columnNameNew][r[0]:r[1]] = df[columnName][r[0]:r[1]].interpolate(**kwargs)
 
 
 

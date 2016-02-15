@@ -3,11 +3,11 @@ Known TODOs
 -------------------------------------------------------------------------
 
 1) (DONE)
-    Create
+    Add
     Create Node to determine Tidal Efficiency based on diff. methods
 
 2) (DONE)
-    Create
+    Add
     Create Node to plot GROUND water-level vs RIVER water-level
 
 3)
@@ -40,3 +40,11 @@ Known TODOs
     Add
     Add Copy-Node button
     This will allow user to copy already prepared Node (i.e. with controls set)
+
+8)
+    Add
+    Add more export dtypes in node **toXLS** (ods etc)
+
+9)
+    Fix
+    Add automatically `.fc` extension to saved flowchart

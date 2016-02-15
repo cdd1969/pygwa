@@ -96,6 +96,7 @@
       <string>Library</string>
      </property>
      <addaction name="actionAdd_item_to_library"/>
+     <addaction name="actionLoad_Library"/>
     </widget>
     <addaction name="menuFlowchart"/>
     <addaction name="menuLibrary"/>
@@ -106,7 +107,7 @@
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionHelp"/>
+    <addaction name="actionDocumentation"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
    </widget>
@@ -308,7 +309,7 @@
   </action>
   <action name="actionAdd_item_to_library">
    <property name="text">
-    <string>Add new Node</string>
+    <string>Add Node to Library</string>
    </property>
   </action>
   <action name="actionLoad_fc">
@@ -335,9 +336,17 @@
     <string>Ctrl+Shift+S</string>
    </property>
   </action>
-  <action name="actionHelp">
+  <action name="actionDocumentation">
    <property name="text">
-    <string>Help</string>
+    <string>Documentation</string>
+   </property>
+   <property name="shortcut">
+    <string>F1</string>
+   </property>
+  </action>
+  <action name="actionLoad_Library">
+   <property name="text">
+    <string>Load Library</string>
    </property>
   </action>
  </widget>

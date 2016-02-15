@@ -1,0 +1,6 @@
+{
+    "filename":  "node_readxls.py",
+    "classname": "readXLSNode",
+    "libpath": ["Input/Output"],
+    "override": true
+}

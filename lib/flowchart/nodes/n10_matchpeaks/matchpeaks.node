@@ -1,0 +1,6 @@
+{
+    "filename":  "node_matchpeaks.py",
+    "classname": "matchPeaksNode",
+    "libpath": ["Processing"],
+    "override": true
+}

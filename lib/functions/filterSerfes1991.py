@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 import numpy as np
-import time
 import gc
 import pandas as pd
 
@@ -123,9 +122,3 @@ def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, verbose=
 
     gc.collect()
     return data
-
-
-if __name__ == '__main__':
-    import process2pandas
-    import pyqtgraph as pg
-    app = pg.mkQApp()
