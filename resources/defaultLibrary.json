@@ -16,8 +16,6 @@
     "12": "lib/flowchart/nodes/n12_timelag/timelag.node",
     "13": "lib/flowchart/nodes/n13_serfes/serfes.node",
     "14": "lib/flowchart/nodes/n14_overheadplot/overheadplot.node",
-    "15": "lib/flowchart/nodes/n15_scatterplotwigdet/scatterplotwidget.node",
+    "15": "lib/flowchart/nodes/n15_scatterplotwigdet/scatterplotwidget.node"
 
-
-    "16": "lib/flowchart/nodes/n000_testnode/test.node"
 }

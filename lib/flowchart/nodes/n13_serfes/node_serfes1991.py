@@ -93,7 +93,6 @@ class serfes1991NodeCtrlWidget(NodeCtrlWidget):
         self._parent.update()
         self._calculateNAllowed = False
 
-
     def prepareInputArguments(self):
         validArgs = ['datetime', 'N', 'verbose', 'log']
         kwargs = dict()
