@@ -57,7 +57,8 @@ class NodeWithCtrlWidget(Node):
         self._ctrlWidget.restoreState(state['crtlWidget'])
         if update:
             self.update()
-
+    
+    @QtCore.pyqtSlot()
     def changed(self, update=False):
         print 'changed... update=', update
         if update:
@@ -83,8 +84,76 @@ class NodeCtrlWidget(ParameterTree):
         self._savedState = self.saveState()
 
     def initSignalConnections(self, update_parent=True):
-        for child in self.p.children(recursive=True, ignore_groups=True):
-            child.sigStateChanged.connect(lambda: self._parent.changed(update_parent))
+        ''' Function searches for all parameters (nested params are included)
+        within `self.p` recursively. Group parameters are omitted. Then all pa-
+        rameters that are found, are connected with `self._parent.changed()`
+        method with their `sigValueChanged` signal.
+
+        That method (`self._parent.changed()`) has an optional keyword `update`
+        which is responsible for trigerring `Node.update()` method. In other
+        words we may control if the changes in parameter `self.p` values will
+        trigger the `.update()` method of the parent Node.
+
+        Args:
+        -----
+            update_parent (True, False, dict):
+                This parameter allows control on which parameters
+                will be (not) connected to the `self._parent.changed` slot,
+                with flag to trigger `self._parent.update()` method
+
+                True  - all params will trigger update()
+                False - all params wont trigger update()
+                dict  - dictionary with two keys ('connect', 'disconnect')
+                    to control parameters individually. Two possibilities are given:
+                    1) Dont connect any of params except param1 and param2:
+                        {'action': 'connect',
+                         'parameters': (param1, param2)}
+                    2) Connect all params escept param1 and param2
+                        {'action': 'disconnect',
+                         'parameters': (param1, param2)}
+                
+                NOTE:
+                If you want to use `dict` type, then you need to pass there
+                the instances of the parameters. To do that REIMPLEMENT this
+                method in your custom node e.g.:
+
+                def initSignalConnections(self, update_parent=True):
+                    new_update_parent = {
+                        'action': 'connect',
+                        'parameters': (self.param('foo'), self.param('bar'))
+                    }
+                    super(thisNodeClass, self).initSignalConnections(new_update_parent)
+
+        '''
+
+        if isinstance(update_parent, dict):
+            # we have dictionary, treat params separately
+            if update_parent['action'] in ['connect', u'connect', True]:
+                default_action = False
+            elif update_parent['action'] in ['disconnect', u'disconnect', False]:
+                default_action = True
+            else:
+                raise KeyError('Invalid value {0} for key `action`'.format(update_parent['action']))
+            
+            if not isinstance(update_parent['parameters'], (tuple, list)):
+                # if one param passed without brackets:
+                #   {'parameters': self.param('foo')}
+                # explicitly convert it to length=1 list to use `in` statement further
+                update_parent['parameters'] = [update_parent['parameters']]
+
+            for child in self.p.children(recursive=True, ignore_groups=True):
+                if child in update_parent['parameters']:
+                    child.sigStateChanged.connect(lambda: self._parent.changed(not(default_action)))
+                else:
+                    child.sigStateChanged.connect(lambda: self._parent.changed(default_action))
+
+        elif isinstance(update_parent, bool):
+            # we have bool, treat params all together
+            default_action = update_parent
+            for child in self.p.children(recursive=True, ignore_groups=True):
+                child.sigStateChanged.connect(lambda: self._parent.changed(default_action))
+        else:
+            raise TypeError('Invalid type {0} of parameter `update_parent`. Must be `bool` or `dict`'.format(type(update_parent)))
 
     def initUserSignalConnections(self):
         """ This method should be reimplemented by user when creating custom node,

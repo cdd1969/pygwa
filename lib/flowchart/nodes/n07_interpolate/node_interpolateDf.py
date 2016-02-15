@@ -1,23 +1,17 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-
 import gc
 import copy
 import pyqtgraph.parametertree.parameterTypes as pTypes
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore
 from pyqtgraph import BusyCursor
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 from lib.flowchart.package import Package
-
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.interpolate import applyInterpolationBasedOnRanges, createInterpolationRanges
-from lib.functions.evaluatedictionary import evaluateDict, evaluationFunction
 from lib.functions.general import returnPandasDf
-
-
 
 
 class interpolateDfNode(NodeWithCtrlWidget):
@@ -73,7 +67,7 @@ class interpolateDfNode(NodeWithCtrlWidget):
                 
                 if nanN > 0:
                     #print( 'Updating ...', colName)
-                    params = self._ctrlWidget.evaluateState(columnName=colName)
+                    params = self._ctrlWidget.prepareInputArguments(columnName=colName)
                     realKwargs = {
                                     'method': params['method'],
                     }
@@ -176,9 +170,9 @@ class interpolateDfNodeCtrlWidget(NodeCtrlWidget):
         self.param(columnName, 'method').sigValueChanged.disconnect()
         self.param(columnName, 'order').sigValueChanged.disconnect()
         self.param(columnName, '**kwargs').sigValueChanged.disconnect()
-        #self.p.child(columnName).child('Plot').sigActivated.disconnect(self._parent.plot)
+        #self.param(columnName, 'Plot').sigActivated.disconnect(self._parent.plot)
         self.p.removeChild(self.param(columnName))
-        #del self.p.child(columnName)
+        #del self.param(columnName)
     
     #def restoreState(self, state): #
     #    # here i wold have to probably add constructor of the missing params
@@ -188,23 +182,12 @@ class interpolateDfNodeCtrlWidget(NodeCtrlWidget):
     #    #self.restoreState(state)
     #    pass
 
-    def evaluateState(self, state=None, columnName=''):
-        """ function evaluates passed state , reading only necessary parameters,
-            those that can be passed to pandas.read_csv() as **kwargs
-
-            user should re-implement this function for each Node"""
-
-        if state is None:
-            state = self.saveState()
-        listWithDicts = evaluateDict(state['children'][columnName], functionToDicts=evaluationFunction, log=False)
-        #print ('returning listWithDicts for column', columnName)
-        #print (listWithDicts)
-        kwargs = dict()
-        for d in listWithDicts:
-            # {'a': None}.items() >>> [('a', None)] => two times indexing
-            kwargs[d.items()[0][0]] = d.items()[0][1]
-        #print ('returning kwargs for column', columnName)
-        #print (kwargs)
+    def prepareInputArguments(self, columnName=''):
+        kwargs = {
+            'interpolateMargin': self.p.child(columnName, 'interpolateMargin').value(),
+            'method':            self.p.child(columnName, 'method').value(),
+            'order':             self.p.child(columnName, 'order').value(),
+            '**kwargs':          self.p.evaluateValue(self.p.child(columnName, '**kwargs').value(), datatype=dict)}
         return kwargs
 
 
