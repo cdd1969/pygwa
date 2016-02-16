@@ -1,6 +1,5 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-
 import os, sys
 import traceback
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
@@ -18,6 +17,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
         super(MainWindow, self).__init__()
+        self._unittestmode = False  #set this to True if running a unittest
         #self.setupUi(self)
         uic.loadUi(projectPath('resources/mainwindow.ui'), self)
         self.uiData = uiData(self)
@@ -147,7 +147,8 @@ class MainWindow(QtWidgets.QMainWindow):
             #print( self.flowChartWidget.view.viewBox().mapViewToScene(pos))
             mappedPos = self.flowChartWidget.view.viewBox().mapSceneToView(pos)
             if nodeType in self.uiData.nodeNamesList():  # to avoid drag'n'dropping Group-names
-                self.flowChartWidget.chart.createNode(nodeType, pos=mappedPos)
+                self.fc.createNode(nodeType, pos=mappedPos)
+                #self.flowChartWidget.chart.createNode(nodeType, pos=mappedPos)
 
 
         self.flowChartWidget.view.dragEnterEvent = dragEnterEvent
@@ -265,8 +266,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(object, str, object)
     def on_sigChartChanged(self, emitter, action, node):
-        print( "on_sigChartChanged() is called")
-        print( self, emitter, action, node)
+        #print( "on_sigChartChanged() is called")
+        #print( self, emitter, action, node)
         self.uiData.setChangesUnsaved(True)
 
         if action == 'add':
@@ -354,6 +355,10 @@ class MainWindow(QtWidgets.QMainWindow):
             return True
 
     def closeEvent(self, event):
+        if self._unittestmode:  # set this variable in your unittest
+            # if we are running tests...
+            QtWidgets.qApp.quit()
+
         if self.doActionIfUnsavedChanges(message='Are you sure to quit?'):
             QtWidgets.qApp.quit()  #quit application
         else:

@@ -132,7 +132,7 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
     @QtCore.pyqtSlot()  #default signal
     def on_pushButton_viewPlot_clicked(self):
         """ open nice graphic representation of our data"""
-        plt.figure()
+        self.matplotlibWindow = plt.figure()
         ax = plt.subplot(111)
         columns = self.parent().getPandasModel().selectColumns()
         self.parent().getPandasModel().getData()[columns].plot(ax=ax)

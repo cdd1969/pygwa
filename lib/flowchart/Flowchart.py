@@ -18,7 +18,7 @@ class customFlowchart(Flowchart):
         self.outputNode.graphicsItem().hide()
 
     def loadFile(self, fileName=None, startDir=None):
-        print( 'loadFile called with fname:', fileName)
+        #print( 'loadFile called with fname:', fileName)
         if fileName is None:
             if startDir is None:
                 startDir = self.filePath

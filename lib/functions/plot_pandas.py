@@ -7,6 +7,8 @@ import matplotlib.lines as mlines
 import scipy
 import seaborn as sns
 import pandas as pd
+import matplotlib.mlab as mlab
+
 
 
 def r_squared(actual, ideal):
@@ -506,112 +508,141 @@ def calculate_mean_std(signal):
 
 
 
-def plot_statistical_analysis(data, data2=None, save=False, figurename='figure.jpg',  plot_title='Original signal', ylims=None, papersize=None,
-            xlabel1=None, ylabel1=None, xlabel2=None, ylabel2=None, xlabel3=None, ylabel3=None,
-            axeslabel_fontsize=10., title_fontsize=20., axesvalues_fontsize=10., annotation_fontsize=10., legend_fontsize=8.):
+def plot_statistical_analysis(data, data2=None,
+            bins=10,
+            hist_type=0,
+            plot_title='Original signal',
+            data_units='',
+            axeslabel_fontsize=15., title_fontsize=20., axesvalues_fontsize=15., annotation_fontsize=15., legend_fontsize=15.):
+    
+    if hist_type in [0, 'Frequency']:
+        y_label = 'Frequency'
+        label2 = 'Frequency Histogram'
+        label3 = 'Cumulative Frequency Histogram'
+    
+    elif hist_type in [1, 'Relative Frequency']:
+        y_label = 'Relative Frequency'
+        label2 = 'Relative Frequency Histogram'
+        label3 = 'Cumulative Rel.Frequency Histogram'
 
-    if papersize in ['a4', 'A4']:
-        fig = plt.figure(figsize=(11.69, 8.27), tight_layout=True)
-    else:
-        fig = plt.figure(tight_layout=True)
+    elif hist_type in [2, 'Normalized']:
+        y_label = 'Density'
+        label2 = 'Density Histogram'
+        label3 = 'Cumulative Density Histogram'
+
+
+    plt.figure(tight_layout=True)
+
+    ax1 = plt.subplot2grid((2, 2), (0, 0), colspan=2)
+    ax2 = plt.subplot2grid((2, 2), (1, 0))
+    ax3 = plt.subplot2grid((2, 2), (1, 1))
 
     # we can pass to data not only Array, but also pandas DataFrame or Timeseries
     # where indexes are DatetimeIndex. Lets figure it out...
     # The thing is, for calculations we need raw arrays without datetime indexes
     raw_data = data
-    print( raw_data)
-    if type(data) in [pd.core.frame.DataFrame, pd.core.frame.Series]:
+
+    ax1.set_xlabel('Number of data-points', fontsize=axeslabel_fontsize)
+
+    if isinstance(data, (pd.Series, pd.DataFrame)):
         if type(data.index) is pd.tseries.index.DatetimeIndex:
             #print( 'pd.tseries.index.DatetimeIndex detected')
             raw_data = data.iloc[:, 0].values  # select all time-entries for first column 
                                                # (note we have ONLY one column in raw_data)
+            ax1.set_xlabel('')
+            
     
 
     mu, std = calculate_mean_std(raw_data)
 
-    ax1 = plt.subplot2grid((2, 2), (0, 0), colspan=2)
-    ax2 = plt.subplot2grid((2, 2), (1, 0))
-    ax3 = plt.subplot2grid((2, 2), (1, 1))
     
     # -------------
     # subplot 1
     # -------------
-    try:
-        data.plot(ax=ax1, lw=1., legend=None)
-        ax1.set_xlabel("")
-    except:
-        print( "except...")
-        ax1.plot(data)
-        if xlabel1: ax1.set_xlabel(xlabel1, fontsize=axeslabel_fontsize)
+    if isinstance(data, (pd.Series, pd.DataFrame)):
+        data.plot(ax=ax1, lw=1.)
+    else:
+        ax1.plot(data, label='Signal')
+
+
 
     # since we have plotted timeseries, we can reset pointer to use raw data (array) instead of timeseries
     data = raw_data
 
-
-    if data2 is not None:
-        try:
-            sns.tsplot(data2, err_style="ci_band", color="g", ax=ax1, n_boot=1, lw=.5, interpolate=True, marker=None)
-        except MemoryError:
-            ax1.plot(data2)
-        l1 = mlines.Line2D([0, 0], [0, 0], linewidth=None, color='b')
-        l2 = mlines.Line2D([0, 0], [0, 0], linewidth=None, color='g')
-        ax1.legend([l1, l2], [plot_title, 'River low tide'], fontsize=legend_fontsize)
-    
-
-
-    if plot_title: ax1.set_title(plot_title, fontsize=title_fontsize)
-    if ylabel1: ax1.set_ylabel(ylabel1, fontsize=axeslabel_fontsize)
+    ax1.set_title(plot_title, fontsize=title_fontsize)
+    ax1.set_ylabel(data_units, fontsize=axeslabel_fontsize)
     ax1.tick_params(axis='both', labelsize=axesvalues_fontsize)
     
-    #ax1.xlim([0, data.size])
+    ax1.legend(loc='upper right')
+    handles, labels = ax1.get_legend_handles_labels()
+    labels[0] = labels[0]+'\n'+(r'$\mu$'+' = {0:.2f}\n'+r'$\sigma$'+' = {1:.3f}').format(mu, std)
+    ax1.legend(handles, labels, fontsize=legend_fontsize)
     
     # -------------
     # subplot 2
     # -------------
-    BINS = 20
-    sns.distplot(data, bins=BINS, fit=scipy.stats.norm, norm_hist=False, ax=ax2,
-                kde_kws={"label": "data"},
-                fit_kws={"label": "gaussian PDF"})
-    ymax = ax2.get_ylim()[1]
-    ax2.axvline(mu, ymax=1., color='k', linestyle='--', lw=1)
+
+    # the histogram of the data
+    #n, bins, patches = ax2.hist(data, bins, normed=True, facecolor='#75bbfd', alpha=0.5)
+    ## add a 'best fit' line
+    #y = mlab.normpdf( bins, mu, std)
+    #l = ax2.plot(bins, y, 'r--', linewidth=1)
+
+    #sns.distplot(data, bins=bins, norm_hist=False, ax=ax2, kde=False)
+    if hist_type in [0, 'Frequency']:
+        sns.distplot(data, bins=bins, norm_hist=False, kde=False, ax=ax2)
+    
+    elif hist_type in [1, 'Relative Frequency']:
+        sns.distplot(data, bins=bins, norm_hist=False, kde=False, ax=ax2, hist_kws={'weights': np.ones_like(data)/float(data.size)})
+
+    elif hist_type in [2, 'Normalized']:
+        sns.distplot(data, bins=bins, ax=ax2, kde_kws={"label": "KDE"})
+
+    ax2.axvline(mu, ymax=1., color='k', linestyle='--', lw=1, label=('Mean: '+r'$\mu$'+' = {0:.2f}').format(mu))
     
 
-    ax2.set_title("PDF", fontsize=title_fontsize)
-    if ylabel2: ax2.set_ylabel(ylabel2, fontsize=axeslabel_fontsize)
-    if xlabel2: ax2.set_xlabel(xlabel2, fontsize=axeslabel_fontsize)
+
+    ax2.set_title(label2, fontsize=title_fontsize)
+    ax2.set_xlabel(data_units, fontsize=axeslabel_fontsize)
+    ax2.set_ylabel(y_label, fontsize=axeslabel_fontsize)
     ax2.tick_params(axis='both', labelsize=axesvalues_fontsize)
 
 
     handles, labels = ax2.get_legend_handles_labels()
-    labels[1] = labels[1]+'\n'+(r'$\mu$'+' = {0:.2f}\n'+r'$\sigma$'+' = {1:.3f}').format(mu, std)
     ax2.legend(handles, labels, fontsize=legend_fontsize)
 
 
     # -------------
     # subplot 3
     # -------------
-    sns.kdeplot(data, gridsize=BINS, cumulative=True, ax=ax3, label='data')
-    #x = np.linspace(data.min(), data.max(), BINS)
-    sns.kdeplot(np.random.normal(mu, std, BINS), gridsize=BINS, cumulative=True, color='k', ax=ax3,
-                label=('gaussian CDF\n'+r'$\mu$'+' = {0:.2f}\n'+r'$\sigma$'+' = {1:.3f}').format(mu, std))
+    if hist_type in [0, 'Frequency']:
+        sns.distplot(data, bins=bins, kde=False, ax=ax3, hist_kws={'cumulative': True})
+        ax3.set_ylim([0, data.size])
     
-    ax3.set_title("CDF", fontsize=title_fontsize)
-    if ylabel3: ax3.set_ylabel(ylabel3, fontsize=axeslabel_fontsize)
-    if xlabel3: ax3.set_xlabel(xlabel3, fontsize=axeslabel_fontsize)
+    elif hist_type in [1, 'Relative Frequency']:
+        sns.distplot(data, bins=bins, kde=False, ax=ax3, hist_kws={'cumulative': True, 'weights': np.ones_like(data)/float(data.size)})
+        ax3.set_ylim([0, 1])
+
+    elif hist_type in [2, 'Normalized']:
+        sns.distplot(data, bins=bins, ax=ax3, kde_kws={"label": "KDE", 'cumulative': True}, hist_kws={'cumulative': True})
+        ax3.set_ylim([0, 1])
+
+    
+    ax3.set_title(label3, fontsize=title_fontsize)
+    ax3.set_ylabel(y_label, fontsize=axeslabel_fontsize)
+    ax3.set_xlabel(data_units, fontsize=axeslabel_fontsize)
     ax3.tick_params(axis='both', labelsize=axesvalues_fontsize)
     handles, labels = ax3.get_legend_handles_labels()
     ax3.legend(handles, labels, fontsize=legend_fontsize)
     
-
-    if ylims:
-        ax1.set_ylim(ylims)
-        ax2.set_xlim(ylims)
-        ax3.set_xlim(ylims)
     
     plt.get_current_fig_manager().window.showMaximized()
-    if save:
-        fig.savefig(figurename, dpi=300)
-        print( 'Figure saved:', figurename)
-        plt.close()
-        #plt.show()
-    else: plt.show()
+    plt.show()
+
+
+
+if __name__ == '__main__':
+    plot_statistical_analysis(np.random.uniform(-1, 1, size=5000),
+            bins=100,
+            data_units='',
+            hist_type=1)
