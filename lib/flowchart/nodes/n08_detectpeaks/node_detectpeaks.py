@@ -1,6 +1,7 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
 from pyqtgraph import BusyCursor
+from pyqtgraph.Qt import QtGui
 
 from lib.flowchart.package import Package
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
@@ -21,7 +22,7 @@ class detectPeaksTSNode(NodeWithCtrlWidget):
         ]},
         {'name': 'Period Check Params', 'type': 'group', 'children': [
             {'name': 'T', 'type': 'str', 'value': 12.42, 'default': None, 'tip': 'Awaited period of the signal in hours. If `None`, will calculate\nthe Period `T` as the mean of difference between peaks, multiplied\nby two (i.e. T = peaks["time"].diff().mean()*2)'},
-            {'name': 'hMargin', 'type': 'int', 'value': 1, 'default': 1, 'limits': (0, int(10e6)), 'tip': 'Number of hours, safety margin when comparing period length.\nSee formula below:\nT/2 - hMargin < T_i/2 < T/2 + hMargin'},
+            {'name': 'hMargin', 'type': 'float', 'value': 1.5, 'default': 1.5, 'limits': (0., 100.), 'tip': 'Number of hours, safety margin when comparing period length.\nSee formula below:\nT/2 - hMargin < T_i/2 < T/2 + hMargin'},
             {'name': 'Warnings', 'type': 'str', 'value': '?', 'default': '?', 'tip': 'Number of period-check warnings detected after detecting peaks.\nWarnings are raised where period condition is not met.\tHit `Plot` button to visualize errors', 'readonly': True},
         ]},
         {'name': 'Plot', 'type': 'action'}]

@@ -81,6 +81,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionSave_As_fc.triggered.connect(self.on_actionSave_As_fc)
         self.actionLoad_fc.triggered.connect(self.on_actionLoad_fc)
         self.actionAdd_item_to_library.triggered.connect(self.on_actionAdd_item_to_library)
+        self.actionLoadLibrary.triggered.connect(self.on_actionLoadLibrary)
 
         self.actionAbout.triggered.connect(self.on_actionAbout)
         self.actionDocumentation.triggered.connect(self.on_actionDocumentation)
@@ -240,6 +241,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def on_actionDocumentation(self):
         QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/cdd1969/pygwa/wiki'))
 
+    @QtCore.pyqtSlot()
+    def on_actionLoadLibrary(self):
+        QtWidgets.QMessageBox.warning(self, "Load Node Library", "Not implemented yet")
 
     
     @QtCore.pyqtSlot()

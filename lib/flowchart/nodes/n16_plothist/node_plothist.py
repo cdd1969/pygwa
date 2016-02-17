@@ -14,6 +14,9 @@ class plotHistNode(NodeWithCtrlWidget):
             {'name': 'Signal Units', 'type': 'str', 'value': u'm AMSL', 'default': u'', 'tip': 'Units of the `Signal` to be displayed'},
             {'name': 'Histogram Type', 'type': 'list', 'value': 'Frequency', 'values': ['Frequency', 'Relative Frequency', 'Normalized'], 'tip': 'Type of the histogram.'},
             {'name': 'Bins', 'type': 'int', 'value': 10, 'default': 10, 'step': 1, 'limits': (1, 200), 'tip': 'Number of bins for building histogram'},
+            {'name': 'Data Max', 'type': 'str', 'value': '', 'tip': 'Maximum value of passed `Signal`', 'readonly': True},
+            {'name': 'Data Min', 'type': 'str', 'value': '', 'tip': 'Minimum value of passed `Signal`', 'readonly': True},
+            {'name': 'Bin Width', 'type': 'str', 'value': '', 'tip': 'Bin width', 'readonly': True},
             {'name': 'Plot', 'type': 'action'},
         ]
 
@@ -30,6 +33,14 @@ class plotHistNode(NodeWithCtrlWidget):
             if not self._ctrlWidget.plotAllowed():
                 colname = [col for col in df.columns if isNumpyNumeric(df[col].dtype)]
                 self._ctrlWidget.param('Signal').setLimits(colname)
+                
+                column = self._ctrlWidget.param('Signal').value()
+                Max = float(max(df[column]))
+                Min = float(min(df[column]))
+                NBins = self._ctrlWidget.param('Bins').value()
+                self._ctrlWidget.param('Data Max').setValue('{0:.2f}'.format(Max))
+                self._ctrlWidget.param('Data Min').setValue('{0:.2f}'.format(Min))
+                self._ctrlWidget.param('Bin Width').setValue('{0:.2f}'.format((Max-Min)/float(NBins)))
             
             if self._ctrlWidget.plotAllowed():
                 kwargs = self.ctrlWidget().prepareInputArguments()
@@ -38,6 +49,11 @@ class plotHistNode(NodeWithCtrlWidget):
                     bins=kwargs['Bins'],
                     data_units=kwargs['Signal Units'],
                     hist_type=kwargs['Histogram Type'])
+        else:
+            self._ctrlWidget.param('Signal').setLimits([''])
+            self._ctrlWidget.param('Data Max').setValue('')
+            self._ctrlWidget.param('Data Min').setValue('')
+            self._ctrlWidget.param('Bin Width').setValue('')
 
 
 class plotHistNodeCtrlWidget(NodeCtrlWidget):
@@ -47,8 +63,9 @@ class plotHistNodeCtrlWidget(NodeCtrlWidget):
 
     def initUserSignalConnections(self):
         self.param('Plot').sigActivated.connect(self.on_plot_clicked)
+        self.param('Signal').sigValueChanged.connect(self._parent.update)
+        self.param('Bins').sigValueChanged.connect(self._parent.update)
 
-    @QtCore.pyqtSlot()
     def on_plot_clicked(self):
         self._plotAllowed = True
         self._parent.update()

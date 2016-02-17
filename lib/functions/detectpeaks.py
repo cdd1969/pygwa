@@ -299,8 +299,8 @@ def detectPeaks_ts(data, col, T=None, datetime=None, hMargin=1., detectPeaksFlag
         n_max = len(peakIndices_max)
         
         if n_min != n_max:
-            kwargs['plot'] = True
-            detectPeaks(data[col].values, **kwargs)
+            #kwargs['plot'] = False
+            #detectPeaks(data[col].values, **kwargs)
             raise Exception('Number of min and max peaks is not equal: {0} != {1}'.format(n_min, n_max))
         
         peaks['N'] = np.arange(max(n_min, n_max))
@@ -322,8 +322,7 @@ def detectPeaks_ts(data, col, T=None, datetime=None, hMargin=1., detectPeaksFlag
                 peaks.iloc[-1, peaks.columns.get_loc('val_max')] = np.nan
         
         peaks['time_diff'] = peaks['time_max'] - peaks['time_min']
-
-
+        peaks['tidal_range'] = np.abs(peaks['val_max'] - peaks['val_min'])
 
     # estimate periods
     if T is None:
@@ -331,7 +330,6 @@ def detectPeaks_ts(data, col, T=None, datetime=None, hMargin=1., detectPeaksFlag
     else:
         T = timedelta(hours=T)
     halfT = T/2
-
 
     # perform data-checks
     epsilon = timedelta(hours=hMargin)
@@ -590,7 +588,6 @@ def match_peaks(peaks_w, peaks_gw, match_colName='time_min', **kwargs):
     peaks_matched = peaks_w.copy(deep=True)
     del peaks_matched['check']
     del peaks_matched['time_diff']
-    peaks_matched['tidehub'] = np.abs(peaks_matched['val_max'] - peaks_matched['val_min'])
     peaks_matched['md_N']        = np.nan
     peaks_matched['md_ind_min']  = np.nan
     peaks_matched['md_ind_max']  = np.nan
@@ -613,7 +610,7 @@ def match_peaks(peaks_w, peaks_gw, match_colName='time_min', **kwargs):
             peaks_matched.ix[i, 'md_val_min']  = peaks_gw.iloc[j, peaks_gw.columns.get_loc('val_min')]
             peaks_matched.ix[i, 'md_val_max']  = peaks_gw.iloc[j, peaks_gw.columns.get_loc('val_max')]
 
-    peaks_matched['md_tidehub']  = np.abs(peaks_matched['md_val_max'] - peaks_matched['md_val_min'])
+    peaks_matched['md_tidal_range']  = np.abs(peaks_matched['md_val_max'] - peaks_matched['md_val_min'])
     return peaks_matched
     
 

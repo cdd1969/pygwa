@@ -1,5 +1,6 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
+from pyqtgraph.Qt import QtGui
 from pyqtgraph import BusyCursor
 import numpy as np
 
@@ -34,7 +35,7 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
         matched_peaks = returnPandasDf(matched_peaks)
         self._ctrlWidget.param('E = ').setValue(str(E))
         
-        with BusyCursor():
+        if df is not None:
             colname = [col for col in df.columns if isNumpyNumeric(df[col].dtype)]
             self._ctrlWidget.param('river').setLimits(colname)
             self._ctrlWidget.param('gw').setLimits(colname)
@@ -44,25 +45,37 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
             kwargs = self.ctrlWidget().prepareInputArguments()
             
             if kwargs['method'] == '1) STD':
+                self._ctrlWidget.param('gw').setWritable(True)
                 E = tidalEfficiency_method1(df, kwargs['river'], kwargs['gw'])
 
             elif kwargs['method'] == '2) Cyclic amplitude':
+                self._ctrlWidget.param('gw').setWritable(False)
+                self._ctrlWidget.param('gw').setLimits(['see matched peaks'])
+                if matched_peaks is None:
+                    QtGui.QMessageBox.warning(None, "Node: {0}".format(self.nodeName), 'To use method `Cyclic amplitude` please provide data in terminal `matched_peaks` (a valid data-set can be created with node `Match Peaks`)')
+                    return
                 # select only valid cycles
                 df_slice = matched_peaks.loc[~matched_peaks['md_N'].isin([np.nan, None])]
-                E, N = tidalEfficiency_method2(df_slice['tidehub'], df_slice['md_tidehub'])
-                print( 'Method2: Calculated E with {0} tidal-cycles'.format(N))
+                E, N = tidalEfficiency_method2(df_slice['tidal_range'], df_slice['md_tidal_range'])
+                #print( 'Method2: Calculated E with {0} tidal-cycles'.format(N))
 
             elif kwargs['method'] == '3) Cyclic STD':
-                mPeaks_slice = matched_peaks.loc[~matched_peaks['md_N'].isin([np.nan, None])]
+                self._ctrlWidget.param('gw').setWritable(True)
+                #self._ctrlWidget.param('gw').setLimits(['see matched peaks'])
+                if matched_peaks is None:
+                    QtGui.QMessageBox.warning(None, "Node: {0}".format(self.nodeName), 'To use method `Cyclic amplitude` please provide data in terminal `matched_peaks` (a valid data-set can be created with node `Match Peaks`)')
+                    return
+                with BusyCursor():
+                    mPeaks_slice = matched_peaks.loc[~matched_peaks['md_N'].isin([np.nan, None])]
 
-                E, N = tidalEfficiency_method3(df,  kwargs['river'], kwargs['gw'], kwargs['datetime'],
-                    mPeaks_slice['time_min'], mPeaks_slice['time_max'],
-                    mPeaks_slice['md_time_min'], mPeaks_slice['md_time_max'])
-                print( 'Method3: Calculated E with {0} tidal-cycles'.format(N))
+                    E, N = tidalEfficiency_method3(df,  kwargs['river'], kwargs['gw'], kwargs['datetime'],
+                        mPeaks_slice['time_min'], mPeaks_slice['time_max'],
+                        mPeaks_slice['md_time_min'], mPeaks_slice['md_time_max'])
+                #print( 'Method3: Calculated E with {0} tidal-cycles'.format(N))
             else:
                 raise Exception('Method <%s> not yet implemented' % kwargs['method'])
         
-        self._ctrlWidget.param('E = ').setValue(str(E))
+            self._ctrlWidget.param('E = ').setValue('{0:.4f}'.format(E))
         return {'E': E}
 
 
