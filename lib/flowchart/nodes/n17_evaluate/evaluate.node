@@ -1,0 +1,6 @@
+{
+    "filename":  "node_evaluate.py",
+    "classname": "pumpedEvalNode",
+    "libpath": ["Data"],
+    "override": true
+}

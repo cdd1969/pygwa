@@ -17,6 +17,7 @@
     "13": "lib/flowchart/nodes/n13_serfes/serfes.node",
     "14": "lib/flowchart/nodes/n14_overheadplot/overheadplot.node",
     "15": "lib/flowchart/nodes/n15_scatterplotwigdet/scatterplotwidget.node",
-    "16": "lib/flowchart/nodes/n16_plothist/plothist.node"
+    "16": "lib/flowchart/nodes/n16_plothist/plothist.node",
+    "17": "lib/flowchart/nodes/n17_evaluate/evaluate.node"
 
 }
