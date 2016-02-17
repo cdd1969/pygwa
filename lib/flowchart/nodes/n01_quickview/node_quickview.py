@@ -181,7 +181,7 @@ class PandasModel(QtCore.QAbstractTableModel):
         # append header of the newly set data to our HeaderModel
         self._headerModel.clear()  #flush previous model
         for name in self.getDataHeader():
-            item = QtGui.QStandardItem(name+' ;; dtype <{0}>'.format(self._dataPandas[name].dtype))
+            item = QtGui.QStandardItem('{0} ;; dtype <{0}>'.format(name, self._dataPandas[name].dtype))
             item.setCheckable(True)
             item.setEditable(False)
             item.setCheckState(Qt.Checked)
@@ -253,10 +253,6 @@ class PandasModel(QtCore.QAbstractTableModel):
                 #print( 're', re.search('(.*?)\s;;\sdtype.*', item.text()).group(1))
                 columns.append(self.getItemName(item))
         
-        ## if all has been checked => return None
-        #if len(columns) == self._headerModel.rowCount():
-        #    columns = None
-
         #print( "selectColumns() returning", columns)
         return columns
 
@@ -265,7 +261,12 @@ class PandasModel(QtCore.QAbstractTableModel):
         # since i have changed the text of the item to `colname+' ;; <dtype>'`
         # i need to extract column name once again
         #print( 're', re.search('(.*?)\s;;\sdtype.*', item.text()).group(1))
-        return re.search('(.*?)\s;;\sdtype.*', tw_item.text()).group(1)
+        colNameStr = re.search('(.*?)\s;;\sdtype.*', tw_item.text()).group(1)
+        if colNameStr not in self._dataPandas.columns:
+            colNameStr = int(colNameStr)
+            if colNameStr not in self._dataPandas.columns:
+                raise ValueError('Column name `{0}` not found in DataFtame.columns'.format(colNameStr))
+        return colNameStr
 
 
     def createNumpyData(self):
@@ -277,7 +278,11 @@ class PandasModel(QtCore.QAbstractTableModel):
         else:
             # return only desired columns
             # note <selectedColumns> should be a list of strings (i.e. ['datetime', 'col1', 'col2'])
-            return np.array(self._dataPandas[selectedColumns])
+            try:
+                data = self._dataPandas[[str(col) for col in selectedColumns]]
+            except:
+                data = self._dataPandas[[int(col) for col in selectedColumns]]
+            return np.array(data)
 
     @QtCore.pyqtSlot(object)
     def on_tv_itemChanged(self, item):

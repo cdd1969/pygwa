@@ -52,7 +52,7 @@ class PythonHighlighter (QSyntaxHighlighter):
         'is', 'lambda', 'not', 'or', 'pass', 'print',
         'raise', 'return', 'try', 'while', 'yield',
         'None', 'True', 'False', '__init__', 'type', 'open',
-        'with', 'int', 'float'
+        'with', 'int', 'float', 'as', 'locals', 'globals'
     ]
 
     # Python operators

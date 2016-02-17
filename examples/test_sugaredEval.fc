@@ -1,0 +1,41 @@
+pos: (0.0, 0.0)
+connects: [(u'PythonEval.0', 'output', u'Plot Histogram.0', 'In'), (u'PythonEval.0', 'output', u'QuickView.0', 'In')]
+terminals:
+    dataOut:
+        multi: False
+        io: 'out'
+        renamable: False
+        multiable: False
+        removable: False
+        optional: False
+    dataIn:
+        multi: False
+        io: 'in'
+        renamable: False
+        multiable: False
+        removable: False
+        optional: False
+bypass: False
+inputNode:
+    terminals:
+        dataIn:
+            multi: False
+            io: 'out'
+            renamable: False
+            multiable: False
+            removable: False
+            optional: False
+    pos: (-150.0, 0.0)
+    bypass: False
+nodes: [{'state': {'text': "# Access inputs as args['input']\nfrom lib.flowchart.package import Package as P\nimport pandas as pd\n\na = np.random.rand(100)*2 + np.random.rand(100)**2\n\ndf = P(pd.DataFrame(a))\n\nreturn {'output': df} ## one key per output terminal", 'terminals': OrderedDict([('input', {'multi': False, 'io': 'in', 'renamable': True, 'multiable': True, 'removable': False, 'optional': False}), ('output', {'multi': False, 'io': 'out', 'renamable': True, 'multiable': True, 'removable': False, 'optional': False})]), 'pos': (-136.32657985930086, -41.20509815388182), 'bypass': False}, 'pos': (-136.32657985930086, -41.20509815388182), 'class': 'PythonEval', 'name': u'PythonEval.0'}, {'state': {'pos': (130.6629111927953, 109.86506118097877), 'bypass': False}, 'pos': (130.6629111927953, 109.86506118097877), 'class': 'QuickView', 'name': u'QuickView.0'}, {'state': {'crtlWidget': {'expanded': True, 'name': 'params', 'strictNaming': False, 'default': None, 'enabled': True, 'title': None, 'renamable': False, 'value': None, 'visible': True, 'readonly': False, 'removable': False, 'type': 'group', 'children': OrderedDict([('Signal', {'expanded': True, 'name': 'Signal', 'limits': [0], 'strictNaming': False, 'default': None, 'tip': 'Name of the column with an array to be evaluated', 'title': None, 'renamable': False, 'value': 0, 'visible': True, 'readonly': False, 'values': [None], 'removable': False, 'type': 'list', 'enabled': True}), ('Signal Units', {'expanded': True, 'name': 'Signal Units', 'strictNaming': False, 'default': u'', 'enabled': True, 'title': None, 'renamable': False, 'value': u'm AMSL', 'visible': True, 'readonly': False, 'tip': 'Units of the `Signal` to be displayed', 'removable': False, 'type': 'str'}), ('Histogram Type', {'expanded': True, 'name': 'Histogram Type', 'limits': ['Frequency', 'Relative Frequency', 'Normalized'], 'strictNaming': False, 'default': 'Frequency', 'enabled': True, 'title': None, 'renamable': False, 'value': 'Frequency', 'visible': True, 'readonly': False, 'tip': 'Type of the histogram.', 'values': ['Frequency', 'Relative Frequency', 'Normalized'], 'removable': False, 'type': 'list'}), ('Bins', {'expanded': True, 'name': 'Bins', 'limits': (1, 200), 'strictNaming': False, 'default': 10, 'tip': 'Number of bins for building histogram', 'title': None, 'renamable': False, 'readonly': False, 'value': 10, 'visible': True, 'step': 1, 'removable': False, 'type': 'int', 'enabled': True}), ('Plot', {'expanded': True, 'name': 'Plot', 'strictNaming': False, 'default': None, 'enabled': True, 'title': None, 'renamable': False, 'value': None, 'visible': True, 'readonly': False, 'removable': False, 'type': 'action'})])}, 'pos': (182.85357080501117, -16.70176398695409), 'bypass': False}, 'pos': (182.85357080501117, -16.70176398695409), 'class': 'Plot Histogram', 'name': u'Plot Histogram.0'}]
+outputNode:
+    terminals:
+        dataOut:
+            multi: False
+            io: 'in'
+            renamable: False
+            multiable: False
+            removable: False
+            optional: False
+    pos: (300.0, 0.0)
+    bypass: False
