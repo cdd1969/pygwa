@@ -31,6 +31,10 @@ class makeTimeseriesCurveNode(NodeWithCtrlWidget):
         
     def process(self, df):
         df  = returnPandasDf(df)
+        if df is None:
+            return
+        del self.item
+        self.item = PlotDataItem(clipToView=False)
 
         colname = [col for col in df.columns if isNumpyNumeric(df[col].dtype)]
         self._ctrlWidget.param('Y:signal').setLimits(colname)
