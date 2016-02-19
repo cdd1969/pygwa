@@ -36,7 +36,7 @@ class TableView(QtGui.QTableView):
         
         self.contextMenu = QtGui.QMenu()
         self.contextMenu.addAction('Copy Selection').triggered.connect(self.copySel)
-        self.contextMenu.addAction('Copy All').triggered.connect(self.copyAll)
+        #self.contextMenu.addAction('Copy All').triggered.connect(self.copyAll)
         self.contextMenu.addAction('Save Selection').triggered.connect(self.saveSel)
         self.contextMenu.addAction('Save All').triggered.connect(self.saveAll)
         
@@ -153,9 +153,9 @@ class TableView(QtGui.QTableView):
                             else:
                                 rowdata.append(missing_value)
                         writer.writerow(rowdata)
-                QtGui.QMessageBox.information(None, 'Save File', 'File `{0}` saved successfully'.format(fn))
+                QtGui.QMessageBox.information(None, 'Export table to file', 'File `{0}` saved successfully'.format(fn))
             except Exception, err:
-                QtGui.QMessageBox.critical(None, 'Save File', 'File `{2}` cannot be saved:\n{0}\n{1}'.format(Exception, err, fn))
+                QtGui.QMessageBox.critical(None, 'Export table to file', 'File `{2}` cannot be saved:\n{0}\n{1}'.format(Exception, err, fn))
 
 
     def item(self, row, col):
@@ -208,7 +208,7 @@ class TableView(QtGui.QTableView):
             try:
                 open(fileName, 'w').write(data)
             except Exception, err:
-                QtGui.QMessageBox.critical(None, 'ERROR', 'File `{2}` cannot be saved:\n{0}\n{1}'.format(Exception, err, fileName))
+                QtGui.QMessageBox.critical(None, 'Export table to file', 'File `{2}` cannot be saved:\n{0}\n{1}'.format(Exception, err, fileName))
         return
 
     def contextMenuEvent(self, ev):
@@ -226,7 +226,7 @@ class TableView(QtGui.QTableView):
 
 
     def fileSaveAs(self):
-        fn, _ = QtGui.QFileDialog.getSaveFileName(self, "Save as...", "tableview_export.csv", "CSV files (*.csv);; TAB separated files(*.tsv)")
+        fn, _ = QtGui.QFileDialog.getSaveFileName(self, "Export table to file", "export.csv", "CSV files (*.csv);; TAB separated files (*.tsv)")
         if not fn:
             return False
         #fn = fn.lower()

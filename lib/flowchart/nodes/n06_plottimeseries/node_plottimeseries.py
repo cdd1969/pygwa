@@ -103,7 +103,7 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
             if terminal_name in self._TSitems.keys():
                 # if we have already something from this terminal
                 self.removeTSItem(terminal_name)
-            print ('adding item from term: {0}'.format(terminal_name))
+            #print ('adding item from term: {0}'.format(terminal_name))
             self._TSitems[terminal_name] = dict()
             # init symbol pen and size
             GraphItem.setSymbolPen(GraphItem.opts['pen'])
@@ -124,7 +124,7 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
             #print( 'adding items: (1) {0} {1} >>> (2) {2} {3}'.format(item, type(item), item2, type(item2)))
 
     def removeTSItem(self, terminal_name):
-        print ('removing item from term: {0}'.format(terminal_name))
+        #print ('removing item from term: {0}'.format(terminal_name))
         if terminal_name in self._TSitems.keys():
             TSitem = self._TSitems[terminal_name]
             self.canvas()[0].removeItem(TSitem['GraphItems'][0])
