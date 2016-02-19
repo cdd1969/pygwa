@@ -29,6 +29,9 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
     def _createCtrlWidget(self, **kwargs):
         return tidalEfficiencyNodeCtrlWidget(**kwargs)
 
+    def p(self):
+        return self._ctrlWidget.p
+
     def process(self, df, matched_peaks):
         E = None
         df = returnPandasDf(df)
@@ -49,22 +52,22 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
                 E = tidalEfficiency_method1(df, kwargs['river'], kwargs['gw'])
 
             elif kwargs['method'] == '2) Cyclic amplitude':
-                self._ctrlWidget.param('gw').setWritable(False)
-                self._ctrlWidget.param('gw').setLimits(['see matched peaks'])
                 if matched_peaks is None:
                     QtGui.QMessageBox.warning(None, "Node: {0}".format(self.nodeName), 'To use method `Cyclic amplitude` please provide data in terminal `matched_peaks` (a valid data-set can be created with node `Match Peaks`)')
                     return
+                self._ctrlWidget.param('gw').setWritable(False)
+                self._ctrlWidget.param('gw').setLimits(['see matched peaks'])
                 # select only valid cycles
                 df_slice = matched_peaks.loc[~matched_peaks['md_N'].isin([np.nan, None])]
                 E, N = tidalEfficiency_method2(df_slice['tidal_range'], df_slice['md_tidal_range'])
                 #print( 'Method2: Calculated E with {0} tidal-cycles'.format(N))
 
             elif kwargs['method'] == '3) Cyclic STD':
-                self._ctrlWidget.param('gw').setWritable(True)
                 #self._ctrlWidget.param('gw').setLimits(['see matched peaks'])
                 if matched_peaks is None:
                     QtGui.QMessageBox.warning(None, "Node: {0}".format(self.nodeName), 'To use method `Cyclic amplitude` please provide data in terminal `matched_peaks` (a valid data-set can be created with node `Match Peaks`)')
                     return
+                self._ctrlWidget.param('gw').setWritable(True)
                 with BusyCursor():
                     mPeaks_slice = matched_peaks.loc[~matched_peaks['md_N'].isin([np.nan, None])]
 

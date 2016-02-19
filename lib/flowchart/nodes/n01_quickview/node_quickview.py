@@ -5,7 +5,6 @@ from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from PyQt5.QtCore import Qt
 from pyqtgraph.flowchart.Node import Node
 from pyqtgraph import functions as fn
-from pyqtgraph import BusyCursor
 
 import re
 import gc
@@ -28,13 +27,12 @@ class QuickViewNode(Node):
         self._ctrlWidget = QuickViewCtrlWidget(self)
         
     def process(self, In):
-        with BusyCursor():
-            if self._pandasModel is not None:
-                self._pandasModel.destroy()
-                self._pandasModel = None
-            if In is not None:
-                self._pandasModel = PandasModel(In.unpack(), parent=self)
-            self.ctrlWidget().update()
+        if self._pandasModel is not None:
+            self._pandasModel.destroy()
+            self._pandasModel = None
+        if In is not None:
+            self._pandasModel = PandasModel(In.unpack(), parent=self)
+        self.ctrlWidget().update()
 
     def getPandasModel(self):
         return self._pandasModel
