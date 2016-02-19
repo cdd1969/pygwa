@@ -86,7 +86,7 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
     def on_sigItemReceived(self, term, item):
         """ <term> is not <id(array)>, but it should be passed from parent widget
         """
-        # check if this item exists
+        #check if this item exists
         if term in self._items.keys():  # if we have already something from this terminal
             if 'plotItems' in self._items[term].keys():
                 if self._items[term]['plotItems'][0] is item:  # if the item is absolutely same
@@ -106,6 +106,7 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
                     #print( '>>> on_sigItemReceived(): already have something from term <{0}>: item <{1}> is different'.format(term, item))
                     self.removeItems(self._items[term])
 
+
         if isinstance(item, (pg.PlotDataItem, pg.ScatterPlotItem)):
             #print( '>>> on_sigItemReceived(): registering incoming item')
             self._items[term] = dict()
@@ -115,6 +116,8 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
 
             #print( '>>> on_sigItemReceived(): adding item to upper subplot')
             self.canvas()[0].addItem(item)
+            self._graphicsWidget.legend.removeItem(item.name())
+            self._graphicsWidget.legend.addItem(item, name=item.name())
 
             # for some reason it is impossible to add same item to two subplots...
             #print( '>>> on_sigItemReceived(): creating item-copy for bottom subplot')
@@ -143,6 +146,7 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
         try:
             if 'plotItems' in item.keys() and isinstance(item['plotItems'], list) and len(item['plotItems']) == 2:
                 self.canvas()[0].removeItem(item['plotItems'][0])
+                self._graphicsWidget.legend.removeItem(item['plotItems'][0].name())
                 self.canvas()[1].removeItem(item['plotItems'][1])
         except RuntimeError:  # sometimes happens by loading new chart (RuntimeError: wrapped C/C++ object of type PlotDataItem has been deleted)
             #print( '>>> plotArray: item not deleted')
