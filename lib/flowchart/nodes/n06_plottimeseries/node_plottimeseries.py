@@ -168,7 +168,7 @@ class plotTimeseriesGraphicsWidget(QtGui.QWidget):
 
         self.p1 = win.addPlot(row=1, col=0, axisItems={'bottom': x_axis1, 'left': self.y_axis1})
         #self.p1.setClipToView(True)
-        self.p2 = win.addPlot(row=2, col=0, axisItems={'bottom': x_axis2, 'left': self.y_axis2})
+        self.p2 = win.addPlot(row=2, col=0, axisItems={'bottom': x_axis2, 'left': self.y_axis2}, enableMenu=False, title=' ')
         #self.p1.setClipToView(True)
         self.vb = self.p1.vb  # ViewBox
         
