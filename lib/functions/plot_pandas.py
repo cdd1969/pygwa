@@ -305,7 +305,7 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
     ax.set_xlim([minx, maxx])
 
 
-    if trendlinemode in [1, 2, 3]:
+    if trendlinemode in [1, 2, 3, 'Normal', 'Shifted']:
         print( 'plotting trendlines...')
         # get colors...
         handles, labels = ax.get_legend_handles_labels()
@@ -328,12 +328,12 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
             
             ideal = z[1] + (z[0] * df[X])
 
-            if trendlinemode == 1:
+            if trendlinemode in [1, 'Normal']:
                 r_sq = r_squared(df[Y], ideal)
                 trendline_equation = 'y=%.3fx+(%.3f)' % (z[0], z[1])
                 ax.plot([minx, maxx], p([minx, maxx]), '--', lw=0.8, color=c, label='Trendline\n{0}\nr^2={1:.3f}'.format(trendline_equation, r_sq))
             
-            elif trendlinemode in [2, 3]:
+            elif trendlinemode in [2, 3, 'Shifted']:
                 # now find out the maximum deviating point... above the trendline...
                 def ideal(value, z):
                     return z[1] + (z[0] * float(value))
@@ -351,7 +351,7 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
                         deviation_from_trendline_index.append(index)
                 #print ('Number of deviation that are (>0):', len(deviation_from_trendline))
 
-                if trendlinemode == 3:
+                if trendlinemode in [3, 'Shifted']:
                     # overwriting N_DEVIATIONS to one single point
                     N_DEVIATIONS = 1  # create lines based on N_DEVIATIONS points
                     # now find 1 maximum deviation...
