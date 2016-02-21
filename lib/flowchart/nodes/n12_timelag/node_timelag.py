@@ -16,11 +16,17 @@ class timeLagNode(NodeWithCtrlWidget):
             {'name': 'gw', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Column name with GROUNDWATER hydrograph data\nin `df_gw` dataframe'},
             {'name': 'gw_dtime', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Location of the datetime objects\nin `df_gw` dataframe'},
             {'name': 'method', 'type': 'list', 'value': '1) Erskine 1991', 'default': '1) Erskine 1991', 'values': ['1) Erskine 1991'], 'tip': 'Method to calculate TimeLag. Read docs'},
-            {'name': 'E', 'type': 'float', 'value': None, 'tip': 'tidal efficiency'},
-            {'name': 't1', 'type': 'int', 'value': 1, 'default': 1, 'limits': (0, int(10e3)), 'tip': 'First value for timelag-iteration tuple. Read docs'},
-            {'name': 't2', 'type': 'int', 'value': 60, 'default': 60, 'limits': (0, int(10e3)), 'tip': 'Last value for timelag-iteration tuple. Read docs'},
-            {'name': 't_step', 'type': 'int', 'value': 1, 'default': 1, 'limits': (1, int(10e3)), 'tip': 'Step value for timelag-iteration tuple. Read docs'},
-            {'name': 'tlag = ', 'type': 'str', 'readonly': True, 'value': None}
+            
+            {'title': 'Tidal Efficiency Parameters', 'name': 'E_grp', 'type': 'group', 'tip': '', 'expanded': True, 'children': [
+                {'title': 'Tidal Efficiency', 'name': 'E', 'type': 'float', 'value': None, 'tip': 'Tidal Efficiency (dimensionless)'},
+                {'title': 'Set `E` Manually', 'name': 'manual_E', 'type': 'bool', 'value': False, 'tip': 'Use `E` value received in terminal or set manually'}
+                ]},
+            {'title': 'Time Lag Parameters', 'name': 'tlag_grp', 'type': 'group', 'tip': '', 'expanded': True, 'children': [
+                {'name': 't1', 'type': 'int', 'value': 1, 'default': 1, 'limits': (0, int(10e3)), 'tip': 'First value for timelag-iteration tuple. In minutes. Read docs'},
+                {'name': 't2', 'type': 'int', 'value': 60, 'default': 60, 'limits': (0, int(10e3)), 'tip': 'Last value for timelag-iteration tuple. In minutes. Read docs'},
+                {'name': 't_step', 'type': 'int', 'value': 1, 'default': 1, 'limits': (1, int(10e3)), 'tip': 'Step value for timelag-iteration tuple. In minutes. Read docs'},
+                {'name': 'tlag = ', 'type': 'str', 'readonly': True, 'value': None}
+                ]}
         ]
 
     def __init__(self, name, parent=None):
@@ -35,28 +41,30 @@ class timeLagNode(NodeWithCtrlWidget):
         return timeLagNodeCtrlWidget(**kwargs)
 
     def process(self, df_gw, df_w, E):
-        self._ctrlWidget.param('tlag = ').setValue('?')
+        self.CW().param('tlag_grp', 'tlag = ').setValue('?')
         
         df_gw = returnPandasDf(df_gw)
         df_w = returnPandasDf(df_w)
 
         colname = [col for col in df_gw.columns if not isNumpyDatetime(df_gw[col].dtype)]
-        self._ctrlWidget.param('gw').setLimits(colname)
+        self.CW().param('gw').setLimits(colname)
         colname = [col for col in df_gw.columns if isNumpyDatetime(df_gw[col].dtype)]
-        self._ctrlWidget.param('gw_dtime').setLimits(colname)
+        self.CW().param('gw_dtime').setLimits(colname)
         
         colname = [col for col in df_w.columns if not isNumpyDatetime(df_w[col].dtype)]
-        self._ctrlWidget.param('river').setLimits(colname)
+        self.CW().param('river').setLimits(colname)
         colname = [col for col in df_w.columns if isNumpyDatetime(df_w[col].dtype)]
-        self._ctrlWidget.param('river_dtime').setLimits(colname)
+        self.CW().param('river_dtime').setLimits(colname)
 
-        kwargs = self.ctrlWidget().prepareInputArguments()
-        if E is None:
-            E = kwargs['E']
-        else:
-            self._ctrlWidget.param('E').setValue(E)  # maybe this will provoke process onceagain.
-            # and i would have to block the signals here...
-
+        if not self.CW().param('E_grp', 'manual_E').value():
+            self.CW().disconnect_valueChanged2upd(self.CW().param('E_grp', 'E'))
+            self.CW().param('E_grp', 'E').setValue(E)  # maybe this will provoke process onceagain.
+            self.CW().connect_valueChanged2upd(self.CW().param('E_grp', 'E'))
+        
+        kwargs = self.CW().prepareInputArguments()
+        E = kwargs['E']
+        # and i would have to block the signals here...
+        print ('Calculating with E=', E)
         with BusyCursor():
             if kwargs['method'] == '1) Erskine 1991':
                 tlag = timelag_erskine1991_method(df_gw, kwargs['gw'], kwargs['gw_dtime'],
@@ -65,20 +73,25 @@ class timeLagNode(NodeWithCtrlWidget):
             else:
                 raise Exception('Method <%s> not yet implemented' % kwargs['method'])
         
-            self._ctrlWidget.param('tlag = ').setValue(str(tlag))
+            self.CW().param('tlag_grp', 'tlag = ').setValue(str(tlag))
         return {'tlag': tlag}
 
 
 class timeLagNodeCtrlWidget(NodeCtrlWidget):
     
     def __init__(self, **kwargs):
-        super(timeLagNodeCtrlWidget, self).__init__(**kwargs)
+        super(timeLagNodeCtrlWidget, self).__init__(update_on_statechange=True, **kwargs)
+        self.disconnect_valueChanged2upd(self.param('tlag_grp', 'tlag = '))
+        #self.disconnect_valueChanged2upd(self.param('E_grp', 'manual_E'))
+        #self.param('E_grp', 'manual_E').sigValueChanged.connect(self.toggle_manualE)
 
-    def initSignalConnections(self, update_parent=True):
-        new_update_parent = {
-            'action': 'disconnect',
-            'parameters': self.param('tlag = ')}
-        super(timeLagNodeCtrlWidget, self).initSignalConnections(new_update_parent)
+    def toggle_manualE(self):
+        if self.param('E_grp', 'manual_E').value() is True:
+            self.param('E_grp', 'E').setOpts({'enabled': False})
+        else:
+            self.param('E_grp', 'E').setOpts({'enabled': True})
+            #self.param('E_grp', 'E').setWritable(False)
+
 
     def prepareInputArguments(self):
         kwargs = dict()

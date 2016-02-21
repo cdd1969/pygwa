@@ -58,7 +58,6 @@ class plotGWLvsWLNode(NodeWithCtrlWidget):
             
             if self._ctrlWidget.plotAllowed():
                 kwargs = self.ctrlWidget().prepareInputArguments()
-                print kwargs, '\n'
                 with BusyCursor():
                     if self._ctrlWidget.param('plot overheads').value() is True:
                         y_name = kwargs['y'][0]

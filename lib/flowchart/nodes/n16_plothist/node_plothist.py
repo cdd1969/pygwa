@@ -65,6 +65,8 @@ class plotHistNodeCtrlWidget(NodeCtrlWidget):
         self.param('Plot').sigActivated.connect(self.on_plot_clicked)
         self.param('Signal').sigValueChanged.connect(self._parent.update)
         self.param('Bins').sigValueChanged.connect(self._parent.update)
+        
+        self.disconnect_valueChanged2upd(self.param('Bins'))
 
     def on_plot_clicked(self):
         self._plotAllowed = True

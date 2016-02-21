@@ -27,47 +27,57 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
         super(tidalEfficiencyNode, self).__init__(name, parent=parent, terminals=terms, color=(250, 250, 150, 150))
     
     def _createCtrlWidget(self, **kwargs):
+        print ('**kwargs:', kwargs)
         return tidalEfficiencyNodeCtrlWidget(**kwargs)
 
     def p(self):
-        return self._ctrlWidget.p
+        return self.CW().p
 
     def process(self, df, matched_peaks):
         E = None
         df = returnPandasDf(df)
         matched_peaks = returnPandasDf(matched_peaks)
-        self._ctrlWidget.param('E = ').setValue(str(E))
+        self.CW().param('E = ').setValue(str(E))
+        self.CW().param('gw').setWritable(True)
         
         if df is not None:
+            for name in ['river', 'gw', 'datetime']:
+                self.CW().disconnect_valueChanged2upd(self.CW().param(name))
             colname = [col for col in df.columns if isNumpyNumeric(df[col].dtype)]
-            self._ctrlWidget.param('river').setLimits(colname)
-            self._ctrlWidget.param('gw').setLimits(colname)
+            self.CW().param('river').setLimits(colname)
+            self.CW().param('gw').setLimits(colname)
             colname = [col for col in df.columns if isNumpyDatetime(df[col].dtype)]
-            self._ctrlWidget.param('datetime').setLimits(colname)
+            self.CW().param('datetime').setLimits(colname)
             
+            for name in ['river', 'gw', 'datetime']:
+                self.CW().connect_valueChanged2upd(self.CW().param(name))
+
             kwargs = self.ctrlWidget().prepareInputArguments()
             
             if kwargs['method'] == '1) STD':
-                self._ctrlWidget.param('gw').setWritable(True)
                 E = tidalEfficiency_method1(df, kwargs['river'], kwargs['gw'])
 
             elif kwargs['method'] == '2) Cyclic amplitude':
                 if matched_peaks is None:
                     QtGui.QMessageBox.warning(None, "Node: {0}".format(self.nodeName), 'To use method `Cyclic amplitude` please provide data in terminal `matched_peaks` (a valid data-set can be created with node `Match Peaks`)')
                     return
-                self._ctrlWidget.param('gw').setWritable(False)
-                self._ctrlWidget.param('gw').setLimits(['see matched peaks'])
+                self.CW().disconnect_valueChanged2upd(self.CW().param('gw'))
+                self.CW().param('gw').setWritable(False)
+                self.CW().param('gw').setLimits(['see matched peaks'])
+                self.CW().connect_valueChanged2upd(self.CW().param('gw'))
                 # select only valid cycles
                 df_slice = matched_peaks.loc[~matched_peaks['md_N'].isin([np.nan, None])]
                 E, N = tidalEfficiency_method2(df_slice['tidal_range'], df_slice['md_tidal_range'])
                 #print( 'Method2: Calculated E with {0} tidal-cycles'.format(N))
 
             elif kwargs['method'] == '3) Cyclic STD':
-                #self._ctrlWidget.param('gw').setLimits(['see matched peaks'])
                 if matched_peaks is None:
                     QtGui.QMessageBox.warning(None, "Node: {0}".format(self.nodeName), 'To use method `Cyclic amplitude` please provide data in terminal `matched_peaks` (a valid data-set can be created with node `Match Peaks`)')
                     return
-                self._ctrlWidget.param('gw').setWritable(True)
+                self.CW().disconnect_valueChanged2upd(self.CW().param('gw'))
+                self.CW().param('gw').setWritable(False)
+                self.CW().param('gw').setLimits(['see matched peaks'])
+                self.CW().connect_valueChanged2upd(self.CW().param('gw'))
                 with BusyCursor():
                     mPeaks_slice = matched_peaks.loc[~matched_peaks['md_N'].isin([np.nan, None])]
 
@@ -78,20 +88,17 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
             else:
                 raise Exception('Method <%s> not yet implemented' % kwargs['method'])
         
-            self._ctrlWidget.param('E = ').setValue('{0:.4f}'.format(E))
+            self.CW().param('E = ').setValue('{0:.4f}'.format(E))
         return {'E': E}
+
+
 
 
 
 class tidalEfficiencyNodeCtrlWidget(NodeCtrlWidget):
     def __init__(self, **kwargs):
-        super(tidalEfficiencyNodeCtrlWidget, self).__init__(**kwargs)
-
-    def initSignalConnections(self, update_parent=True):
-        new_update_parent = {
-            'action': 'disconnect',
-            'parameters': self.param('E = ')}
-        super(tidalEfficiencyNodeCtrlWidget, self).initSignalConnections(new_update_parent)
+        super(tidalEfficiencyNodeCtrlWidget, self).__init__(update_on_statechange=True, **kwargs)
+        self.disconnect_valueChanged2upd(self.param('E = '))
 
     def prepareInputArguments(self):
         kwargs = dict()

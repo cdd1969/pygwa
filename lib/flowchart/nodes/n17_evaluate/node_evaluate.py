@@ -17,7 +17,7 @@ class pumpedEvalNode(EvalNode):
         super(pumpedEvalNode, self).__init__(name)
         highlight = syntaxPython.PythonHighlighter(self.text)
 
-        preload_libs = '#from lib.flowchart.package import Package as P; import pandas as pd'
+        preload_libs = '#from lib import Package as P; import pandas as pd'
 
         self.text.setPlainText("# Access inputs as args['input']\n"+preload_libs+"\nreturn {'output': None} ## one key per output terminal")
 

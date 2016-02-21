@@ -59,14 +59,11 @@ class detectPeaksTSNode(NodeWithCtrlWidget):
 
 class detectPeaksTSNodeCtrlWidget(NodeCtrlWidget):
     def __init__(self, **kwargs):
-        super(detectPeaksTSNodeCtrlWidget, self).__init__(update_on_statechange=False, **kwargs)
+        super(detectPeaksTSNodeCtrlWidget, self).__init__(update_on_statechange=True, **kwargs)
 
-    def initSignalConnections(self, update_parent=True):
-        new_update_parent = {
-            'action': 'disconnect',
-            'parameters': self.param('Period Check Params', 'Warnings')}
-        super(detectPeaksTSNodeCtrlWidget, self).initSignalConnections(new_update_parent)
+        self.disconnect_valueChanged2upd(self.param('Period Check Params', 'Warnings'))
         self.param('Plot').sigActivated.connect(self._parent.plot)
+
 
     def prepareInputArguments(self):
         kwargs = dict()

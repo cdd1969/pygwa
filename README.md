@@ -18,8 +18,8 @@ $ python pygwa.py
 ## Dependencies
 - Program is known to run on Linux
 - [Python 2.7][python2]
-- [QT 5][qt5] (5.4.1)
-- py: [PyQt 5][pyqt5] (5.5)
+- py: scipy
+- py: [PyQt 5][pyqt5] (5.5.1)
 - py: [pyqtgraph][pyqtgraph]
     - version: branch *devel*, commit *fd7644345883d1a5d484c3fe4abcbf06f5c3c3b0*
 - py: [pandas][pandas] (>= 0.17.0)
