@@ -27,12 +27,12 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
     #sigRegItemReceived = QtCore.Signal(object)  #already registered item received (id(item))
 
     def __init__(self, name, parent=None, **kwargs):
-        super(plotTimeseriesNode, self).__init__(name, terminals={'Items': {'io': 'in', 'multi': True}}, color=(150, 150, 250, 200), **kwargs)
+        super(plotTimeseriesNode, self).__init__(name, terminals={'Curves': {'io': 'in', 'multi': True}}, color=(150, 150, 250, 200), **kwargs)
         self.sigItemReceived.connect(self.on_sigItemReceived)
 
     def _init_at_first(self):
         self._graphicsWidget = plotTimeseriesGraphicsWidget(self)
-        self._items = dict()
+        self._TSitems = dict()
 
     def _createCtrlWidget(self, **kwargs):
         return plotTimeseriesNodeCtrlWidget(**kwargs)
@@ -41,20 +41,17 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
         return self._graphicsWidget
     
     def items(self):
-        return self._items
+        return self._TSitems
 
     def disconnected(self, localTerm, remoteTerm):
-        if localTerm is self['Items'] and remoteTerm in self._items.keys():
-            #print( "localTerm <{0}> is disconnected from remoteTerm <{1}>".format(localTerm, remoteTerm))
-            if 'plotItems' in self._items[remoteTerm].keys():
-                self.removeItem(self._items[remoteTerm])
-                del self._items[remoteTerm]
+        if localTerm is self['Curves'] and remoteTerm in self._TSitems.keys():
+            self.removeTSItem(remoteTerm)
 
-    def process(self, Items):
-        for term, vals in Items.items():
+    def process(self, Curves):
+        for term, vals in Curves.items():
             if vals is None:
                 continue
-            if type(vals) is not list:
+            if not hasattr(vals, '__iter__'):
                 vals = [vals]
             
             for val in vals:
@@ -64,7 +61,8 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
                 # GUI-based handling of exceptions (will result in crash)
                 #
                 # Therefore we directly call <on_signal_received> here
-                self.on_sigItemReceived(term, val)
+                #self.on_sigItemReceived(term, val)
+                self.addTSItem(val, term)
     
     def canvas(self):
         c1 = self._graphicsWidget.p1
@@ -72,8 +70,8 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
         return [c1, c2]
 
     def clear(self):
-        for item in self._items.values():
-            self.removeItem(item)
+        for remoteTerm in self._TSitems.keys():
+            self.removeTSItem(remoteTerm)
 
     def close(self):
         self.clear()
@@ -84,71 +82,61 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
 
     @QtCore.pyqtSlot(object, object)
     def on_sigItemReceived(self, term, item):
-        """ <term> is not <id(array)>, but it should be passed from parent widget
-        """
-        # check if this item exists
-        if term in self._items.keys():  # if we have already something from this terminal
-            if 'plotItems' in self._items[term].keys():
-                if self._items[term]['plotItems'][0] is item:  # if the item is absolutely same
-                    #print( '>>> on_sigItemReceived(): already have something from term <{0}>: item <{1}> is the same'.format(term, item))
-                    
-                    # in this case item on the upper subplot will be updated automatically, but the bottom subplot will stay same...
-                    # When the item is receive, we are manually creating a COPY of incoming item and are adding this copy to the
-                    # bottom subplot. Lets do same trick! Keep original item, but recreate the COPY
-                    item2 = self.copyItem(item)
-                    self.canvas()[1].removeItem(self._items[term]['plotItems'][1])
-                    del self._items[term]['plotItems'][1]
-                    
-                    self.canvas()[1].addItem(item2)
-                    self._items[term]['plotItems'].append(item2)
-                    return
-                else:
-                    #print( '>>> on_sigItemReceived(): already have something from term <{0}>: item <{1}> is different'.format(term, item))
-                    self.removeItems(self._items[term])
-
-        if isinstance(item, (pg.PlotDataItem, pg.ScatterPlotItem)):
-            #print( '>>> on_sigItemReceived(): registering incoming item')
-            self._items[term] = dict()
-            # init symbol pen and size
-            item.setSymbolPen(item.opts['pen'])
-            item.setSymbolSize(5)
-
-            #print( '>>> on_sigItemReceived(): adding item to upper subplot')
-            self.canvas()[0].addItem(item)
-
-            # for some reason it is impossible to add same item to two subplots...
-            #print( '>>> on_sigItemReceived(): creating item-copy for bottom subplot')
-            item2 = self.copyItem(item)
-            
-            #print( '>>> on_sigItemReceived(): adding item-copy to bottom subplot')
-            self.canvas()[1].addItem(item2)
-
-            self._items[term]['plotItems'] = [item, item2]
-            #print( 'adding items: (1) {0} {1} >>> (2) {2} {3}'.format(item, type(item), item2, type(item2)))
-            return
+        self.addTSItem(item, term)
 
     def copyItem(self, sampleItem):
         opts = sampleItem.opts
         opts['clipToView'] = False  #  we need to change it to False, because for some reason it fails....
+        opts['symbol'] = None
         return pg.PlotDataItem(sampleItem.xData, sampleItem.yData, **opts)
 
     def redraw(self):
-        for iId in self._items.keys():
-            state = self._items[iId]['arrayItem'].saveState()
+        for termName in self._TSitems.keys():
+            state = self._TSitems[termName]['arrayItem'].saveState()
             pen = fn.mkPen(color=state['color'], width=state['size'])
-            for plotItem in self._items[iId]['plotItems']:
+            for plotItem in self._TSitems[termName]['GraphItems']:
                 plotItem.setPen(pen)
 
-    def removeItem(self, item):
-        try:
-            if 'plotItems' in item.keys() and isinstance(item['plotItems'], list) and len(item['plotItems']) == 2:
-                self.canvas()[0].removeItem(item['plotItems'][0])
-                self.canvas()[1].removeItem(item['plotItems'][1])
-        except RuntimeError:  # sometimes happens by loading new chart (RuntimeError: wrapped C/C++ object of type PlotDataItem has been deleted)
-            #print( '>>> plotArray: item not deleted')
-            pass
-        del item
-        gc.collect()
+
+    def addTSItem(self, GraphItem, terminal_name):
+        if isinstance(GraphItem, (pg.PlotDataItem, pg.ScatterPlotItem)):
+            if terminal_name in self._TSitems.keys():
+                # if we have already something from this terminal
+                self.removeTSItem(terminal_name)
+            #print ('adding item from term: {0}'.format(terminal_name))
+            self._TSitems[terminal_name] = dict()
+            # init symbol pen and size
+            GraphItem.setSymbolPen(GraphItem.opts['pen'])
+            GraphItem.setSymbolSize(5)
+
+            #print( '>>> on_sigItemReceived(): adding item to upper subplot')
+            self.canvas()[0].addItem(GraphItem)
+            #self._graphicsWidget.legend.addItem(GraphItem, name=GraphItem.name())
+
+            # for some reason it is impossible to add same item to two subplots...
+            #print( '>>> on_sigItemReceived(): creating item-copy for bottom subplot')
+            GraphItem2 = self.copyItem(GraphItem)
+            
+            #print( '>>> on_sigItemReceived(): adding item-copy to bottom subplot')
+            self.canvas()[1].addItem(GraphItem2)
+
+            self._TSitems[terminal_name]['GraphItems'] = [GraphItem, GraphItem2]
+            #print( 'adding items: (1) {0} {1} >>> (2) {2} {3}'.format(item, type(item), item2, type(item2)))
+
+    def removeTSItem(self, terminal_name):
+        #print ('removing item from term: {0}'.format(terminal_name))
+        if terminal_name in self._TSitems.keys():
+            TSitem = self._TSitems[terminal_name]
+            self.canvas()[0].removeItem(TSitem['GraphItems'][0])
+            self._graphicsWidget.legend.removeItem(TSitem['GraphItems'][0].name())
+            self.canvas()[1].removeItem(TSitem['GraphItems'][1])
+            del TSitem['GraphItems'][0]
+            del TSitem['GraphItems'][0]
+            del self._TSitems[terminal_name]
+            gc.collect()
+
+
+
 
 
 
@@ -180,7 +168,7 @@ class plotTimeseriesGraphicsWidget(QtGui.QWidget):
 
         self.p1 = win.addPlot(row=1, col=0, axisItems={'bottom': x_axis1, 'left': self.y_axis1})
         #self.p1.setClipToView(True)
-        self.p2 = win.addPlot(row=2, col=0, axisItems={'bottom': x_axis2, 'left': self.y_axis2})
+        self.p2 = win.addPlot(row=2, col=0, axisItems={'bottom': x_axis2, 'left': self.y_axis2}, enableMenu=False, title=' ')
         #self.p1.setClipToView(True)
         self.vb = self.p1.vb  # ViewBox
         
@@ -234,13 +222,16 @@ class plotTimeseriesGraphicsWidget(QtGui.QWidget):
     def togglePoints(self, enable):
         #print('togglePoints', enable)
         with BusyCursor():
-            for item in self.parent().items().values():
-                # we want to toggle points only on upper subplot => index [0]
+            for TSitem in self.parent().items().values():
                 if enable:
                     symbol = 'x'
                 else:
                     symbol = None
-                item['plotItems'][0].setSymbol(symbol)
+                # we want to toggle points only on upper subplot => index [0]
+                print ('toggle points:', enable)
+                TSitem['GraphItems'][0].setSymbol(symbol)
+                # we want to keep no points on lower subplot => index [1]
+                TSitem['GraphItems'][1].setSymbol(None)
 
 
     def on_zoomRegion_changed(self):
@@ -280,7 +271,7 @@ class plotTimeseriesGraphicsWidget(QtGui.QWidget):
 
 class plotTimeseriesNodeCtrlWidget(NodeCtrlWidget):
     def __init__(self, **kwargs):
-        super(plotTimeseriesNodeCtrlWidget, self).__init__(**kwargs)
+        super(plotTimeseriesNodeCtrlWidget, self).__init__(update_on_statechange=False, **kwargs)
         self._gr = self._parent.graphicsWidget()
         self.on_yAxisLabelUnitsChanged()  #on init, it is important that WINDOW is already inited
 

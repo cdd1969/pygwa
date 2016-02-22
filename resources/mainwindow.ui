@@ -96,7 +96,7 @@
       <string>Library</string>
      </property>
      <addaction name="actionAdd_item_to_library"/>
-     <addaction name="actionLoad_Library"/>
+     <addaction name="actionLoadLibrary"/>
     </widget>
     <addaction name="menuFlowchart"/>
     <addaction name="menuLibrary"/>
@@ -344,7 +344,7 @@
     <string>F1</string>
    </property>
   </action>
-  <action name="actionLoad_Library">
+  <action name="actionLoadLibrary">
    <property name="text">
     <string>Load Library</string>
    </property>

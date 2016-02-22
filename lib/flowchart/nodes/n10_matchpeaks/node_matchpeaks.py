@@ -40,7 +40,6 @@ class matchPeaksNode(NodeWithCtrlWidget):
         with BusyCursor():
             mode = kwargs.pop('Match Option')
             if mode == 'Closest Time':
-                print kwargs
                 matched_peaks = match_peaks(df_w, df_gw, kwargs.pop('Match Column'), **kwargs)
                 
             N_md = matched_peaks['md_N'].count()
@@ -51,13 +50,9 @@ class matchPeaksNode(NodeWithCtrlWidget):
 
 class matchPeaksNodeCtrlWidget(NodeCtrlWidget):
     def __init__(self, **kwargs):
-        super(matchPeaksNodeCtrlWidget, self).__init__(**kwargs)
+        super(matchPeaksNodeCtrlWidget, self).__init__(update_on_statechange=True, **kwargs)
+        self.disconnect_valueChanged2upd(self.param('MATCHED/PEAKS'))
 
-    def initSignalConnections(self, update_parent=True):
-        new_update_parent = {
-            'action': 'disconnect',
-            'parameters': self.param('MATCHED/PEAKS')}
-        super(matchPeaksNodeCtrlWidget, self).initSignalConnections(new_update_parent)
 
     def prepareInputArguments(self):
         kwargs = dict()

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from pyqtgraph.python2_3 import asUnicode
 from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph import BusyCursor
+import csv
 
 
 class TableView(QtGui.QTableView):
@@ -35,26 +36,42 @@ class TableView(QtGui.QTableView):
         
         self.contextMenu = QtGui.QMenu()
         self.contextMenu.addAction('Copy Selection').triggered.connect(self.copySel)
-        self.contextMenu.addAction('Copy All').triggered.connect(self.copyAll)
+        #self.contextMenu.addAction('Copy All').triggered.connect(self.copyAll)
         self.contextMenu.addAction('Save Selection').triggered.connect(self.saveSel)
         self.contextMenu.addAction('Save All').triggered.connect(self.saveAll)
         
 
          
-    def serialize(self, useSelection=False):
-        """Convert entire table (or just selected area) into tab-separated text values"""
+    def serialize(self, useSelection=False, sep='\t', fv=u''):
+        """Convert entire table (or just selected area) into tab-separated text values
+
+        Args:
+        -----
+            useSelection (bool):
+                flag to read selected data
+            
+            sep (str):
+                string-separator between cells
+
+            fv (str):
+                string to represent fill-values
+        """
+        sep = unicode(sep)
+        fv = unicode(fv)
+        model = self.model()
         if useSelection:
             selection = self.selectionModel().selection().indexes()
-            topLeft = selection[0]
-            bottomRight = selection[-1]
+            if selection:
+                topLeft = selection[0]
+                bottomRight = selection[-1]
 
-            rows = list(range(topLeft.row(),
-                              bottomRight.row() + 1))
-            columns = list(range(topLeft.column(),
-                                 bottomRight.column() + 1))
+                rows = xrange(topLeft.row(), bottomRight.row() + 1)
+                columns = xrange(topLeft.column(), bottomRight.column() + 1)
+            else:
+                return None
         else:
-            rows = list(range(self.rowCount()))
-            columns = list(range(self.columnCount()))
+            rows = xrange(model.rowCount())
+            columns = xrange(model.columnCount())
 
         data = []
         if self.horizontalHeadersSet:
@@ -63,25 +80,83 @@ class TableView(QtGui.QTableView):
                 row.append(u'')
             
             for c in columns:
-                row.append(asUnicode(self.horizontalHeaderItem(c)))
+                row.append(unicode(self.horizontalHeaderItem(c)))
             data.append(row)
         
         for r in rows:
             row = []
             if self.verticalHeadersSet:
-                row.append(asUnicode(self.verticalHeaderItem(r)))
+                row.append(unicode(self.verticalHeaderItem(r)))
             for c in columns:
-                item = self.item(r, c)
+                index = model.index(r, c)
+                item = model.data(index)
                 if item is not None:
-                    row.append(asUnicode(item))
+                    row.append(unicode(item))
                 else:
-                    row.append(u'')
+                    row.append(fv)
             data.append(row)
             
-        s = ''
+        s = u''
         for row in data:
-            s += ('\t'.join(row) + '\n')
-        return s
+            s += sep.join(row) + '\n'
+        return unicode(s)
+
+
+    def handleSave(self, useSelection=False, missing_value=u''):
+        missing_value = unicode(missing_value)
+        
+        model = self.model()
+        if useSelection:
+            selection = self.selectionModel().selection().indexes()
+            if selection:
+                topLeft = selection[0]
+                bottomRight = selection[-1]
+
+                rows = xrange(topLeft.row(), bottomRight.row() + 1)
+                columns = xrange(topLeft.column(), bottomRight.column() + 1)
+            else:
+                return None
+        else:
+            rows = xrange(model.rowCount())
+            columns = xrange(model.columnCount())
+
+
+        fn = self.fileSaveAs()
+        if fn:
+            try:
+                with BusyCursor(), open(unicode(fn), 'wb') as stream:
+                    if fn.endswith('.tsv'):
+                        dialect = 'excel-tab'
+                    else:
+                        dialect = 'excel'
+                    writer = csv.writer(stream, dialect=dialect)
+
+                    # Write header
+                    if self.horizontalHeadersSet:
+                        header_row = []
+                        if self.verticalHeadersSet:
+                            header_row.append(u'')
+                        for c in columns:
+                            header_row.append(unicode(self.horizontalHeaderItem(c)))
+                        writer.writerow(header_row)
+
+                    # Write data
+                    for row in rows:
+                        rowdata = []
+                        if self.verticalHeadersSet:
+                            rowdata.append(unicode(self.verticalHeaderItem(row)))
+                        for column in columns:
+                            index = model.index(row, column)
+                            item  = model.data(index)
+                            if item:
+                                rowdata.append(unicode(item))
+                            else:
+                                rowdata.append(missing_value)
+                        writer.writerow(rowdata)
+                QtGui.QMessageBox.information(None, 'Export table to file', 'File `{0}` saved successfully'.format(fn))
+            except Exception, err:
+                QtGui.QMessageBox.critical(None, 'Export table to file', 'File `{2}` cannot be saved:\n{0}\n{1}'.format(Exception, err, fn))
+
 
     def item(self, row, col):
         return self.model().index(row, col).data()
@@ -106,28 +181,34 @@ class TableView(QtGui.QTableView):
 
     def copySel(self):
         """Copy selected data to clipboard."""
-        QtGui.QApplication.clipboard().setText(self.serialize(useSelection=True))
+        with BusyCursor():
+            data = self.serialize(useSelection=True)
+        if data:
+            QtGui.QApplication.clipboard().setText(data)
 
     def copyAll(self):
         """Copy all data to clipboard."""
-        QtGui.QApplication.clipboard().setText(self.serialize(useSelection=False))
+        with BusyCursor():
+            self.serialize(useSelection=False)
 
     def saveSel(self):
         """Save selected data to file."""
-        self.save(self.serialize(useSelection=True))
+        self.handleSave(useSelection=True)
 
     def saveAll(self):
         """Save all data to file."""
-        self.save(self.serialize(useSelection=False))
+        #with BusyCursor():
+        #    data = self.serialize(useSelection=False)
+        #self.save(data)
+        self.handleSave(useSelection=False)
 
     def save(self, data):
-        fileName = QtGui.QFileDialog.getSaveFileName(self, "Save As..", "tableview_export.tsv", "Tab-separated values (*.tsv)")[0]
+        fileName = self.fileSaveAs()
         if fileName:
             try:
                 open(fileName, 'w').write(data)
             except Exception, err:
-                print( "File is not created...")
-                print( Exception, err)
+                QtGui.QMessageBox.critical(None, 'Export table to file', 'File `{2}` cannot be saved:\n{0}\n{1}'.format(Exception, err, fileName))
         return
 
     def contextMenuEvent(self, ev):
@@ -144,5 +225,13 @@ class TableView(QtGui.QTableView):
             ev.ignore()
 
 
-
+    def fileSaveAs(self):
+        fn, _ = QtGui.QFileDialog.getSaveFileName(self, "Export table to file", "export.csv", "CSV files (*.csv);; TAB separated files (*.tsv)")
+        if not fn:
+            return False
+        #fn = fn.lower()
+        if not fn.endswith(('.csv', '.tsv')):
+            # The default.
+            fn += '.csv'
+        return fn
 

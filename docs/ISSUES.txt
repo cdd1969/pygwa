@@ -16,9 +16,10 @@ KNOWN BUGS AND ISSUES
     Node: plotTimeseries
     PlotTimeseries currently works only with curves in which X-axes has been built with *datetime* objects
 
-    dismissed comment: I have decided that this should be the only possible behaviour
+    UPD:
+        I have decided that this should be the only possible behaviour
 
-4)
+4) (DONE)
     Node: plotTimeseries
     PlotTimeseries does not update te colors of the points when a color of a curve is changed after it has been added
     the canvas
@@ -34,6 +35,9 @@ KNOWN BUGS AND ISSUES
     General, Flowchart
     The changes in the Node-parameters doesnt provoke the *unsavedChanges* status. Currently it it toggled
     only when : a) node is added b) node is removed c) node is renamed
+
+    UPD 15.02:
+        Partly fixed, but now some unwanted signals `sigUIChanged` are emitted when data is processed
 
 7)
     Function, Statistical Analysis
@@ -67,7 +71,7 @@ KNOWN BUGS AND ISSUES
     Something is wrong with trendlines...
     Not working, sometimes KeyError, sometimes everythin's ok
 
-11)
+11) (DONE)
     Node: timeseriesPlot/makeTimeseriesCurve
     When *timeseriesPlot* node is connected to *makeTimeseriesCurve*, and the legend is on
     whenever the column is changed in *makeTimeseriesCurve* it is not updated

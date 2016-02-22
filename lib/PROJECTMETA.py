@@ -1,7 +1,7 @@
-__version__ = '0.1.5'
+__version__ = '0.2'
 __author__  = 'Nikolai Chernikov'
 __contact__ = 'nikolai.chernikov.ru@gmail.ru'
 
 __label__ = 'PyGWA'
 
-about = 'Program name `PyGWA` is the acronim for `PYthon Ground Water hydrograph Analyzer`. This is a tool for exploring groundwater measurements with help of flowchart-node-graph UI.'
+about = 'Program `PyGWA` is a tool for exploring groundwater hydrographs with a help of the flowchart GUI. For more information visit wiki (Help > Documentation)'

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from pyqtgraph.flowchart.Flowchart import Flowchart
-from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.Qt import QtGui
 from pyqtgraph import configfile as configfile
-import sys, traceback
+import traceback
+import os
 
 
 class customFlowchart(Flowchart):
@@ -17,7 +18,7 @@ class customFlowchart(Flowchart):
         self.outputNode.graphicsItem().hide()
 
     def loadFile(self, fileName=None, startDir=None):
-        print( 'loadFile called with fname:', fileName)
+        #print( 'loadFile called with fname:', fileName)
         if fileName is None:
             if startDir is None:
                 startDir = self.filePath
@@ -57,9 +58,10 @@ class customFlowchart(Flowchart):
                 return
 
         fileName = unicode(fileName)
+        if os.path.splitext(fileName)[1] != '.fc':
+            fileName += u'.fc'
         configfile.writeConfigFile(self.saveState(), fileName)
         self.sigFileSaved.emit(fileName)
-
 
     def addNode(self, node, name, pos=None):
         super(customFlowchart, self).addNode(node, name, pos=pos)

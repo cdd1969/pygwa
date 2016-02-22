@@ -16,6 +16,9 @@
     "12": "lib/flowchart/nodes/n12_timelag/timelag.node",
     "13": "lib/flowchart/nodes/n13_serfes/serfes.node",
     "14": "lib/flowchart/nodes/n14_overheadplot/overheadplot.node",
-    "15": "lib/flowchart/nodes/n15_scatterplotwigdet/scatterplotwidget.node"
+    "15": "lib/flowchart/nodes/n15_scatterplotwigdet/scatterplotwidget.node",
+    "16": "lib/flowchart/nodes/n16_plothist/plothist.node",
+    "17": "lib/flowchart/nodes/n17_evaluate/evaluate.node",
+    "18": "lib/flowchart/nodes/n18_diffusivity_ferris/ferris_diffusivity.node"
 
 }

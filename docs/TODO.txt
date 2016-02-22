@@ -38,13 +38,16 @@ Known TODOs
 
 7)
     Add
-    Add Copy-Node button
+    Add Copy/Paste Node button
     This will allow user to copy already prepared Node (i.e. with controls set)
 
-8)
+8)  (DISMISSED)
     Add
     Add more export dtypes in node **toXLS** (ods etc)
 
-9)
+    UPD:
+        Tried it. Library xlrd works only with excel files
+
+9)  (DONE)
     Fix
     Add automatically `.fc` extension to saved flowchart

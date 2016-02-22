@@ -1,6 +1,6 @@
 {
     "filename":  "node_pipe.py",
     "classname": "pipeNode",
-    "libpath": ["Appearance"],
+    "libpath": ["Special"],
     "override": true
 }

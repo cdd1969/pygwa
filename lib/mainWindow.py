@@ -1,6 +1,5 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-
 import os, sys
 import traceback
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
@@ -18,6 +17,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
         super(MainWindow, self).__init__()
+        self._unittestmode = False  #set this to True if running a unittest
         #self.setupUi(self)
         uic.loadUi(projectPath('resources/mainwindow.ui'), self)
         self.uiData = uiData(self)
@@ -81,6 +81,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionSave_As_fc.triggered.connect(self.on_actionSave_As_fc)
         self.actionLoad_fc.triggered.connect(self.on_actionLoad_fc)
         self.actionAdd_item_to_library.triggered.connect(self.on_actionAdd_item_to_library)
+        self.actionLoadLibrary.triggered.connect(self.on_actionLoadLibrary)
 
         self.actionAbout.triggered.connect(self.on_actionAbout)
         self.actionDocumentation.triggered.connect(self.on_actionDocumentation)
@@ -147,7 +148,8 @@ class MainWindow(QtWidgets.QMainWindow):
             #print( self.flowChartWidget.view.viewBox().mapViewToScene(pos))
             mappedPos = self.flowChartWidget.view.viewBox().mapSceneToView(pos)
             if nodeType in self.uiData.nodeNamesList():  # to avoid drag'n'dropping Group-names
-                self.flowChartWidget.chart.createNode(nodeType, pos=mappedPos)
+                self.fc.createNode(nodeType, pos=mappedPos)
+                #self.flowChartWidget.chart.createNode(nodeType, pos=mappedPos)
 
 
         self.flowChartWidget.view.dragEnterEvent = dragEnterEvent
@@ -239,6 +241,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def on_actionDocumentation(self):
         QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/cdd1969/pygwa/wiki'))
 
+    @QtCore.pyqtSlot()
+    def on_actionLoadLibrary(self):
+        QtWidgets.QMessageBox.warning(self, "Load Node Library", "Not implemented yet")
 
     
     @QtCore.pyqtSlot()
@@ -265,8 +270,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(object, str, object)
     def on_sigChartChanged(self, emitter, action, node):
-        print( "on_sigChartChanged() is called")
-        print( self, emitter, action, node)
+        #print( "on_sigChartChanged() is called")
+        #print( self, emitter, action, node)
         self.uiData.setChangesUnsaved(True)
 
         if action == 'add':
@@ -354,6 +359,10 @@ class MainWindow(QtWidgets.QMainWindow):
             return True
 
     def closeEvent(self, event):
+        if self._unittestmode:  # set this variable in your unittest
+            # if we are running tests...
+            QtWidgets.qApp.quit()
+
         if self.doActionIfUnsavedChanges(message='Are you sure to quit?'):
             QtWidgets.qApp.quit()  #quit application
         else:
@@ -439,8 +448,6 @@ def main():
     ex = MainWindow()
     ex.show()
 
-
-    print(type(ex.flowChartWidget))
     sys.exit(app.exec_())
 
 
