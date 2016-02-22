@@ -64,7 +64,7 @@ class timeLagNode(NodeWithCtrlWidget):
         kwargs = self.CW().prepareInputArguments()
         E = kwargs['E']
         # and i would have to block the signals here...
-        print ('Calculating with E=', E)
+        #print ('Calculating with E=', E)
         with BusyCursor():
             if kwargs['method'] == '1) Erskine 1991':
                 tlag = timelag_erskine1991_method(df_gw, kwargs['gw'], kwargs['gw_dtime'],

@@ -40,7 +40,6 @@ class matchPeaksNode(NodeWithCtrlWidget):
         with BusyCursor():
             mode = kwargs.pop('Match Option')
             if mode == 'Closest Time':
-                print kwargs
                 matched_peaks = match_peaks(df_w, df_gw, kwargs.pop('Match Column'), **kwargs)
                 
             N_md = matched_peaks['md_N'].count()

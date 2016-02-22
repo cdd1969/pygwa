@@ -27,7 +27,6 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
         super(tidalEfficiencyNode, self).__init__(name, parent=parent, terminals=terms, color=(250, 250, 150, 150))
     
     def _createCtrlWidget(self, **kwargs):
-        print ('**kwargs:', kwargs)
         return tidalEfficiencyNodeCtrlWidget(**kwargs)
 
     def p(self):

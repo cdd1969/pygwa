@@ -126,7 +126,7 @@ class NodeCtrlWidget(ParameterTree):
             pass
 
     def detectChanges_with_UPD(self, param, value):
-        print ('UPD parent. Sender : {0}, {1}'.format(param, param.name()))
+        #print ('UPD parent. Sender : {0}, {1}'.format(param, param.name()))
         self._parent.update()
         # emit signal that UI in the Node has changed => therefore unsaved-changes status will be detected
         self._parent.sigUIStateChanged.emit(self)
