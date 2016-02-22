@@ -2,6 +2,9 @@ from __future__ import print_function
 import sys
 import os
 
+
+from flowchart.package import Package as Package
+
 BASEDIR = os.path.dirname(sys.argv[0])
 
 

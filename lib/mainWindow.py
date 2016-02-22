@@ -448,8 +448,6 @@ def main():
     ex = MainWindow()
     ex.show()
 
-
-    print(type(ex.flowChartWidget))
     sys.exit(app.exec_())
 
 

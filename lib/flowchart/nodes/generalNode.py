@@ -4,7 +4,7 @@ from pyqtgraph.flowchart.Node import Node
 from pyqtgraph import functions as fn
 from pyqtgraph.Qt import QtCore
 
-from pyqtgraph.parametertree import ParameterTree
+from pyqtgraph.parametertree import ParameterTree, Parameter
 from lib.common.Parameter import customParameter
 
 
@@ -15,11 +15,9 @@ class NodeWithCtrlWidget(Node):
     sigUIStateChanged = QtCore.Signal(object)
 
 
-    def __init__(self, name, color=(200, 200, 200, 150), ui=None, **kwargs):
-        self._parent = kwargs.get('parent', None)
+    def __init__(self, name, color=(200, 200, 200, 150), ui=None, parent=None, **kwargs):
+        self._parent = parent
         kwargs['terminals'] = kwargs.get('terminals', {'In': {'io': 'in'}, 'Out': {'io': 'out'}})
-        if 'parent' in kwargs.keys():
-            kwargs.pop('parent')
         super(NodeWithCtrlWidget, self).__init__(name, **kwargs)
         self._init_at_first()
         self.graphicsItem().setBrush(fn.mkBrush(color))
@@ -43,6 +41,12 @@ class NodeWithCtrlWidget(Node):
     def ctrlWidget(self):
         return self._ctrlWidget
 
+    def CW(self):
+        return self._ctrlWidget
+
+    def p(self):
+        return self.CW().p
+        
     def saveState(self):
         """overwriting standard Node method to extend it with saving ctrlWidget state"""
         state = Node.saveState(self)
@@ -58,18 +62,14 @@ class NodeWithCtrlWidget(Node):
         if update:
             self.update()
     
-    @QtCore.pyqtSlot()
-    def changed(self, update=False):
-        if update:
-            self.update()
-        self.sigUIStateChanged.emit(self)
 
 
 class NodeCtrlWidget(ParameterTree):
     ''' This is an abstract class to accompany Nodeclass `NodeWithCtrlWidget`'''
      
-    def __init__(self, parent=None, ui=[], update_on_statechange=True):
+    def __init__(self, parent=None, ui=[], update_on_statechange=True, **kwargs):
         super(NodeCtrlWidget, self).__init__()
+        #print ('INTING NODE_CTRL_WDG {0} with parent {1}'.format(self, parent))
         self._parent = parent
         self._ui = ui
 
@@ -78,86 +78,61 @@ class NodeCtrlWidget(ParameterTree):
         ## set parameter tree to <self> (parameterTreeWidget)
         self.setParameters(self.p, showTop=False)
         # connect parameter signals
-        self.initSignalConnections(update_parent=update_on_statechange)
-        self.initUserSignalConnections()
+        if update_on_statechange:
+            self.connect_all_valueChanged2upd(**kwargs)
+        else:
+            #actually connect but without UPD flag
+            self.disconnect_all_valueChanged2upd(**kwargs)
         # save default state
         self._savedState = self.saveState()
 
-    def initSignalConnections(self, update_parent=True, ignore_actions=True):
-        ''' Function searches for all parameters (nested params are included)
-        within `self.p` recursively. Group parameters are omitted. Then all pa-
-        rameters that are found, are connected with `self._parent.changed()`
-        method with their `sigValueChanged` signal.
+        self.initUserSignalConnections()
 
-        That method (`self._parent.changed()`) has an optional keyword `update`
-        which is responsible for trigerring `Node.update()` method. In other
-        words we may control if the changes in parameter `self.p` values will
-        trigger the `.update()` method of the parent Node.
+    def parent(self):
+        return self._parent
 
-        Args:
-        -----
-            ignore_actions (bool):
-                flag to ignore `action` parameters (i.e. pushbuttons) emitting
-                parent's `Node.UIStateChanged` signal
-                
-            update_parent (True, False, dict):
-                This parameter allows control on which parameters
-                will be (not) connected to the `self._parent.changed` slot,
-                with flag to trigger `self._parent.update()` method
+    def connect_all_valueChanged2upd(self, ignore_groups=True, ignore_actions=False):
+        '''helper function to connect all params in a tree with `.update()` method of parent node'''
+        for child in self.p.children(recursive=True, ignore_groups=ignore_groups, ignore_actions=ignore_actions):
+            self.connect_valueChanged2upd(child)
+    
+    def disconnect_all_valueChanged2upd(self, ignore_groups=True, ignore_actions=False):
+        '''helper function to disconnect all params in a tree from `.update()` method of parent node'''
+        for child in self.p.children(recursive=True, ignore_groups=ignore_groups, ignore_actions=ignore_actions):
+            self.disconnect_valueChanged2upd(child)
+        
+    def connect_valueChanged2upd(self, param):
+        '''helper function to connect param in a tree with `.update()` method of parent node'''
+        self._disconnect_param_from_valuechanged(param)
+        #print ('Connecting param : {0}, {1} with UPD'.format(param, param.name()))
+        param.sigValueChanged.connect(self.detectChanges_with_UPD)
+    
+    def disconnect_valueChanged2upd(self, param):
+        '''helper function to disconnect param in a tree from `.update()` method of parent node'''
+        self._disconnect_param_from_valuechanged(param)
+        #print ('Connecting param : {0}, {1} without UPD'.format(param, param.name()))
+        param.sigValueChanged.connect(self.detectChanges_without_UPD)
 
-                True  - all params will trigger update()
-                False - all params wont trigger update()
-                dict  - dictionary with two keys ('connect', 'disconnect')
-                    to control parameters individually. Two possibilities are given:
-                    1) Dont connect any of params except param1 and param2:
-                        {'action': 'connect',
-                         'parameters': (param1, param2)}
-                    2) Connect all params escept param1 and param2
-                        {'action': 'disconnect',
-                         'parameters': (param1, param2)}
-                
-                NOTE:
-                If you want to use `dict` type, then you need to pass there
-                the instances of the parameters. To do that REIMPLEMENT this
-                method in your custom node e.g.:
+    def _disconnect_param_from_valuechanged(self, param):
+        try:
+            param.sigValueChanged.disconnect(self.detectChanges_with_UPD)
+        except TypeError:
+            #print ('Cannot disconnect param : {0}, {1} from method `detectChanges_with_UPD`'.format(param, param.name()))
+            pass
+        try:
+            param.sigValueChanged.disconnect(self.detectChanges_without_UPD)
+        except TypeError:
+            #print ('Cannot disconnect param : {0}, {1} from method `detectChanges_without_UPD`'.format(param, param.name()))
+            pass
 
-                def initSignalConnections(self, update_parent=True):
-                    new_update_parent = {
-                        'action': 'connect',
-                        'parameters': (self.param('foo'), self.param('bar'))
-                    }
-                    super(thisNodeClass, self).initSignalConnections(new_update_parent)
+    def detectChanges_with_UPD(self, param, value):
+        #print ('UPD parent. Sender : {0}, {1}'.format(param, param.name()))
+        self._parent.update()
+        # emit signal that UI in the Node has changed => therefore unsaved-changes status will be detected
+        self._parent.sigUIStateChanged.emit(self)
 
-        '''
-
-        if isinstance(update_parent, dict):
-            # we have dictionary, treat params separately
-            if update_parent['action'] in ['connect', u'connect', True]:
-                default_action = False
-            elif update_parent['action'] in ['disconnect', u'disconnect', False]:
-                default_action = True
-            else:
-                raise KeyError('Invalid value {0} for key `action`'.format(update_parent['action']))
-            
-            if not isinstance(update_parent['parameters'], (tuple, list)):
-                # if one param passed without brackets:
-                #   {'parameters': self.param('foo')}
-                # explicitly convert it to length=1 list to use `in` statement further
-                update_parent['parameters'] = [update_parent['parameters']]
-
-            for child in self.p.children(recursive=True, ignore_groups=True, ignore_actions=ignore_actions):
-                if child in update_parent['parameters']:
-                    child.sigStateChanged.connect(lambda: self._parent.changed(not(default_action)))
-                else:
-                    child.sigStateChanged.connect(lambda: self._parent.changed(default_action))
-
-        elif isinstance(update_parent, bool):
-            # we have bool, treat params all together
-            default_action = update_parent
-            for child in self.p.children(recursive=True, ignore_groups=True, ignore_actions=ignore_actions):
-                child.sigStateChanged.connect(lambda: self._parent.changed(default_action))
-        else:
-            raise TypeError('Invalid type {0} of parameter `update_parent`. Must be `bool` or `dict`'.format(type(update_parent)))
+    def detectChanges_without_UPD(self, param, value):
+        self._parent.sigUIStateChanged.emit(self)
 
     def initUserSignalConnections(self):
         """ This method should be reimplemented by user when creating custom node,
@@ -168,7 +143,7 @@ class NodeCtrlWidget(ParameterTree):
             self.param(('Graphics', 'color')).sigValueChanged.connect(self.on_colorChanged)
 
         Note:
-            This method is executed in during initialization.
+            This method is executed during initialization.
         """
         pass
 
