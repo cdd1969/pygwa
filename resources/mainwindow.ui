@@ -372,7 +372,7 @@
     <string>Copy Selected Node</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+C</string>
+    <string>Ctrl+Alt+C</string>
    </property>
   </action>
   <action name="actionPaste_Node">
@@ -383,7 +383,7 @@
     <string>Paste Node</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+V</string>
+    <string>Ctrl+Alt+V</string>
    </property>
   </action>
  </widget>

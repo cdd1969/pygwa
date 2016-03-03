@@ -36,7 +36,7 @@ Known TODOs
     This can be done by saving the flowchart state to history file every time when it
     (flowchart) is changed.
 
-7)
+7)  (DONE)
     Add
     Add Copy/Paste Node button
     This will allow user to copy already prepared Node (i.e. with controls set)

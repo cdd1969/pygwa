@@ -8,10 +8,17 @@ import os
 
 
 class customFlowchart(Flowchart):
-    """Custom Flowchart
+    """Custom Flowchart with following addons:
+
         - save/load now blocks mainwindow
         - input/output nodes are hidden
         - additional signal `sigUIStateChanged` is emmited when Nodes params are changed
+            (this works only for my custom nodes see `lib.flowchart.nodes.generalNode.NodeWithCtrlWidget`)
+        - added node COPY/PASTE functionality
+                * copySelectedNodeToBuffer()
+                * pasteNodeFromBuffer()
+                * nodeCopyPasteBuffer()
+                * nodeIsSelected()
     """
     def __init__(self, parent=None, **kwargs):
         Flowchart.__init__(self, **kwargs)
