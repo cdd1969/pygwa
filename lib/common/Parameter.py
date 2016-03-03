@@ -43,7 +43,6 @@ class customParameter(pyqtgraphParameter):
     def __init__(self, **opts):
         super(customParameter, self).__init__(**opts)
 
-
     def children(self, child2observe=None, recursive=False, ignore_groups=False, ignore_actions=True):
         """Return a list of this parameter's children.
 

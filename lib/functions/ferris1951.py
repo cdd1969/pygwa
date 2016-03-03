@@ -6,6 +6,7 @@ from math import log as log
 from math import exp as exp
 from math import sin as sin
 from math import cos as cos
+import numpy as np
 
 
 def diffusivity_from_tidal_efficiency(E, x0, t0):
@@ -59,7 +60,7 @@ def diffusivity_from_time_lag(tlag, x0, t0):
     -----
         tlag (float) [s]:
             Time lag (phase shift) of the signal in [seconds]
-        t0 (float) [hours]:
+        t0 (float) [seconds]:
             Period of a tidal oscillation in [seconds]
         x0 (float) [m]:
             Distance from an observation well to shoreline/river in [METERS]
@@ -73,37 +74,39 @@ def diffusivity_from_time_lag(tlag, x0, t0):
     return D
 
 
-def h(x, t, h0, t0, D):
+def h(t=[], A=0., omega=0., phi=0., D=0., x=0.):
     ''' Calculate groundwater amplitude `h(x, t)` based on equation of Ferris 1951 for a
     groundwater head in a tidal influenced aquifer.
 
         Ferris 1951 equation with COS:
-            h(x,t) = h0 * exp(-x*(pi/t0*S/T)**0.5) * cos(2*pi*t/t0 - x*(pi/t0*S/T)**0.5)
+            h(x,t) = A * exp(-x*(omega/2./D)**0.5) * cos(omega*t - x*(omega/2./D)**0.5+phi)
 
             Following boundary conditions are introduced:
                 
-                1) h(x=0, t=0) = h0
+                1) h(x=0, t=0) = A
                 2) h(x=inf) = 0
     Args:
     -----
         x (float) [m]:
             Distance from shoreline/river in
-        t (float) [s]:
-            Time elapsed from reference point
-        h0 (float) [m]:
+        t (float|np.array(float)) [s]:
+            Time elapsed from reference point in [s]. Can be numpy array with floats
+        A (float) [m]:
             Amplitude of a tidal oscillation
-        t0 (float) [hours]:
-            Period of a tidal oscillation
+        omega (float) [rad/s]:
+            Angular velocity
         D (float) [m2/s]:
             Diffusivity (or T/S ration) of an aquifer
+        phi (float) [rad]:
+            Initial phase shift
 
     Return:
     ------
-        h (x,t) [m]:
+        h (float|np.array(float)) [m]:
             groundwater head at distance `x` from shoreline at time `t` with respect to
             the mean groundwater level (i.e. amplitude)
     '''
 
-    h = h0 * exp(-x*(pi/t0/D)**0.5) * cos(2*pi*t/t0 - x*(pi/t0/D)**0.5)
+    h = A * exp(-x*(omega/2./D)**0.5) * np.cos(omega*t - x*(omega/2./D)**0.5+phi)
 
     return h

@@ -1,0 +1,6 @@
+{
+    "filename":  "node_generatecurve.py",
+    "classname": "genCurveNode",
+    "libpath": ["Input/Output"],
+    "override": true
+}

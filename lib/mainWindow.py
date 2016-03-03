@@ -43,8 +43,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # init FlowChart
         self.initFlowchart()
 
-
-
         # connect on select QTreeWidgetItem > se text in QLineEdit
         self.treeWidget.itemActivated.connect(self.on_nodeLibTreeWidget_itemActivated)
 
@@ -80,15 +78,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionSave_fc.triggered.connect(self.on_actionSave_fc)
         self.actionSave_As_fc.triggered.connect(self.on_actionSave_As_fc)
         self.actionLoad_fc.triggered.connect(self.on_actionLoad_fc)
+        
         self.actionAdd_item_to_library.triggered.connect(self.on_actionAdd_item_to_library)
         self.actionLoadLibrary.triggered.connect(self.on_actionLoadLibrary)
+        self.actionReloadDefaultLib.triggered.connect(self.on_actionReloadDefaultLib)
 
         self.actionAbout.triggered.connect(self.on_actionAbout)
         self.actionDocumentation.triggered.connect(self.on_actionDocumentation)
 
         self.actionQuit.triggered.connect(self.closeEvent)
 
-        self.uiData.sigCurrentFilenameChanged.connect(self.renameFlowchartTab)
 
     def connectFCSignals(self):
         self.fc.sigFileLoaded.connect(self.uiData.setCurrentFileName)
@@ -99,6 +98,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.lineEdit_nodeSelect.editingFinished.connect(self.on_lineEditNodeSelect_editingFinished)
  
+        self.uiData.sigCurrentFilenameChanged.connect(self.renameFlowchartTab)
 
 
     def initFlowchart(self):
@@ -177,7 +177,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if not self.doActionIfUnsavedChanges(message='Are you sure to start new Flowchart from scratch without saving this one?'):
                 return
         self.clearStackedWidget()
-        self.fc.loadFile(fileName=self.uiData.standardFileName())
+        self.fc.loadFile(fileName=self.uiData.defaultFlowchartFileName())
         #fn = self.fc.ctrlWidget().currentFileName
         self.uiData.setCurrentFileName(None)
         self.uiData.setChangesUnsaved(False)
@@ -186,7 +186,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def on_actionSave_fc(self):
         self.fc.saveFile(fileName=self.uiData.currentFileName())
         fn = self.fc.widget().currentFileName
-        if fn != self.uiData.standardFileName():
+        if fn != self.uiData.defaultFlowchartFileName():
             self.uiData.setCurrentFileName(fn)
             self.uiData.setChangesUnsaved(False)
             #self.statusBar().showMessage("File saved: "+fn, 10000)
@@ -197,7 +197,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def on_actionSave_As_fc(self):
         self.fc.saveFile()
         fn = self.fc.widget().currentFileName
-        if fn != self.uiData.standardFileName():
+        if fn != self.uiData.defaultFlowchartFileName():
             self.uiData.setCurrentFileName(fn)
             self.uiData.setChangesUnsaved(False)
             #self.statusBar().showMessage("File saved: "+fn, 10000)
@@ -209,7 +209,7 @@ class MainWindow(QtWidgets.QMainWindow):
             directory = os.path.join(os.getcwd(), 'examples')
             self.fc.loadFile(startDir=directory)
             fn = self.fc.widget().currentFileName
-            if fn != self.uiData.standardFileName():
+            if fn != self.uiData.defaultFlowchartFileName():
                 self.uiData.setCurrentFileName(fn)
                 self.uiData.setChangesUnsaved(False)
                 #self.statusBar().showMessage("File loaded: "+fn)
@@ -230,7 +230,16 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.information(self, "Add Item to Node Library", "Node <b>`{0}`</b> has been successflly added to the Library. Node information has been loaded from file <i>{1}</i>".format(data['classname'], fname))
         except Exception, err:
             QtWidgets.QMessageBox.warning(self, "Add Item to Node Library", "Cannot load Node <b>`{0}`</b> from file <i>{1}</i> <br><br> {2}".format(data['classname'], data['filename'], traceback.print_exc()))
-            
+    
+    @QtCore.pyqtSlot()
+    def on_actionReloadDefaultLib(self):
+        self.uiData.initLibrary()
+        self.resetNodeLibraryWidgets()
+        QtWidgets.QMessageBox.information(self, "Reload Default Library", 'Default library has been loaded from file <i>{0}</i>'.format(self.uiData.defaultLibFileName()))
+
+    @QtCore.pyqtSlot()
+    def on_actionLoadLibrary(self):
+        QtWidgets.QMessageBox.warning(self, "Load Node Library", "Not implemented yet")
 
     @QtCore.pyqtSlot()
     def on_actionAbout(self):
@@ -240,10 +249,6 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def on_actionDocumentation(self):
         QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/cdd1969/pygwa/wiki'))
-
-    @QtCore.pyqtSlot()
-    def on_actionLoadLibrary(self):
-        QtWidgets.QMessageBox.warning(self, "Load Node Library", "Not implemented yet")
 
     
     @QtCore.pyqtSlot()
@@ -385,19 +390,27 @@ class uiData(QtCore.QObject):
     def __init__(self, parent=None):
         super(QtCore.QObject, self).__init__(parent=parent)
         self.parent = parent
-        self.initLibrary()
+        self._defaultFlowchartFileName = projectPath('resources/defaultFlowchart.dfc')
+        self._defaultLibFileName = projectPath('resources/defaultLibrary.json')
+        self._flowchartLib = None
         self._currentFileName  = None
         self._changesUnsaved  = True
-        self._standardFileName = projectPath('resources/defaultFlowchart.dfc')
+        
+        self.initLibrary()
 
 
 
-    def initLibrary(self):
+    def initLibrary(self, fname=None):
+        #if self._flowchartLib:
+        #    del self._flowchartLib
+        #    del self._nodeNamesModel
+
+        if fname is None:
+            fname = self.defaultLibFileName()
         self._flowchartLib = customNodeLibrary()
-        self._flowchartLib.buildDefault(projectPath('resources/defaultLibrary.json'), include_pyqtgraph=False)
+        self._flowchartLib.buildDefault(fname, include_pyqtgraph=False)
 
         # create a StringListModel of registered node names, it will be used for auto completion
-        #self._nodeNamesList  = self._flowchartLib.nodeList.keys()
         self._nodeNamesModel = QtCore.QStringListModel(self)
         self._nodeNamesModel.setStringList(self._flowchartLib.getNodeList())
 
@@ -435,8 +448,11 @@ class uiData(QtCore.QObject):
         self._currentFileName = name
         self.sigCurrentFilenameChanged.emit(oldName, name)
 
-    def standardFileName(self):
-        return self._standardFileName
+    def defaultFlowchartFileName(self):
+        return self._defaultFlowchartFileName
+    
+    def defaultLibFileName(self):
+        return self._defaultLibFileName
 
     def fclib(self):
         return self._flowchartLib

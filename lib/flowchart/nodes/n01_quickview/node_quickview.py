@@ -14,6 +14,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from lib.common.TableView import TableView
+from lib.functions.general import returnPandasDf
 
 
 class QuickViewNode(Node):
@@ -27,11 +28,12 @@ class QuickViewNode(Node):
         self._ctrlWidget = QuickViewCtrlWidget(self)
         
     def process(self, In):
+        df = returnPandasDf(In)
         if self._pandasModel is not None:
             self._pandasModel.destroy()
             self._pandasModel = None
-        if In is not None:
-            self._pandasModel = PandasModel(In.unpack(), parent=self)
+        if df is not None:
+            self._pandasModel = PandasModel(df, parent=self)
         self.ctrlWidget().update()
 
     def getPandasModel(self):

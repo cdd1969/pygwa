@@ -97,6 +97,8 @@
      </property>
      <addaction name="actionAdd_item_to_library"/>
      <addaction name="actionLoadLibrary"/>
+     <addaction name="separator"/>
+     <addaction name="actionReloadDefaultLib"/>
     </widget>
     <addaction name="menuFlowchart"/>
     <addaction name="menuLibrary"/>
@@ -347,6 +349,11 @@
   <action name="actionLoadLibrary">
    <property name="text">
     <string>Load Library</string>
+   </property>
+  </action>
+  <action name="actionReloadDefaultLib">
+   <property name="text">
+    <string>Reload Default Lib</string>
    </property>
   </action>
  </widget>
