@@ -24,7 +24,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.connectActions()
         #self.connectSignals()
         self.initUI()
-        
+        self.initGlobalShortcuts()
+
+
+    def initGlobalShortcuts(self):
+        # for some reason action shotcuts are not always working...
+        # change them to global shortcuts
+        QtGui.QShortcut(QtGui.QKeySequence("F1"), self, self.on_actionDocumentation)
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Alt+C"), self, self.on_actionCopy_Selected_Node)
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Alt+V"), self, self.on_actionPaste_Node)
+        #QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Alt+V"), self, self.on_actionPaste_Node)
+
         
 
     def initUI(self):
@@ -82,6 +92,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionAdd_item_to_library.triggered.connect(self.on_actionAdd_item_to_library)
         self.actionLoadLibrary.triggered.connect(self.on_actionLoadLibrary)
         self.actionReloadDefaultLib.triggered.connect(self.on_actionReloadDefaultLib)
+        
+
+        self.actionCopy_Selected_Node.triggered.connect(self.on_actionCopy_Selected_Node)
+        self.actionPaste_Node.triggered.connect(self.on_actionPaste_Node)
 
         self.actionAbout.triggered.connect(self.on_actionAbout)
         self.actionDocumentation.triggered.connect(self.on_actionDocumentation)
@@ -241,6 +255,19 @@ class MainWindow(QtWidgets.QMainWindow):
     def on_actionLoadLibrary(self):
         QtWidgets.QMessageBox.warning(self, "Load Node Library", "Not implemented yet")
 
+    
+    @QtCore.pyqtSlot()
+    def on_actionCopy_Selected_Node(self):
+        self.fc.copySelectedNodeToBuffer()
+        if self.fc.nodeCopyPasteBuffer() is not None:
+            self.actionPaste_Node.setEnabled(True)
+        else:
+            self.actionPaste_Node.setEnabled(False)
+
+    @QtCore.pyqtSlot()
+    def on_actionPaste_Node(self):
+        self.fc.pasteNodeFromBuffer()
+
     @QtCore.pyqtSlot()
     def on_actionAbout(self):
         QtWidgets.QMessageBox.about(self, "About...", "{0}\n\nVersion: {1}\nAuthor: {2}\nContact: {3}".format(
@@ -253,6 +280,7 @@ class MainWindow(QtWidgets.QMainWindow):
     
     @QtCore.pyqtSlot()
     def selectionChanged(self):
+        self.actionCopy_Selected_Node.setEnabled(self.fc.nodeIsSelected())  # enable action only when node is selected
         items = self.fc.scene.selectedItems()
         if len(items) != 0:
             item = items[0]
@@ -357,7 +385,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 return True
             elif reply == QtWidgets.QMessageBox.Save:
                 if self.on_actionSave_fc():
-                    pass
+                    return True
             else:
                 return False
         else:
