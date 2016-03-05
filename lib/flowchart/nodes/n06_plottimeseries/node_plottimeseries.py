@@ -17,9 +17,9 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
     uiTemplate = [
         {'name': 'Y:Label', 'type': 'str', 'value': 'Water level', 'default': 'Water level'},
         {'name': 'Y:Units', 'type': 'str', 'value': 'm AMSL', 'default': 'm AMSL'},
-        {'name': 'Legend', 'type': 'bool', 'value': True, 'default': True, 'readonly': True},
         {'name': 'Crosshair', 'type': 'bool', 'value': False, 'default': False},
-        {'name': 'Data Points', 'type': 'bool', 'value': False, 'default': False},
+        {'name': 'Legend', 'type': 'bool', 'value': True, 'default': True, 'visible': False},
+        {'name': 'Data Points', 'type': 'bool', 'value': False, 'default': False, 'visible': False},
         
         {'name': 'Plot', 'type': 'action'},
         ]
@@ -105,9 +105,6 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
                 self.removeTSItem(terminal_name)
             #print ('adding item from term: {0}'.format(terminal_name))
             self._TSitems[terminal_name] = dict()
-            # init symbol pen and size
-            GraphItem.setSymbolPen(GraphItem.opts['pen'])
-            GraphItem.setSymbolSize(5)
 
             #print( '>>> on_sigItemReceived(): adding item to upper subplot')
             self.canvas()[0].addItem(GraphItem)
@@ -228,10 +225,10 @@ class plotTimeseriesGraphicsWidget(QtGui.QWidget):
                 else:
                     symbol = None
                 # we want to toggle points only on upper subplot => index [0]
-                print ('toggle points:', enable)
-                TSitem['GraphItems'][0].setSymbol(symbol)
-                # we want to keep no points on lower subplot => index [1]
-                TSitem['GraphItems'][1].setSymbol(None)
+                ##print ('toggle points:', enable)
+                ##TSitem['GraphItems'][0].setSymbol(symbol)
+                ### we want to keep no points on lower subplot => index [1]
+                ##TSitem['GraphItems'][1].setSymbol(None)
 
 
     def on_zoomRegion_changed(self):
