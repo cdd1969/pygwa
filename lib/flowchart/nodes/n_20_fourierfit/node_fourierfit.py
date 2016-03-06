@@ -1,13 +1,14 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
 from __future__ import division
+import numpy as np
+import pandas as pd
+from pyqtgraph import BusyCursor
+
 from lib.functions.general import returnPandasDf, isNumpyDatetime, isNumpyNumeric
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.fourier import pandas_fourier_analysis
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from pyqtgraph import BusyCursor
+
 
 class fourierFitNode(NodeWithCtrlWidget):
     """Decompose Sinusoidal timeseries curve with Fast Fourier Transformaions"""
@@ -42,7 +43,6 @@ class fourierFitNode(NodeWithCtrlWidget):
 
 
     def process(self, df):
-        df = returnPandasDf(df)
         if df is None:
             return
 

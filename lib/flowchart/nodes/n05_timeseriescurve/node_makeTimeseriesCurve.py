@@ -6,9 +6,8 @@ from pyqtgraph.Qt import QtCore
 import numpy as np
 import pandas as pd
 
-from lib.flowchart.package import Package
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
-from lib.functions.general import returnPandasDf, isNumpyDatetime, isNumpyNumeric
+from lib.functions.general import isNumpyDatetime, isNumpyNumeric
 
 
 class makeTimeseriesCurveNode(NodeWithCtrlWidget):
@@ -53,7 +52,6 @@ class makeTimeseriesCurveNode(NodeWithCtrlWidget):
         return makeTimeseriesCurveNodeCtrlWidget(**kwargs)
         
     def process(self, df):
-        df  = returnPandasDf(df)
         if df is None:
             return
         del self.item
@@ -84,7 +82,7 @@ class makeTimeseriesCurveNode(NodeWithCtrlWidget):
                 #self.item.setSymbolPen(kwargs['color'])
                 self.item.setSymbolBrush(kwargs['color'])
                 self.item.setSymbolSize(kwargs['symbolSize'])
-        return{'Curve': self.item, 'pd.Series': Package(timeSeries) }
+        return{'Curve': self.item, 'pd.Series': timeSeries }
 
 
 

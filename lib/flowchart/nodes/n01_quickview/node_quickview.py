@@ -14,7 +14,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from lib.common.TableView import TableView
-from lib.functions.general import returnPandasDf
 
 
 class QuickViewNode(Node):
@@ -28,7 +27,7 @@ class QuickViewNode(Node):
         self._ctrlWidget = QuickViewCtrlWidget(self)
         
     def process(self, In):
-        df = returnPandasDf(In)
+        df = In
         if self._pandasModel is not None:
             self._pandasModel.destroy()
             self._pandasModel = None
@@ -132,11 +131,14 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
     @QtCore.pyqtSlot()  #default signal
     def on_pushButton_viewPlot_clicked(self):
         """ open nice graphic representation of our data"""
-        self.matplotlibWindow = plt.figure()
-        ax = plt.subplot(111)
-        columns = self.parent().getPandasModel().selectColumns()
-        self.parent().getPandasModel().getData()[columns].plot(ax=ax)
-        plt.show()
+        try:
+            self.matplotlibWindow = plt.figure()
+            ax = plt.subplot(111)
+            columns = self.parent().getPandasModel().selectColumns()
+            self.parent().getPandasModel().getData()[columns].plot(ax=ax)
+            plt.show()
+        except Exception as exp:
+            self._parent.setException(exp)
     
     @QtCore.pyqtSlot(bool)  #default signal
     def on_radioButton_columnIndex_toggled(self, isChecked):

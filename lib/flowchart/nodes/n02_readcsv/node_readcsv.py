@@ -5,7 +5,6 @@ from pyqtgraph import BusyCursor
 import pandas as pd
 import os
 
-from lib.flowchart.package import Package
 from lib.functions.general import getCallableArgumentList
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 
@@ -54,7 +53,7 @@ class readCSVNode(NodeWithCtrlWidget):
         kwargs = self.ctrlWidget().prepareInputArguments()
         with BusyCursor():
             df = pd.read_csv(**kwargs)
-        return {'Out': Package(df)}
+        return {'Out': df}
 
 
 
