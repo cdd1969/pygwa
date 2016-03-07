@@ -1,10 +1,9 @@
-# Access inputs as args['input']
 from __future__ import division
 import numpy as np
-from numpy import cos, pi, arccos, sin, abs
-from scipy import fftpack
-import matplotlib.pylab as plt
 import pandas as pd
+import matplotlib.pylab as plt
+from numpy import cos, pi, arccos, abs
+from scipy import fftpack
 
 
 
@@ -63,6 +62,10 @@ def fourier_analysis(sig, timestep, N_MAX_POW=1, generate_plot=False, display_pl
     '''
     if N_MAX_POW < 1:
         return
+    msize = kwargs.get('markersize', 2)
+    marker = kwargs.get('marker', 'x')
+    hz2day = kwargs.get('convert2day', True)
+    datetime_plot = kwargs.get('datetime_plot', None)
 
     # consider reading example here
     # http://www.scipy-lectures.org/intro/scipy.html#fast-fourier-transforms-scipy-fftpack
@@ -126,12 +129,6 @@ def fourier_analysis(sig, timestep, N_MAX_POW=1, generate_plot=False, display_pl
 
     fig = None
     if generate_plot:
-        msize = kwargs.get('markersize', 2)
-        marker = kwargs.get('marker', 'x')
-        hz2day = kwargs.get('convert2day', True)
-        datetime_plot = kwargs.get('datetime_plot', None)
-
-
         ampl  = power/len(sig)*2.  # convert power to amplitude
         freqs = np.insert(freqs, 0, 0.)  # insert special case freq==0
         ampl  = np.insert(ampl, 0, EQUATION['0']['A'])  # insert special case freq==0
@@ -170,6 +167,46 @@ def fourier_analysis(sig, timestep, N_MAX_POW=1, generate_plot=False, display_pl
 
 
 def pandas_fourier_analysis(df, sig_name, date_name=None, ranges=(), **kwargs):
+    ''' wrapper to function "fourier_analysis()".
+    Automatically processes pandas DataFrame. Features:
+        - find timestep
+        - slice data based on datetime ranges
+
+    Args:
+    -----
+        df (pd.DataFrame):
+            data
+        sig_name (str):
+            name of the column in `df` with investigated signal values
+        date_name (str|None):
+            name of the column in `df` with datetime information. If `None`
+            will try to use datetime indexes
+        ranges (tuple(np.datetime64, np.datetime64)):
+            tuple of two datetime objects representing slice region. The data
+            will be sliced first before processing based on these values.
+            If emty (ranges=()) then all timespan will be used
+        **kwargs:
+            are passed to "fourier_analysis()"
+
+    Return:
+    -------
+        pd.DataFrame:
+            Dataframe with three columns : "Amplitude" (A), "Angular Velocity" (Omega),
+            "Phase Shift" (Phi). The data in these columns can be used to create curve
+            equation in following way:
+                y = A[0] + A[1]*cos(Omega[1]*t+Phi[1]) + A[2]*cos(Omega[2]*t+Phi[2]) + ... +
+                    A[n]*cos(Omega[n]*t+Phi[n])
+                Note:
+                    first row contains only A value (Omega and Phi are NaN), since it represents
+                    constant
+        f_str (str):
+            string representation of the computed function. Function can be generated with:
+                exec(f_str)
+        f (function):
+            function y=f(t) which accepts t as array of time value in seconds
+        fig (matplotlib figure|None):
+            instance of the generated figure or None. Is usefull for displaying later
+    '''
     NEW_DF_CREATED = False
     if date_name is None and type(df.index) == pd.tseries.index.DatetimeIndex:
         time_vector = df.index
@@ -190,7 +227,6 @@ def pandas_fourier_analysis(df, sig_name, date_name=None, ranges=(), **kwargs):
         time_vector = time_vector.values
         sig = df[sig_name]
 
-    print len(sig), ranges
     EQ, f_str, f, fig = fourier_analysis(sig, timestep, datetime_plot=time_vector, **kwargs)
     
 
