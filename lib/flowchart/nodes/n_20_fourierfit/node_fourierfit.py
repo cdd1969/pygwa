@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from pyqtgraph import BusyCursor
 
-from lib.functions.general import returnPandasDf, isNumpyDatetime, isNumpyNumeric
+from lib.functions.general import isNumpyDatetime, isNumpyNumeric
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.fourier import pandas_fourier_analysis
 

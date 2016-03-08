@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 from pyqtgraph.Qt import QtCore
+import numpy as np
 
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.tide import generate_tide
-import numpy as np
+from lib.functions.general import isNumpyDatetime, isNumpyNumeric
+
 
 
 class genCurveNode(NodeWithCtrlWidget):
@@ -20,37 +22,18 @@ class genCurveNode(NodeWithCtrlWidget):
                 },
                 'tip': 'Equation to generate curve. See documentation'
             },
-
+            {'title': 'Tide Components', 'name': 'tides_grp', 'type': 'group', 'children': [
+                {'title': 'N Signal Components', 'name': 'n_sig', 'type': 'int', 'readonly': True},
+                {'title': 'Amplitude', 'name': 'A', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Name of the column with Amplitude data in dataframe in input terminal'},
+                {'title': 'Angular Velocity', 'name': 'omega', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Name of the column with Angular Velocity data in dataframe in input terminal'},
+                {'title': 'Phase Shift', 'name': 'phi', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Name of the column with Phase Shift data in dataframe in input terminal'},
+            ]},
             {'title': 'Constant to add', 'name': 'W', 'type': 'float', 'value': 0., 'suffix': ' m', 'tip': 'Constant value [meters] to be added to generated signal. Usefull to fit to average water level.'},
 
             {'title': 'Time Options', 'name': 't_grp', 'type': 'group', 'expanded': True, 'children': [
                 {'title': 'Start', 'name': 't0', 'type': 'str', 'value': '2015-12-31 00:00:00', 'default': '2015-12-31 00:00:00', 'tip': 'Datetime of the initial timestep'},
                 {'title': 'Stop', 'name': 'tend', 'type': 'str', 'value': '2016-01-30 00:00:00', 'default': '2016-01-30 00:00:00', 'tip': 'Datetime of the last timestep'},
                 {'title': 'Delta Time', 'name': 'dt', 'type': 'int', 'value': 3600, 'limits': (0., 10.e10), 'suffix': ' s', 'step': 60, 'tip': 'Timesep duration in seconds'},
-            ]},
-               
-            {'title': 'Tide Components', 'name': 'T_grp', 'type': 'group', 'expanded': True, 'children': [
-                #{'title': 'Tide Component Eq.', 'name': 'eq', 'type': 'str', 'readonly': True, 'value': 'h = A*cos(omega*t+phi)'},
-                {'name': 'M2', 'type': 'bool', 'value': False, 'expanded': False, 'children': [
-                    {'title': 'Angular velocity', 'name': 'omega', 'type': 'float', 'suffix': ' rad/h', 'value': 0.5056, 'readonly': True },
-                    {'title': 'Amplitude', 'name': 'A', 'type': 'float', 'suffix': ' m', 'value': 0.0, 'step': 0.1 },
-                    {'title': 'Phase shift', 'name': 'phi', 'type': 'float', 'suffix': ' rad', 'value': 0.0, 'step': 0.1 },
-                ]},
-                {'name': 'S2', 'type': 'bool', 'value': False, 'expanded': False, 'children': [
-                    {'title': 'Angular velocity', 'name': 'omega', 'type': 'float', 'suffix': ' rad/h', 'value': 0.5233, 'readonly': True },
-                    {'title': 'Amplitude', 'name': 'A', 'type': 'float', 'suffix': ' m', 'value': 0.0, 'step': 0.1 },
-                    {'title': 'Phase shift', 'name': 'phi', 'type': 'float', 'suffix': ' rad', 'value': 0.0, 'step': 0.1 },
-                ]},
-                {'name': 'K1', 'type': 'bool', 'value': False, 'expanded': False, 'children': [
-                    {'title': 'Angular velocity', 'name': 'omega', 'type': 'float', 'suffix': ' rad/h', 'value': 0.2624, 'readonly': True },
-                    {'title': 'Amplitude', 'name': 'A', 'type': 'float', 'suffix': ' m', 'value': 0.0, 'step': 0.1 },
-                    {'title': 'Phase shift', 'name': 'phi', 'type': 'float', 'suffix': ' rad', 'value': 0.0, 'step': 0.1 },
-                ]},
-                {'name': 'O1', 'type': 'bool', 'value': False, 'expanded': False, 'children': [
-                    {'title': 'Angular velocity', 'name': 'omega', 'type': 'float', 'suffix': ' rad/h', 'value': 0.2432, 'readonly': True },
-                    {'title': 'Amplitude', 'name': 'A', 'type': 'float', 'suffix': ' m', 'value': 0.0, 'step': 0.1 },
-                    {'title': 'Phase shift', 'name': 'phi', 'type': 'float', 'suffix': ' rad', 'value': 0.0, 'step': 0.1 },
-                ]},
             ]},
             
             {'title': 'Ferris Parameters', 'name': 'ferris_grp', 'type': 'group', 'expanded': False, 'children': [
@@ -80,25 +63,69 @@ class genCurveNode(NodeWithCtrlWidget):
         ]
 
     def __init__(self, name, parent=None):
-        terms = {'pd.DataFrame': {'io': 'out'}}
+        terms = {'tides': {'io': 'in'}, 'sig': {'io': 'out'}}
         super(genCurveNode, self).__init__(name, parent=parent, terminals=terms, color=(100, 250, 100, 150))
 
         self.CW().param('xia_grp', 'theta').setValue(0.35)  # to trigger computation of Ss and D
+        self._df_id = None
     
     def _createCtrlWidget(self, **kwargs):
         return genCurveNodeCtrlWidget(**kwargs)
 
 
-    def process(self):
+    def process(self, tides):
+        if tides is None:
+            return
+        if self._df_id != id(tides):
+            #print 'df new'
+            self._df_id = id(tides)
+            self.CW().param('tides_grp', 'n_sig').setValue(len(tides)-1)
+
+            self.CW().disconnect_valueChanged2upd(self.CW().param('tides_grp', 'A'))
+            self.CW().disconnect_valueChanged2upd(self.CW().param('tides_grp', 'omega'))
+            self.CW().disconnect_valueChanged2upd(self.CW().param('tides_grp', 'phi'))
+
+            colname = [col for col in tides.columns if isNumpyNumeric(tides[col].dtype)]
+            self.CW().param('tides_grp', 'A').setLimits(colname)
+            self.CW().param('tides_grp', 'omega').setLimits(colname)
+            self.CW().param('tides_grp', 'phi').setLimits(colname)
+
+            self.CW().param('tides_grp', 'A').setValue(colname[0])
+            self.CW().param('tides_grp', 'omega').setValue(colname[1])
+            self.CW().param('tides_grp', 'phi').setValue(colname[2])
+
+            self.CW().connect_valueChanged2upd(self.CW().param('tides_grp', 'A'))
+            self.CW().connect_valueChanged2upd(self.CW().param('tides_grp', 'omega'))
+            self.CW().connect_valueChanged2upd(self.CW().param('tides_grp', 'phi'))
+
+            self.CW().disconnect_valueChanged2upd(self.CW().param('W'))
+            W = tides[self.CW().p['tides_grp', 'A']][0]  # 1st value from column `A`
+            self.CW().param('W').setValue(W)
+            self.CW().param('W').setDefault(W)
+            self.CW().connect_valueChanged2upd(self.CW().param('W'))
+
+
         kwargs = self.CW().prepareInputArguments()
 
+        kwargs['tides'] = {}
+        for i in xrange(len(tides)):
+            if not np.isnan(tides.iloc[i][kwargs['df_A']]) and np.isnan(tides.iloc[i][kwargs['df_omega']]):
+                continue  #skipping 0-frequency amplitude
+            kwargs['tides'][str(i)] = {}
+            kwargs['tides'][str(i)]['A']     = tides.iloc[i][kwargs['df_A']]
+            kwargs['tides'][str(i)]['omega'] = tides.iloc[i][kwargs['df_omega']]
+            kwargs['tides'][str(i)]['phi']   = tides.iloc[i][kwargs['df_phi']]
+
+            #print i, ': a={0}, omega={1}, phi={2}'.format(kwargs['tides'][str(i)]['A'], kwargs['tides'][str(i)]['omega'], kwargs['tides'][str(i)]['phi']  )
+
+
         if kwargs['eq'] == 'tide':
-            df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], label=kwargs['label'], equation=kwargs['eq'])
+            df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], label=kwargs['label'], equation=kwargs['eq'])
         elif kwargs['eq'] == 'ferris':
-            df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], label=kwargs['label'], equation=kwargs['eq'],
+            df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], label=kwargs['label'], equation=kwargs['eq'],
                 D=kwargs['ferris']['D'], x=kwargs['ferris']['x'])
         elif kwargs['eq'] == 'xia':
-            df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], label=kwargs['label'], equation=kwargs['eq'],
+            df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], label=kwargs['label'], equation=kwargs['eq'],
                 x=kwargs['xia']['x'],
                 alpha=kwargs['xia']['alpha'], beta=kwargs['xia']['beta'], theta=kwargs['xia']['theta'],
                 L=kwargs['xia']['L'], K1=kwargs['xia']['K1'], b1=kwargs['xia']['b1'],
@@ -107,14 +134,14 @@ class genCurveNode(NodeWithCtrlWidget):
 
         else:
             df = None
-        return {'pd.DataFrame': df}
+        return {'sig': df}
 
 
 class genCurveNodeCtrlWidget(NodeCtrlWidget):
     def __init__(self, **kwargs):
         super(genCurveNodeCtrlWidget, self).__init__(**kwargs)
         self.param('eq').sigValueChanged.connect(self._on_equationChanged)
-
+        self.disconnect_valueChanged2upd(self.param('tides_grp', 'n_sig'))
 
         # xia 200 signals....
         self.disconnect_valueChanged2upd(self.param('xia_grp', 'D'))
@@ -176,13 +203,9 @@ class genCurveNodeCtrlWidget(NodeCtrlWidget):
         kwargs['tend']  = np.datetime64(self.p['t_grp', 'tend'])
         kwargs['label'] = self.p['label']
         
-        kwargs['tides'] = {}
-        for tide_param in self.param('T_grp').children():
-            if tide_param.value() is True:
-                kwargs['tides'][tide_param.name()] = {}
-                kwargs['tides'][tide_param.name()]['A'] = self.p['T_grp', tide_param.name(), 'A']
-                kwargs['tides'][tide_param.name()]['omega'] = self.p['T_grp', tide_param.name(), 'omega']
-                kwargs['tides'][tide_param.name()]['phi'] = self.p['T_grp', tide_param.name(), 'phi']
+        kwargs['df_A']     = self.p['tides_grp', 'A']
+        kwargs['df_omega'] = self.p['tides_grp', 'omega']
+        kwargs['df_phi']   = self.p['tides_grp', 'phi']
 
         # --------  Ferris ------
         kwargs['ferris'] = {}
