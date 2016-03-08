@@ -6,7 +6,7 @@ import numpy as np
 
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.tide import generate_tide
-from lib.functions.general import isNumpyDatetime, isNumpyNumeric
+from lib.functions.general import isNumpyNumeric
 
 
 

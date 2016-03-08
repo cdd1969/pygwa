@@ -136,7 +136,7 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
             ax = plt.subplot(111)
             columns = self.parent().getPandasModel().selectColumns()
             self.parent().getPandasModel().getData()[columns].plot(ax=ax)
-            plt.show()
+            self.matplotlibWindow.show()
         except Exception as exp:
             self._parent.setException(exp)
     

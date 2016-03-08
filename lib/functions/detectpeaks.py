@@ -357,7 +357,7 @@ def plot_signal_peaks_and_errors(data, date, peaks, col, T, halfT, hMargin, epsi
 
     Do not use this function alone. Check input as locals in <detectpeaks.detectPeaks_ts()>
     '''
-    plt.figure()
+    fig = plt.figure()
     plt.title('Period (T) check.\n T/2 - margin < dt < T/2 + margin.\n T={0}. margin={1} hours\n {2} < dt < {3}'.format(T, hMargin,  halfT-epsilon, halfT+epsilon), fontsize=15)
     ax = plt.subplot(111)
     plot_df = pd.DataFrame(index=date.values)
@@ -388,7 +388,7 @@ def plot_signal_peaks_and_errors(data, date, peaks, col, T, halfT, hMargin, epsi
             df_error.plot(ax=ax, color='r', marker='h', lw=5)
             del df_error
 
-    plt.show()
+    fig.show()
     del plot_df
 
 

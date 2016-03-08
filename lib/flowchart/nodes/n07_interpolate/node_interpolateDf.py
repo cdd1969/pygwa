@@ -120,7 +120,8 @@ class interpolateDfNode(NodeWithCtrlWidget):
             df = self.outputs()['Out'].value().unpack()
 
             #plot
-            ax = plt.subplot(211)
+            fig, axes = plt.subplots(2)
+            ax, ax2 = axes
 
             df[cn].plot(ax=ax, marker='x', color='b')
 
@@ -135,7 +136,7 @@ class interpolateDfNode(NodeWithCtrlWidget):
             df[cni].plot(ax=ax2, marker='x', color='g')
             plt.legend(loc='best')
 
-            plt.show()
+            fig.show()
         except Exception, err:
             print ("Error: Cannot plot.", Exception, err)
 
