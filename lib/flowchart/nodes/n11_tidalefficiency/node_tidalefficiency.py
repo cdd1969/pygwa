@@ -6,7 +6,7 @@ import numpy as np
 
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.TidalEfficiency import tidalEfficiency_method1, tidalEfficiency_method2, tidalEfficiency_method3
-from lib.functions.general import returnPandasDf, isNumpyDatetime, isNumpyNumeric
+from lib.functions.general import isNumpyDatetime, isNumpyNumeric
 
 
 class tidalEfficiencyNode(NodeWithCtrlWidget):
@@ -34,8 +34,6 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
 
     def process(self, df, matched_peaks):
         E = None
-        df = returnPandasDf(df)
-        matched_peaks = returnPandasDf(matched_peaks)
         self.CW().param('E = ').setValue(str(E))
         self.CW().param('gw').setWritable(True)
         

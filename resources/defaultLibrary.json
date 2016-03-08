@@ -20,6 +20,7 @@
     "16": "lib/flowchart/nodes/n16_plothist/plothist.node",
     "17": "lib/flowchart/nodes/n17_evaluate/evaluate.node",
     "18": "lib/flowchart/nodes/n18_diffusivity_ferris/ferris_diffusivity.node",
-    "19": "lib/flowchart/nodes/n_19_generatecurve/generatecurve.node"
+    "19": "lib/flowchart/nodes/n_19_generatecurve/generatecurve.node",
+    "20": "lib/flowchart/nodes/n_20_fourierfit/fourierfit.node"
 
 }

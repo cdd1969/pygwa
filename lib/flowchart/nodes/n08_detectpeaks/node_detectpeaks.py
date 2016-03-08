@@ -1,11 +1,9 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
 from pyqtgraph import BusyCursor
-from pyqtgraph.Qt import QtGui
 
-from lib.flowchart.package import Package
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
-from lib.functions.general import returnPandasDf, isNumpyDatetime, isNumpyNumeric
+from lib.functions.general import isNumpyDatetime, isNumpyNumeric
 from lib.functions.detectpeaks import detectPeaks_ts
 
 
@@ -35,7 +33,7 @@ class detectPeaksTSNode(NodeWithCtrlWidget):
         return detectPeaksTSNodeCtrlWidget(**kwargs)
         
     def process(self, In):
-        df = returnPandasDf(In)
+        df = In
 
         self._ctrlWidget.param('Period Check Params', 'Warnings').setValue('?')
         colname = [col for col in df.columns if isNumpyNumeric(df[col].dtype)]
@@ -49,7 +47,7 @@ class detectPeaksTSNode(NodeWithCtrlWidget):
             peaks = detectPeaks_ts(df, kwargs.pop('column'), plot=self._plotRequired, **kwargs)
             self._ctrlWidget.param('Period Check Params', 'Warnings').setValue(str(len(peaks[peaks['check'] == False])))
             
-        return {'peaks': Package(peaks)}
+        return {'peaks': peaks}
 
     def plot(self):
         self._plotRequired = True

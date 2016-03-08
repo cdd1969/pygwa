@@ -8,10 +8,8 @@ from pyqtgraph import BusyCursor
 import numpy as np
 import matplotlib.pyplot as plt
 
-from lib.flowchart.package import Package
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.interpolate import applyInterpolationBasedOnRanges, createInterpolationRanges
-from lib.functions.general import returnPandasDf
 
 
 class interpolateDfNode(NodeWithCtrlWidget):
@@ -26,7 +24,7 @@ class interpolateDfNode(NodeWithCtrlWidget):
         return interpolateDfNodeCtrlWidget(**kwargs)
         
     def process(self, In):
-        df = returnPandasDf(In)
+        df = In
         if df is None:
             self._ctrlWidget.p.clearChildren()
             return
@@ -90,7 +88,7 @@ class interpolateDfNode(NodeWithCtrlWidget):
 
         self._columnsToUpdate = list()
         gc.collect()
-        return {'Out': Package(df_out)}
+        return {'Out': df_out}
         
     def restoreState(self, state):
         """overriding standard Node method to extend it with restoring ctrlWidget state"""

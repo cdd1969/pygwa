@@ -4,7 +4,7 @@ from pyqtgraph import BusyCursor
 
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.TimeLag import timelag_erskine1991_method
-from lib.functions.general import returnPandasDf, isNumpyDatetime
+from lib.functions.general import isNumpyDatetime
 
 
 class timeLagNode(NodeWithCtrlWidget):
@@ -42,9 +42,6 @@ class timeLagNode(NodeWithCtrlWidget):
 
     def process(self, df_gw, df_w, E):
         self.CW().param('tlag_grp', 'tlag = ').setValue('?')
-        
-        df_gw = returnPandasDf(df_gw)
-        df_w = returnPandasDf(df_w)
 
         colname = [col for col in df_gw.columns if not isNumpyDatetime(df_gw[col].dtype)]
         self.CW().param('gw').setLimits(colname)
