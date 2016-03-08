@@ -40,7 +40,7 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
     def graphicsWidget(self):
         return self._graphicsWidget
     
-    def items(self):
+    def TSitems(self):
         return self._TSitems
 
     def disconnected(self, localTerm, remoteTerm):
@@ -63,6 +63,7 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
                 # Therefore we directly call <on_signal_received> here
                 #self.on_sigItemReceived(term, val)
                 self.addTSItem(val, term)
+        #self._graphicsWidget.redrawLegend()
     
     def canvas(self):
         c1 = self._graphicsWidget.p1
@@ -102,7 +103,10 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
         if isinstance(GraphItem, (pg.PlotDataItem, pg.ScatterPlotItem)):
             if terminal_name in self._TSitems.keys():
                 # if we have already something from this terminal
-                self.removeTSItem(terminal_name)
+                if id(GraphItem) == id(self._TSitems[terminal_name]['GraphItems'][0]):
+                    return
+                else:
+                    self.removeTSItem(terminal_name)
             #print ('adding item from term: {0}'.format(terminal_name))
             self._TSitems[terminal_name] = dict()
 
@@ -219,7 +223,7 @@ class plotTimeseriesGraphicsWidget(QtGui.QWidget):
     def togglePoints(self, enable):
         #print('togglePoints', enable)
         with BusyCursor():
-            for TSitem in self.parent().items().values():
+            for TSitem in self.parent().TSitems().values():
                 if enable:
                     symbol = 'x'
                 else:
@@ -264,6 +268,22 @@ class plotTimeseriesGraphicsWidget(QtGui.QWidget):
         self.p1.setTitle(label)
 
 
+    def redrawLegend(self):
+        for term_name, TSitem in self.parent().TSitems().iteritems():
+            self.legend.removeItem(TSitem['GraphItems'][0].name())
+        for term_name, TSitem in self.parent().TSitems().iteritems():
+            self.legend.addItem(TSitem['GraphItems'][0], TSitem['GraphItems'][0].name())
+
+        #for sample, label in self.legend.items:
+        #    #self.legend.items.remove( (sample, label) )    # remove from itemlist
+        #    self.legend.layout.removeItem(sample)          # remove from layout
+        #    #sample.close()                          # remove from drawing
+        #    self.legend.layout.removeItem(label)
+        #    #label.close()
+        #    row = self.legend.layout.rowCount()
+        #    self.legend.layout.addItem(sample, row, 0)
+        #    self.legend.layout.addItem(label, row, 1)
+        #self.legend.updateSize()                       # redraq box
 
 
 class plotTimeseriesNodeCtrlWidget(NodeCtrlWidget):
@@ -276,23 +296,15 @@ class plotTimeseriesNodeCtrlWidget(NodeCtrlWidget):
         #self.param('Label').sigValueChanged.connect(self._gr.setLabel)
         self.param('Y:Label').sigValueChanged.connect(self.on_yAxisLabelUnitsChanged)
         self.param('Y:Units').sigValueChanged.connect(self.on_yAxisLabelUnitsChanged)
-        self.param('Legend').sigValueChanged.connect(self.on_legendChanged)
         self.param('Crosshair').sigValueChanged.connect(self.on_crosshairChanged)
-        self.param('Data Points').sigValueChanged.connect(self.on_datapointsChanged)
 
     def on_yAxisLabelUnitsChanged(self):
         text  = self.param('Y:Label').value()
         units = self.param('Y:Units').value()
         self._gr.setYAxisTextAndUnits(text, units)
     
-    def on_legendChanged(self):
-        self._gr.toggleLegend(self.param('Legend').value())
-    
     def on_crosshairChanged(self):
         self._gr.toggleCrosshair(self.param('Crosshair').value())
-    
-    def on_datapointsChanged(self):
-        self._gr.togglePoints(self.param('Data Points').value())
 
     def prepareInputArguments(self):
         kwargs = dict()
