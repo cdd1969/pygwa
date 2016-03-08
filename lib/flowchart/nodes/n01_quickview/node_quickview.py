@@ -113,19 +113,10 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
             self.twWindow.setWindowTitle(self.parent().nodeName+': Table View')
             self.twWindow.setCentralWidget(self.tableView)
             self.twWindow.resize(1000, 800)
-
-            #self.parent().getPandasModel().update()
             self.twWindow.show()
-            
-            self.pushButton_viewTable.setChecked(True)
         else:
-            if not self.pushButton_viewTable.isChecked():  # This is obviously a bug! Returns
-                self.twWindow.hide()
-                self.pushButton_viewTable.setChecked(False)
-            else:
-                #self.parent().getPandasModel().update()
-                self.twWindow.show()
-                self.pushButton_viewTable.setChecked(True)
+            self.twWindow.show()
+
 
 
     @QtCore.pyqtSlot()  #default signal
@@ -192,6 +183,10 @@ class PandasModel(QtCore.QAbstractTableModel):
         
         #finally call update method
         self.update()
+
+        # make sure previously hidden rows will appear
+        for i in xrange(self._headerModel.rowCount()):
+            self._parent.ctrlWidget().tableView.horizontalHeader().showSection(i)
 
         # since we reimplement function @setPandasDataframe() we need to re-emit the dataChanged signal
         #topLeft = self.createIndex(0, 0)

@@ -166,10 +166,11 @@ def detectPeaks(array1D, order=5, split=False, removeRegions=True, mode='clip', 
         if plot:
             f = plt.figure()
             ax = f.add_subplot(111)
-            ax.plot(array1D)
-            ax.scatter(x=peakIndices_min, y=peakVals_min, color='r', s=25)
-            ax.scatter(x=peakIndices_max, y=peakVals_max, color='g', s=25)
-            plt.show()
+            ax.plot(array1D, label='original signal', marker='o', markersize=5, zorder=1)
+            ax.scatter(x=peakIndices_max, y=peakVals_max, color='r', s=40, label='detected MAX peaks', zorder=2)
+            ax.scatter(x=peakIndices_min, y=peakVals_min, color='k', s=40, label='detected MIN peaks', zorder=2)
+            plt.legend()
+            f.show()
         return ([peakVals_min, peakVals_max], [peakIndices_min, peakIndices_max])
 
     else:
@@ -181,9 +182,11 @@ def detectPeaks(array1D, order=5, split=False, removeRegions=True, mode='clip', 
         if plot:
             f = plt.figure()
             ax = f.add_subplot(111)
-            ax.plot(array1D)
-            ax.scatter(x=peakIndices_all, y=peakVals_all, color='r', s=25)
-            plt.show()
+            ax.plot(array1D, label='original signal', marker='o', markersize=5, zorder=1)
+            ax.scatter(x=peakIndices_max, y=peakVals_max, color='r', s=40, label='detected MAX peaks', zorder=2)
+            ax.scatter(x=peakIndices_min, y=peakVals_min, color='k', s=40, label='detected MIN peaks', zorder=2)
+            plt.legend()
+            f.show()
         return ([peakVals_all], [peakIndices_all])
 
 
@@ -301,6 +304,7 @@ def detectPeaks_ts(data, col, T=None, datetime=None, hMargin=1., detectPeaksFlag
         if n_min != n_max:
             #kwargs['plot'] = False
             #detectPeaks(data[col].values, **kwargs)
+            detectPeaks(data[col].values, plot=plot, **kwargs)
             raise Exception('Number of min and max peaks is not equal: {0} != {1}'.format(n_min, n_max))
         
         peaks['N'] = np.arange(max(n_min, n_max))

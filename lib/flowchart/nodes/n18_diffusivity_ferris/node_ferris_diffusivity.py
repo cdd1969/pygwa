@@ -56,7 +56,7 @@ class ferrisDiffusivityNode(NodeWithCtrlWidget):
             self.CW().connect_valueChanged2upd(self.CW().param('E_grp', 'E'))
         
         kwargs = self.ctrlWidget().prepareInputArguments()
-        print kwargs
+
         if kwargs['E'] is not None:
             D_e = diffusivity_from_tidal_efficiency(kwargs['E'], kwargs['x0'], kwargs['t0'])
         else:

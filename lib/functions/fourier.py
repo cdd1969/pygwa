@@ -161,7 +161,7 @@ def fourier_analysis(sig, timestep, N_MAX_POW=1, generate_plot=False, display_pl
         plt.legend()
         fig.tight_layout()
         if display_plot:
-            plt.show()
+            fig.show()
     return (EQUATION, f_str, f, fig)
 
 
