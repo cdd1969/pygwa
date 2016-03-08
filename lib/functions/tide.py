@@ -32,7 +32,7 @@ def generate_tide(t0, dt, tend, components={}, label='GenCurve', equation='tide'
             Example:
                 components = { 'M2':  # component name
                     {'A': 1.5,        # amplitude of tide component in [m]
-                     'omega': 0.506,  # angular velocity of tide component in [rad/h]
+                     'omega': 5e-6,   # angular velocity of tide component in [rad/s]
                      'phi': -0.2}     # phase shift of tide component in [rad]
                     }
         label (str):
@@ -60,6 +60,7 @@ def generate_tide(t0, dt, tend, components={}, label='GenCurve', equation='tide'
     # >>> create datetime array
     T_datetime = np.arange(t0, tend+dt, dt)  # array with np.datetime64 objects for generating timeseries
     T_hours = (T_datetime - t0) / np.timedelta64(1, 'h')  # array with floats (hours) for calculating curve
+    T_sec = (T_datetime - t0) / np.timedelta64(1, 's')  # array with floats (seconds) for calculating curve
 
     # >>> initialize curve array
     W = kwargs.get('W', 0.)  # get default elevation
@@ -68,11 +69,11 @@ def generate_tide(t0, dt, tend, components={}, label='GenCurve', equation='tide'
     # >>> do curve calculations for each tide component and sum them
     for name, opts in components.iteritems():
         if equation == 'tide':
-            H += canalCurve(T_hours, opts['A'], opts['omega'], opts['phi'])
+            H += canalCurve(T_sec, opts['A'], opts['omega'], opts['phi'])
         elif equation == 'ferris':
-            H += ferris1951curve(t=T_hours*3600., A=opts['A'], omega=opts['omega']/3600., phi=opts['phi'], D=kwargs['D'], x=kwargs['x'])
+            H += ferris1951curve(t=T_sec, A=opts['A'], omega=opts['omega'], phi=opts['phi'], D=kwargs['D'], x=kwargs['x'])
         elif equation == 'xia':
-            H += xia2007curve(t=T_hours*3600., x=kwargs['x'],
+            H += xia2007curve(t=T_sec, x=kwargs['x'],
                 A=opts['A'], omega=opts['omega']/3600., phi0=opts['phi'],
                 alpha=kwargs['alpha'], beta=kwargs['beta'], theta=kwargs['theta'],
                 L=kwargs['L'], K1=kwargs['K1'], b1=kwargs['b1'],
