@@ -39,7 +39,6 @@ class ferrisDiffusivityNode(NodeWithCtrlWidget):
 
 
     def process(self, E, tlag):
-
         for p_name in (('E_grp', 'E'), ('tlag_grp', 'tlag')):
             if isinstance(p_name, (list, tuple)):
                 self.CW().disconnect_valueChanged2upd(self.CW().param(*p_name))

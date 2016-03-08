@@ -63,7 +63,7 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
                 # Therefore we directly call <on_signal_received> here
                 #self.on_sigItemReceived(term, val)
                 self.addTSItem(val, term)
-        #self._graphicsWidget.redrawLegend()
+        self._graphicsWidget.redrawLegend()
     
     def canvas(self):
         c1 = self._graphicsWidget.p1
@@ -104,6 +104,8 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
             if terminal_name in self._TSitems.keys():
                 # if we have already something from this terminal
                 if id(GraphItem) == id(self._TSitems[terminal_name]['GraphItems'][0]):
+                    # only update item at bottom subplot
+                    self.updateBottomGraphItem(self._TSitems[terminal_name])
                     return
                 else:
                     self.removeTSItem(terminal_name)
@@ -136,6 +138,28 @@ class plotTimeseriesNode(NodeWithCtrlWidget):
             del self._TSitems[terminal_name]
             gc.collect()
 
+    def updateBottomGraphItem(self, TSitem):
+        ''' update bottom GraphItem taking params from the upper one'''
+        opts = TSitem['GraphItems'][0].opts
+
+        TSitem['GraphItems'][1].setAlpha(opts['alphaHint'], opts['alphaMode'])
+        TSitem['GraphItems'][1].setFftMode(opts['fftMode'])
+        TSitem['GraphItems'][1].setLogMode(opts['logMode'][0], opts['logMode'][1])
+        TSitem['GraphItems'][1].setPointMode(opts['pointMode'])
+        TSitem['GraphItems'][1].setPen(opts['pen'])
+        TSitem['GraphItems'][1].setShadowPen(opts['shadowPen'])
+        TSitem['GraphItems'][1].setFillBrush(opts['fillBrush'])
+        TSitem['GraphItems'][1].setFillLevel(opts['fillLevel'])
+        TSitem['GraphItems'][1].setSymbol(opts['symbol'])
+        TSitem['GraphItems'][1].setSymbolPen(opts['symbolPen'])
+        TSitem['GraphItems'][1].setSymbolBrush(opts['symbolBrush'])
+        TSitem['GraphItems'][1].setSymbolSize(opts['symbolSize'])
+        TSitem['GraphItems'][1].setDownsampling(opts['downsample'], opts['autoDownsample'], opts['autoDownsampleFactor'])
+        TSitem['GraphItems'][1].setClipToView(opts['clipToView'])
+
+        x, y = TSitem['GraphItems'][0].getData()
+        TSitem['GraphItems'][1].setData(x, y)
+        del x, y
 
 
 
@@ -269,8 +293,16 @@ class plotTimeseriesGraphicsWidget(QtGui.QWidget):
 
 
     def redrawLegend(self):
+        # remove old names
+        graph_item_names = [TSitem['GraphItems'][0].name() for TSitem in self.parent().TSitems().values()]
+        for sample, label in self.legend.items:
+            if label.text not in graph_item_names:
+                self.legend.removeItem(label.text)
+
+        # now remove all items
         for term_name, TSitem in self.parent().TSitems().iteritems():
             self.legend.removeItem(TSitem['GraphItems'][0].name())
+        # add all items
         for term_name, TSitem in self.parent().TSitems().iteritems():
             self.legend.addItem(TSitem['GraphItems'][0], TSitem['GraphItems'][0].name())
 
