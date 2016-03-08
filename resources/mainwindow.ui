@@ -142,6 +142,8 @@
    <addaction name="actionSave_fc"/>
    <addaction name="actionSave_As_fc"/>
    <addaction name="actionLoad_fc"/>
+   <addaction name="actionCopy_Selected_Node"/>
+   <addaction name="actionPaste_Node"/>
   </widget>
   <widget class="QDockWidget" name="dockWidget">
    <property name="sizePolicy">
@@ -369,6 +371,9 @@
     <bool>false</bool>
    </property>
    <property name="text">
+    <string>Copy Node</string>
+   </property>
+   <property name="toolTip">
     <string>Copy Selected Node</string>
    </property>
    <property name="shortcut">
