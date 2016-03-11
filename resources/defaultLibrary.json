@@ -21,6 +21,12 @@
     "17": "lib/flowchart/nodes/n17_evaluate/evaluate.node",
     "18": "lib/flowchart/nodes/n18_diffusivity_ferris/ferris_diffusivity.node",
     "19": "lib/flowchart/nodes/n_19_generatecurve/generatecurve.node",
-    "20": "lib/flowchart/nodes/n_20_fourierfit/fourierfit.node"
+    "20": "lib/flowchart/nodes/n_20_fourierfit/fourierfit.node",
+    "21": "lib/flowchart/nodes/n_21_join_columns/joincol.node",
+    "22": "lib/flowchart/nodes/n_22_add/add.node",
+    "23": "lib/flowchart/nodes/n_23_substract/substract.node",
+    "24": "lib/flowchart/nodes/n_24_multiply/multiply.node",
+    "25": "lib/flowchart/nodes/n_25_divide/divide.node",
+    "26": "lib/flowchart/nodes/n_26_gradient/gradient.node"
 
 }

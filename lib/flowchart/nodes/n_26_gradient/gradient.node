@@ -1,0 +1,6 @@
+{
+    "filename":  "node_gradient.py",
+    "classname": "gradientNode",
+    "libpath": ["Processing"],
+    "override": true
+}
