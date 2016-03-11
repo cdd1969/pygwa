@@ -113,7 +113,7 @@ class fourierFitNodeCtrlWidget(NodeCtrlWidget):
     def prepareInputArguments(self):
         kwargs = dict()
 
-        kwargs['ranges']  = (np.datetime64(self.p['t0']), np.datetime64(self.p['t1'])) if self.p['ranges'] else None
+        kwargs['ranges']  = (np.datetime64(self.p['t0'])+'Z', np.datetime64(self.p['t1']))+'Z' if self.p['ranges'] else None
         kwargs['sig'] = self.p['sig']
         kwargs['datetime'] = self.p['datetime']
         kwargs['N_MAX_POW'] = self.p['N_MAX_POW']

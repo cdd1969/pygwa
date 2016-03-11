@@ -38,7 +38,7 @@ class genCurveNode(NodeWithCtrlWidget):
             
             {'title': 'Ferris Parameters', 'name': 'ferris_grp', 'type': 'group', 'expanded': False, 'children': [
                 {'title': 'Diffusivity', 'name': 'D', 'type': 'float', 'suffix': ' m**2/s', 'value': 0.5, 'step': 0.1, 'tip': 'Diffusivity of the aquifer'},
-                {'title': 'Distance to shore', 'name': 'x', 'type': 'float', 'suffix': ' m', 'value': 0.0, 'step': 5., 'limits': (0., 10.e10), 'tip': 'Distance between the observation point in aquifer and the shore-line'},
+                {'title': 'Distance to shore', 'name': 'x', 'type': 'float', 'suffix': ' m', 'value': 0.0, 'step': 1., 'limits': (0., 10.e10), 'tip': 'Distance between the observation point in aquifer and the shore-line'},
             ]},
 
             {'title': 'Xia Parameters', 'name': 'xia_grp', 'type': 'group', 'expanded': False, 'children': [
@@ -198,9 +198,9 @@ class genCurveNodeCtrlWidget(NodeCtrlWidget):
         kwargs['eq']    = self.p['eq']
         kwargs['W']     = self.p['W']
 
-        kwargs['t0']    = np.datetime64(self.p['t_grp', 't0'])
+        kwargs['t0']    = np.datetime64(self.p['t_grp', 't0'] + 'Z')  # zulu time
         kwargs['dt']    = np.timedelta64(self.p['t_grp', 'dt'], 's')
-        kwargs['tend']  = np.datetime64(self.p['t_grp', 'tend'])
+        kwargs['tend']  = np.datetime64(self.p['t_grp', 'tend'] + 'Z')  # zulu time
         kwargs['label'] = self.p['label']
         
         kwargs['df_A']     = self.p['tides_grp', 'A']
