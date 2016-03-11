@@ -8,6 +8,7 @@ import pandas as pd
 
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.general import isNumpyDatetime, isNumpyNumeric
+import time
 
 
 class makeTimeseriesCurveNode(NodeWithCtrlWidget):
@@ -75,7 +76,7 @@ class makeTimeseriesCurveNode(NodeWithCtrlWidget):
             # part 2
             #   convert time
             b = t.astype(np.dtype('datetime64[s]'))
-            timeStamps = b.astype(np.int64)-kwargs['tz correct']*60*60
+            timeStamps = b.astype(np.int64)-kwargs['tz correct']*60*60+time.timezone
             #   now create curve
             pen = fn.mkPen(color=kwargs['color'], width=kwargs['width'], style=kwargs['style'])
             self.item.setData(timeStamps, df[kwargs['Y:signal']].values, pen=pen, name=kwargs['Y:signal'])
