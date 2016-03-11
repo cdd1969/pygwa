@@ -1,0 +1,6 @@
+{
+    "filename":  "node_multiply.py",
+    "classname": "multiplyNode",
+    "libpath": ["Operands"],
+    "override": true
+}

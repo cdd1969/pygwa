@@ -1,0 +1,6 @@
+{
+    "filename":  "node_substract.py",
+    "classname": "substractNode",
+    "libpath": ["Operands"],
+    "override": true
+}
