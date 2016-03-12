@@ -25,14 +25,17 @@ class QuickViewNode(Node):
         self.graphicsItem().setBrush(fn.mkBrush(150, 150, 250, 200))
         self._pandasModel = None
         self._ctrlWidget = QuickViewCtrlWidget(self)
+        self._id = None
         
     def process(self, In):
         df = In
-        if self._pandasModel is not None:
+        if id(df) != self._id and self._pandasModel is not None:
+            self._id = None
             self._pandasModel.destroy()
             self._pandasModel = None
         if df is not None:
             self._pandasModel = PandasModel(df, parent=self)
+            self._id = id(df)
         self.ctrlWidget().update()
 
     def getPandasModel(self):
@@ -68,6 +71,7 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
     def initUI(self):
         #self.tableView = QtWidgets.QTableView()
         self.tableView = TableView(parent=self)
+        self.twWindow = None
         self.update()
 
     def setModels(self):
@@ -98,10 +102,10 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
         self.pushButton_viewPlot.setEnabled(modelsAreSet)
 
     def update(self):
-        try:
-            self.twWindow.hide()
-        except:
-            self.twWindow = None
+        #try:
+        #    self.twWindow.hide()
+        #except:
+        #    self.twWindow = None
         self.setModels()  # we enable and disable buttons also in this method
         self.tableView.resizeColumnsToContents()
 
