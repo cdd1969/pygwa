@@ -11,7 +11,7 @@ from flowchart.Flowchart import customFlowchart as Flowchart
 from common.CustomQCompleter import CustomQCompleter
 import PROJECTMETA
 from lib import projectPath
-
+from pyqtgraph import configfile
 
 class MainWindow(QtWidgets.QMainWindow):
 
@@ -203,7 +203,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if fn != self.uiData.defaultFlowchartFileName():
             self.uiData.setCurrentFileName(fn)
             self.uiData.setChangesUnsaved(False)
-            #self.statusBar().showMessage("File saved: "+fn, 10000)
+            self.statusBar().showMessage("File saved: "+fn, 5000)
         return True
 
 
@@ -214,7 +214,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if fn != self.uiData.defaultFlowchartFileName():
             self.uiData.setCurrentFileName(fn)
             self.uiData.setChangesUnsaved(False)
-            #self.statusBar().showMessage("File saved: "+fn, 10000)
+            self.statusBar().showMessage("File saved: "+fn, 5000)
         return True
     
     @QtCore.pyqtSlot()
@@ -226,7 +226,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if fn != self.uiData.defaultFlowchartFileName():
                 self.uiData.setCurrentFileName(fn)
                 self.uiData.setChangesUnsaved(False)
-                #self.statusBar().showMessage("File loaded: "+fn)
+                self.statusBar().showMessage("File loaded: "+fn, 5000)
 
     @QtCore.pyqtSlot()
     def on_actionAdd_item_to_library(self):
@@ -336,6 +336,11 @@ class MainWindow(QtWidgets.QMainWindow):
             raise KeyError(msg)
 
 
+        # save backup flowchart
+        if action in ['add', 'remove', 'rename']:
+            self.saveBackup()
+
+
     @QtCore.pyqtSlot(Node)
     def on_selectedNodeChanged(self, node):
         if node.ctrlWidget() is not None:
@@ -394,12 +399,39 @@ class MainWindow(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         if self._unittestmode:  # set this variable in your unittest
             # if we are running tests...
+            self.deleteBackup()
             QtWidgets.qApp.quit()
 
         if self.doActionIfUnsavedChanges(message='Are you sure to quit?'):
+            self.deleteBackup()
             QtWidgets.qApp.quit()  #quit application
         else:
             event.ignore()
+
+
+    def saveBackup(self):
+        currFName = self.uiData.currentFileName()
+        if currFName is None:
+            # save somewhere
+            bakname = os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'unsaved_flowchart.bak'))
+        else:
+            #save to file folder
+            bakname = os.path.abspath(currFName)+'.bak'
+
+        configfile.writeConfigFile(self.fc.saveState(), bakname)
+        self.statusBar().showMessage("Bak file saved: "+bakname, 5000)
+
+        # now try to delete old file
+        if self.uiData.currentBakFile() == bakname:
+            pass  # no need to delete
+        else:
+            self.deleteBackup()
+            self.uiData.setCurrentBakFile(bakname)
+
+    def deleteBackup(self):
+        if self.uiData.currentBakFile() is not None:
+            os.remove(self.uiData.currentBakFile())
+            self.uiData.setCurrentBakFile(None)
 
 
 
@@ -422,6 +454,7 @@ class uiData(QtCore.QObject):
         self._defaultLibFileName = projectPath('resources/defaultLibrary.json')
         self._flowchartLib = None
         self._currentFileName  = None
+        self._currentBakFile  = None
         self._changesUnsaved  = True
         
         self.initLibrary()
@@ -454,6 +487,9 @@ class uiData(QtCore.QObject):
     def currentFileName(self):
         return self._currentFileName
 
+    def currentBakFile(self):
+        return self._currentBakFile
+
     def changesUnsaved(self):
         return self._changesUnsaved
 
@@ -475,6 +511,9 @@ class uiData(QtCore.QObject):
         oldName = self._currentFileName
         self._currentFileName = name
         self.sigCurrentFilenameChanged.emit(oldName, name)
+    
+    def setCurrentBakFile(self, name):
+        self._currentBakFile = name
 
     def defaultFlowchartFileName(self):
         return self._defaultFlowchartFileName
