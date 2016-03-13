@@ -86,6 +86,9 @@ class MainWindow(QtWidgets.QMainWindow):
             action = QtGui.QAction(self, visible=False, triggered=self.openRecentFile)
             self.menuOpen_Recent.addAction(action)
             self.recentFileActs.append(action)
+        self.menuOpen_Recent.addSeparator()
+        self.actionClearRecent = QtGui.QAction('Clear', self, visible=True, triggered=self.on_actionClearRecent)
+        self.menuOpen_Recent.addAction(self.actionClearRecent)
         self.uiData.updateRecentFileActions()
 
 
@@ -294,6 +297,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def on_actionDocumentation(self):
         QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/cdd1969/pygwa/wiki'))
 
+    @QtCore.pyqtSlot()
+    def on_actionClearRecent(self):
+        self.uiData.clearRecentFiles()
     
     @QtCore.pyqtSlot()
     def selectionChanged(self):
@@ -446,6 +452,7 @@ class uiData(QtCore.QObject):
     def __init__(self, parent=None):
         super(QtCore.QObject, self).__init__(parent=parent)
         self.settings = QtCore.QSettings()
+        #self.settings.clear()
 
         self.win = parent
         self.MAX_RECENT_FILES = 10
@@ -511,6 +518,20 @@ class uiData(QtCore.QObject):
         
         self.settings.setValue("RecentFiles", recentFiles)
         self.updateRecentFileActions()
+
+    def removeRecentFile(self, fname):
+        recentFiles = self.settings.value('RecentFiles', [])
+        if fname not in recentFiles:
+            return
+        recentFiles.remove(fname)
+        self.settings.setValue("RecentFiles", recentFiles)
+        self.updateRecentFileActions()
+
+    def clearRecentFiles(self):
+        recentFiles = self.settings.value('RecentFiles', [])
+        for fname in recentFiles:
+            self.removeRecentFile(fname)
+
     
     
     def updateRecentFileActions(self):
