@@ -94,13 +94,11 @@ class gradientNode(NodeWithCtrlWidget):
         # here we will generate large dataset of all timesteps
         if self.CW().CALCULATE_ALL:
             # now generate long dataframe
-            All = data.copy()
+            All = pd.DataFrame({kwargs['datetime']: data[kwargs['datetime']], 'gradient': np.zeros(len(data.index)), 'direction(degrees North)': np.zeros(len(data.index))}  )
             self.All_out = All  # pointer
-            All['gradient'] = np.zeros(len(All.index))
-            All['direction(degrees North)'] = np.zeros(len(All.index))
             with pg.ProgressDialog("Calculating gradient for All timesteps {0}".format(len(All.index)), 0, len(All.index)) as dlg:
-                for row_i in All.index:
-                    row = All.loc[row_i]
+                for row_i in data.index:
+                    row = data.loc[row_i]
                     z = np.zeros(len(coord.index))
                     for i, well_n in enumerate(well_names):
                         z[i] = float(row[well_n])
