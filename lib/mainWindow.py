@@ -45,8 +45,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle(PROJECTMETA.__label__)
         #self.center()  # center window position
 
-        self.splitter.setSizes([300, 500])  #set horizontal sizes between splitter
-
         font = QtGui.QFont("Times", 11, QtGui.QFont.Bold, True)
         font.setUnderline(True)
         self.label_nodeCtrlName.setFont(font)
@@ -501,6 +499,8 @@ class uiData(QtCore.QObject):
         if fname is None or fname.endswith('.bak'):
             return
         recentFiles = self.settings.value('RecentFiles', [])
+        if not recentFiles:
+            recentFiles = []
         
         fname = unicode(fname)
         if fname not in recentFiles:
@@ -529,13 +529,18 @@ class uiData(QtCore.QObject):
 
     def clearRecentFiles(self):
         recentFiles = self.settings.value('RecentFiles', [])
+        if not recentFiles:
+            return
         for fname in recentFiles:
             self.removeRecentFile(fname)
+        self.settings.setValue("RecentFiles", [])
 
     
     
     def updateRecentFileActions(self):
         files = self.settings.value('RecentFiles', [])
+        if files is None:
+            return
 
         numRecentFiles = min(len(files), self.MAX_RECENT_FILES)
 
@@ -589,6 +594,10 @@ class uiData(QtCore.QObject):
         settings.setValue('mainwindow/size', self.win.size())
         settings.setValue('mainwindow/pos',  self.win.pos())
         settings.setValue('mainwindow/fullScreen',  self.win.isFullScreen())
+        settings.setValue('mainwindow/state',  self.win.saveState())
+        settings.setValue('mainwindow/splitter_sizes',  self.win.splitter.sizes())
+        #settings.setValue('mainwindow/geometry_nodelibrary_dockwidget',  self.win.dockWidget.geometry())
+        #settings.setValue('mainwindow/geometry_nodecontrol_dockwidget',  self.win.dockWidget_2.geometry())
 
 
 
@@ -613,6 +622,15 @@ class uiData(QtCore.QObject):
 
         self.win.resize(settings.value('mainwindow/size', QtCore.QSize(800, 800)))
         self.win.move(settings.value('mainwindow/pos', QtCore.QPoint(400, 400)))
+        self.win.splitter.setSizes(settings.value('mainwindow/splitter_sizes', [300, 500]))
+
+        if settings.value('mainwindow/state') is not None:
+            self.win.restoreState(settings.value('mainwindow/state'))
+        #if settings.value('mainwindow/geometry_nodelibrary_dockwidget') is not None:
+        #    self.win.dockWidget.setGeometry(settings.value('mainwindow/geometry_nodelibrary_dockwidget'))
+        #if settings.value('mainwindow/geometry_nodecontrol_dockwidget') is not None:
+        #    self.win.dockWidget_2.setGeometry(settings.value('mainwindow/geometry_nodecontrol_dockwidget'))
+        
         if settings.value('mainwindow/fullScreen', False) is True:
             self.win.showFullScreen()
 
