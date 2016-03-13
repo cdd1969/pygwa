@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os, sys
 import traceback
+import getpass
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
 from pyqtgraph.flowchart import Node
 
@@ -13,6 +14,8 @@ import PROJECTMETA
 from lib import projectPath
 from pyqtgraph import configfile
 
+
+
 class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
@@ -22,24 +25,25 @@ class MainWindow(QtWidgets.QMainWindow):
         uic.loadUi(projectPath('resources/mainwindow.ui'), self)
         self.uiData = uiData(self)
         self.connectActions()
-        #self.connectSignals()
         self.initUI()
         self.initGlobalShortcuts()
 
+        # everything has been inited. Now do some actions
+        # 1) check crash status
+        self.uiData.on_crash_LoadBakFile()
+
 
     def initGlobalShortcuts(self):
-        # for some reason action shotcuts are not always working...
-        # change them to global shortcuts
+        # for some reason action shotcuts are not always working... change them to global shortcuts
         QtGui.QShortcut(QtGui.QKeySequence("F1"), self, self.on_actionDocumentation)
         QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Alt+C"), self, self.on_actionCopy_Selected_Node)
         QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Alt+V"), self, self.on_actionPaste_Node)
-        #QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Alt+V"), self, self.on_actionPaste_Node)
 
         
 
     def initUI(self):
         self.setWindowTitle(PROJECTMETA.__label__)
-        self.center()  # center window position
+        #self.center()  # center window position
 
         self.splitter.setSizes([300, 500])  #set horizontal sizes between splitter
 
@@ -76,9 +80,17 @@ class MainWindow(QtWidgets.QMainWindow):
         # set tree view of node library
         fill_widget(self.treeWidget, self.uiData.nodeNamesTree())
 
+        # create EMPTY Open Recent Actions
+        self.recentFileActs = []
+        for i in xrange(self.uiData.MAX_RECENT_FILES):
+            action = QtGui.QAction(self, visible=False, triggered=self.openRecentFile)
+            self.menuOpen_Recent.addAction(action)
+            self.recentFileActs.append(action)
+        self.uiData.updateRecentFileActions()
+
+
     def resetNodeLibraryWidgets(self):
         #init node selector tab, set autocompletion etc
-        #self._nodeNameCompleter = QtWidgets.QCompleter(self)
         self.uiData.nodeNamesModel().setStringList(self.uiData.nodeNamesList())
         # set tree view of node library
         fill_widget(self.treeWidget, self.uiData.nodeNamesTree())
@@ -163,8 +175,6 @@ class MainWindow(QtWidgets.QMainWindow):
             mappedPos = self.flowChartWidget.view.viewBox().mapSceneToView(pos)
             if nodeType in self.uiData.nodeNamesList():  # to avoid drag'n'dropping Group-names
                 self.fc.createNode(nodeType, pos=mappedPos)
-                #self.flowChartWidget.chart.createNode(nodeType, pos=mappedPos)
-
 
         self.flowChartWidget.view.dragEnterEvent = dragEnterEvent
         self.flowChartWidget.view.viewBox().setAcceptDrops(True)
@@ -208,25 +218,32 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     @QtCore.pyqtSlot()
-    def on_actionSave_As_fc(self):
-        self.fc.saveFile()
+    def on_actionSave_As_fc(self, fileName=None):
+        self.fc.saveFile(fileName=fileName)
         fn = self.fc.widget().currentFileName
         if fn != self.uiData.defaultFlowchartFileName():
             self.uiData.setCurrentFileName(fn)
             self.uiData.setChangesUnsaved(False)
+            self.uiData.addRecentFile(fn)
             self.statusBar().showMessage("File saved: "+fn, 5000)
         return True
     
     @QtCore.pyqtSlot()
-    def on_actionLoad_fc(self):
+    def on_actionLoad_fc(self, fileName=None):
         if self.doActionIfUnsavedChanges(message='Are you sure to load another Flowchart without saving this one?'):
             directory = os.path.join(os.getcwd(), 'examples')
-            self.fc.loadFile(startDir=directory)
+            self.fc.loadFile(startDir=directory, fileName=fileName)
             fn = self.fc.widget().currentFileName
             if fn != self.uiData.defaultFlowchartFileName():
                 self.uiData.setCurrentFileName(fn)
                 self.uiData.setChangesUnsaved(False)
+                self.uiData.addRecentFile(fn)
                 self.statusBar().showMessage("File loaded: "+fn, 5000)
+    
+    def openRecentFile(self):
+        action = self.sender()
+        if action:
+            self.on_actionLoad_fc(fileName=action.data())
 
     @QtCore.pyqtSlot()
     def on_actionAdd_item_to_library(self):
@@ -299,6 +316,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if node.ctrlWidget() is not None:
                 self.stackNodeCtrlStackedWidget.addWidget(node.ctrlWidget())
             self.on_selectedNodeChanged(node)
+        self.uiData.deleteBakFile()
 
 
     @QtCore.pyqtSlot(object, str, object)
@@ -338,7 +356,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # save backup flowchart
         if action in ['add', 'remove', 'rename']:
-            self.saveBackup()
+            self.uiData.saveBakFile()
 
 
     @QtCore.pyqtSlot(Node)
@@ -399,39 +417,17 @@ class MainWindow(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         if self._unittestmode:  # set this variable in your unittest
             # if we are running tests...
-            self.deleteBackup()
+            self.uiData.deleteBakFile()
             QtWidgets.qApp.quit()
 
         if self.doActionIfUnsavedChanges(message='Are you sure to quit?'):
-            self.deleteBackup()
+            self.uiData.deleteBakFile()
+            self.uiData.writeSettingsOnQuit()
             QtWidgets.qApp.quit()  #quit application
         else:
             event.ignore()
 
 
-    def saveBackup(self):
-        currFName = self.uiData.currentFileName()
-        if currFName is None:
-            # save somewhere
-            bakname = os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'unsaved_flowchart.bak'))
-        else:
-            #save to file folder
-            bakname = os.path.abspath(currFName)+'.bak'
-
-        configfile.writeConfigFile(self.fc.saveState(), bakname)
-        self.statusBar().showMessage("Bak file saved: "+bakname, 5000)
-
-        # now try to delete old file
-        if self.uiData.currentBakFile() == bakname:
-            pass  # no need to delete
-        else:
-            self.deleteBackup()
-            self.uiData.setCurrentBakFile(bakname)
-
-    def deleteBackup(self):
-        if self.uiData.currentBakFile() is not None:
-            os.remove(self.uiData.currentBakFile())
-            self.uiData.setCurrentBakFile(None)
 
 
 
@@ -449,17 +445,15 @@ class uiData(QtCore.QObject):
 
     def __init__(self, parent=None):
         super(QtCore.QObject, self).__init__(parent=parent)
-        self.parent = parent
+        self.settings = QtCore.QSettings()
+
+        self.win = parent
+        self.MAX_RECENT_FILES = 10
         self._defaultFlowchartFileName = projectPath('resources/defaultFlowchart.dfc')
         self._defaultLibFileName = projectPath('resources/defaultLibrary.json')
-        self._flowchartLib = None
-        self._currentFileName  = None
-        self._currentBakFile  = None
-        self._changesUnsaved  = True
         
         self.initLibrary()
-
-
+        self.readSettingsOnStart()
 
     def initLibrary(self, fname=None):
         #if self._flowchartLib:
@@ -485,18 +479,61 @@ class uiData(QtCore.QObject):
         return self._flowchartLib.getNodeTree()
 
     def currentFileName(self):
-        return self._currentFileName
+        return self.settings.value('currentSession/fileName')
 
-    def currentBakFile(self):
-        return self._currentBakFile
+    def currentBakFileName(self):
+        return self.settings.value('currentSession/bakFileName')
+    
+    def setCurrentBakFileName(self, name):
+        self.settings.setValue("currentSession/bakFileName", name)
 
     def changesUnsaved(self):
-        return self._changesUnsaved
+        return self.settings.value('currentSession/changesUnsaved')
+        
+    def addRecentFile(self, fname):
+        if fname is None or fname.endswith('.bak'):
+            return
+        recentFiles = self.settings.value('RecentFiles', [])
+        
+        fname = unicode(fname)
+        if fname not in recentFiles:
+            # fname is not here
+            recentFiles.insert(0, fname)
+
+        elif recentFiles.index(fname) != 0:
+            # fname is here and is not on top of the list
+            oldindex = recentFiles.index(fname)
+            newindex = 0
+            recentFiles.insert(newindex, recentFiles.pop(oldindex))
+
+        # cut it to 10 files
+        recentFiles = recentFiles[0:self.MAX_RECENT_FILES] if len(recentFiles) >= self.MAX_RECENT_FILES else recentFiles
+        
+        self.settings.setValue("RecentFiles", recentFiles)
+        self.updateRecentFileActions()
+    
+    
+    def updateRecentFileActions(self):
+        files = self.settings.value('RecentFiles', [])
+
+        numRecentFiles = min(len(files), self.MAX_RECENT_FILES)
+
+        for i in xrange(numRecentFiles):
+            if not os.path.isfile(files[i]):
+                self.win.recentFileActs[i].setVisible(False)
+                continue
+            text = self.strippedName(files[i])
+            self.win.recentFileActs[i].setText(text)
+            self.win.recentFileActs[i].setData(files[i])
+            self.win.recentFileActs[i].setVisible(True)
+
+        for j in xrange(numRecentFiles, self.MAX_RECENT_FILES):
+            self.win.recentFileActs[j].setVisible(False)
 
     def setChangesUnsaved(self, state):
         if isinstance(state, bool):
-            self._changesUnsaved = state
-            fn = self._currentFileName
+            self.settings.setValue('currentSession/changesUnsaved', state)
+            fn = self.settings.value('currentSession/fileName')
             if fn is not None:
                 # we are only emitting sigal simutaing the rename operation, without actually renaming
                 # the flowchart. This will cause TabWidget label to be renamed
@@ -506,14 +543,10 @@ class uiData(QtCore.QObject):
                     self.sigCurrentFilenameChanged.emit(fn, unicode(fn))
 
 
-    @QtCore.pyqtSlot(str)
     def setCurrentFileName(self, name):
-        oldName = self._currentFileName
-        self._currentFileName = name
+        oldName = self.settings.value('currentSession/fileName')
+        self.settings.setValue('currentSession/fileName', name)
         self.sigCurrentFilenameChanged.emit(oldName, name)
-    
-    def setCurrentBakFile(self, name):
-        self._currentBakFile = name
 
     def defaultFlowchartFileName(self):
         return self._defaultFlowchartFileName
@@ -524,10 +557,107 @@ class uiData(QtCore.QObject):
     def fclib(self):
         return self._flowchartLib
 
+    def writeSettingsOnQuit(self):
+        settings = QtCore.QSettings()  # do not know why i have to Initialize it once again
+        #settings = self.settings
+        
+        # user session
+        settings.setValue('currentSession/exitStatus', u'ok')
+      
+        # MainWindow state
+        settings.setValue('mainwindow/size', self.win.size())
+        settings.setValue('mainwindow/pos',  self.win.pos())
+        settings.setValue('mainwindow/fullScreen',  self.win.isFullScreen())
+
+
+
+    def readSettingsOnStart(self):
+        settings = self.settings
+
+        settings.setValue('lastSession/exitStatus', settings.value('currentSession/exitStatus', u'ok'))
+        settings.setValue('lastSession/fileName', settings.value('currentSession/fileName', None))
+        settings.setValue('lastSession/bakFileName', settings.value('currentSession/bakFileName', None))
+        settings.setValue('lastSession/user', settings.value('currentSession/user', getpass.getuser()))
+
+        settings.setValue('currentSession/exitStatus', u'crash')
+        settings.setValue('currentSession/fileName', None)
+        settings.setValue('currentSession/bakFileName', None)
+        settings.setValue('currentSession/changesUnsaved', False)
+        settings.setValue('currentSession/user', getpass.getuser())
+
+
+        # restore GUI settings if the config file was previously generated by the same user
+        if settings.value('currentSession/user') != settings.value('lastSession/user') and settings.value('lastSession/user') is not None:
+            return
+
+        self.win.resize(settings.value('mainwindow/size', QtCore.QSize(800, 800)))
+        self.win.move(settings.value('mainwindow/pos', QtCore.QPoint(400, 400)))
+        if settings.value('mainwindow/fullScreen', False) is True:
+            self.win.showFullScreen()
+
+        #self.updateRecentFileActions()  #>>> is moved to INIT of MainWindow since actions are not inited yet
+
+    def saveBakFile(self):
+        fname = self.currentFileName()
+        if fname is None:
+            # save somewhere
+            bakname = os.path.join(os.path.dirname(__file__), '../', 'unsaved_flowchart.fc.bak')
+        else:
+            #save to current file folder
+            bakname = fname+'.bak'
+
+        bakname = os.path.abspath(bakname)
+        configfile.writeConfigFile(self.win.fc.saveState(), bakname)
+
+        self.setCurrentBakFileName(bakname)
+        # delay dsiplaying because status bar shows other messages as well. Too lazy to make queue
+        QtCore.QTimer.singleShot(5000, lambda: self.win.statusBar().showMessage("Bak file saved: "+bakname, 5000))
+
+    def deleteBakFile(self):
+        if self.currentBakFileName() is not None:
+            if os.path.isfile(self.currentBakFileName()) and self.currentBakFileName().endswith('.bak'):
+                os.remove(self.currentBakFileName())
+            self.setCurrentBakFileName(None)
+
+    def on_crash_LoadBakFile(self):
+        ''' Checks crash status of last session and offers to load BAK file
+        Warning: use after the MainWindow has been already initialized
+        '''
+        if self.settings.value('lastSession/exitStatus') != 'crash':
+            return
+        bak = self.settings.value('lastSession/bakFileName', None)
+        if bak is None:
+            return
+        reply = QtWidgets.QMessageBox.question(self.win, "Load Backup File", 'Previous session was not closed properly. Would you like to load backup file? \br <i>{0}</i>'.format(bak), QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ok)
+
+        if reply == QtWidgets.QMessageBox.Ok:
+            self.win.on_actionLoad_fc(bak)
+            self.win.on_actionSave_As_fc(fileName=os.path.splitext(bak)[0])
+            self.deleteBakFile()
+            self.win.statusBar().showMessage("Restored after crash from BAK file: {0}".format(bak), 5000)
+
+        
+
+    def strippedName(self, fullFileName):
+        return QtCore.QFileInfo(fullFileName).canonicalFilePath()
+
+    def print_settings(self, symbol):
+        settings = self.settings
+        print '-'*20
+        for k in settings.allKeys():
+            print '{0} {2} {1}'.format(k, settings.value(k), symbol)
+        print '-'*20
+
+
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
     app.setWindowIcon(QtGui.QIcon(projectPath('resources/icon.gif')))
+    
+    # is needed for QSettings
+    app.setOrganizationName("pygwa")
+    app.setApplicationName("pygwa")
+
     ex = MainWindow()
     ex.show()
 

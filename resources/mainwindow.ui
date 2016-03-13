@@ -53,17 +53,6 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="tab_2">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="statusTip">
-         <string>Create new flowchart</string>
-        </property>
-        <attribute name="title">
-         <string>+</string>
-        </attribute>
-       </widget>
       </widget>
      </widget>
     </item>
@@ -82,26 +71,17 @@
     <property name="title">
      <string>Menu</string>
     </property>
-    <widget class="QMenu" name="menuFlowchart">
+    <widget class="QMenu" name="menuOpen_Recent">
      <property name="title">
-      <string>Flowchart</string>
+      <string>Open Recent</string>
      </property>
-     <addaction name="actionNew_fc"/>
-     <addaction name="actionSave_fc"/>
-     <addaction name="actionSave_As_fc"/>
-     <addaction name="actionLoad_fc"/>
-    </widget>
-    <widget class="QMenu" name="menuLibrary">
-     <property name="title">
-      <string>Library</string>
-     </property>
-     <addaction name="actionAdd_item_to_library"/>
-     <addaction name="actionLoadLibrary"/>
      <addaction name="separator"/>
-     <addaction name="actionReloadDefaultLib"/>
     </widget>
-    <addaction name="menuFlowchart"/>
-    <addaction name="menuLibrary"/>
+    <addaction name="actionNew_fc"/>
+    <addaction name="actionLoad_fc"/>
+    <addaction name="menuOpen_Recent"/>
+    <addaction name="actionSave_fc"/>
+    <addaction name="actionSave_As_fc"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -120,8 +100,17 @@
     <addaction name="actionCopy_Selected_Node"/>
     <addaction name="actionPaste_Node"/>
    </widget>
+   <widget class="QMenu" name="menuLib">
+    <property name="title">
+     <string>Lib</string>
+    </property>
+    <addaction name="actionAdd_item_to_library"/>
+    <addaction name="actionLoadLibrary"/>
+    <addaction name="actionReloadDefaultLib"/>
+   </widget>
    <addaction name="menuMenu"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuLib"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -320,13 +309,16 @@
    </property>
   </action>
   <action name="actionAdd_item_to_library">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Add Node to Library</string>
    </property>
   </action>
   <action name="actionLoad_fc">
    <property name="text">
-    <string>Load</string>
+    <string>Open</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -357,11 +349,17 @@
    </property>
   </action>
   <action name="actionLoadLibrary">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Load Library</string>
    </property>
   </action>
   <action name="actionReloadDefaultLib">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Reload Default Lib</string>
    </property>
