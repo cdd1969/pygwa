@@ -44,10 +44,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def initUI(self):
         self.setWindowTitle(PROJECTMETA.__label__)
         #self.center()  # center window position
-
-        font = QtGui.QFont("Times", 11, QtGui.QFont.Bold, True)
-        font.setUnderline(True)
-        self.label_nodeCtrlName.setFont(font)
         
         # create dummy widget (it will be selected if our node doesnot has ctrlWidget)
         self._dummyWidget = QtWidgets.QWidget(self)
@@ -74,7 +70,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._nodeNameCompleter.setModel(self.uiData.nodeNamesModel())
         self._nodeNameCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.lineEdit_nodeSelect.setCompleter(self._nodeNameCompleter)
-        self.lineEdit_nodeSelect.setPlaceholderText('Type Node Name Here')
         # set tree view of node library
         fill_widget(self.treeWidget, self.uiData.nodeNamesTree())
 
@@ -622,7 +617,7 @@ class uiData(QtCore.QObject):
 
         self.win.resize(settings.value('mainwindow/size', QtCore.QSize(800, 800)))
         self.win.move(settings.value('mainwindow/pos', QtCore.QPoint(400, 400)))
-        self.win.splitter.setSizes(settings.value('mainwindow/splitter_sizes', [300, 500]))
+        self.win.splitter.setSizes(settings.value('mainwindow/splitter_sizes', [150, 500]))
 
         if settings.value('mainwindow/state') is not None:
             self.win.restoreState(settings.value('mainwindow/state'))

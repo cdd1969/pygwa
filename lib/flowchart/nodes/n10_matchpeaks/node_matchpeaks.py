@@ -9,7 +9,7 @@ from lib.functions.general import isNumpyDatetime
 
 class matchPeaksNode(NodeWithCtrlWidget):
     """Match peaks from two DataFrames. Peaks should be detected before"""
-    nodeName = "matchpeaks"
+    nodeName = "Match Peaks"
     uiTemplate = [
             {'name': 'Match Option', 'type': 'list', 'value': 'Closest Time', 'default': 'Closest Time', 'values': ['Closest Time'], 'tip': 'Match option:\n"Closest Time" - match gw_peaks which have closest datetime to w_peaks'},
             {'name': 'Closest Time', 'type': 'group', 'children': [

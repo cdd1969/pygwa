@@ -15,7 +15,7 @@ class makeTimeseriesCurveNode(NodeWithCtrlWidget):
     """Prepare Timeseries for plotting. Generate curve that can be viewed with node *TimeseriesPlot*
     and pd.Series with datetime stored in Index
     """
-    nodeName = "makeTimeseriesCurve"
+    nodeName = "Make Curve"
     uiTemplate = [
         {'name': 'Y:signal', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Signal Data-Values (Y-axis)'},
         {'name': 'X:datetime', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Datetime Values (X-axis)'},

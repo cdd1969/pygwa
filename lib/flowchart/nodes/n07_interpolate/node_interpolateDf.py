@@ -14,7 +14,7 @@ from lib.functions.interpolate import applyInterpolationBasedOnRanges, createInt
 
 class interpolateDfNode(NodeWithCtrlWidget):
     """Interpolate missing data in given DataFrame"""
-    nodeName = "interpolate"
+    nodeName = "Interpolate"
 
     def __init__(self, name, parent=None, **kwargs):
         super(interpolateDfNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}, 'Out': {'io': 'out'}}, color=(250, 250, 150, 150), **kwargs)

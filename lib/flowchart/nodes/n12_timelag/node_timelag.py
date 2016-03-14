@@ -9,7 +9,7 @@ from lib.functions.general import isNumpyDatetime
 
 class timeLagNode(NodeWithCtrlWidget):
     """Calculate Timelag comparing given river and groundwater hydrogrpahs"""
-    nodeName = "TimeLag"
+    nodeName = "Time Lag"
     uiTemplate = [
             {'name': 'river', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Column name with RIVER hydrograph data\nin `df_w` dataframe'},
             {'name': 'river_dtime', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Location of the datetime objects\nin `df_w` dataframe'},

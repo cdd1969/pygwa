@@ -59,12 +59,12 @@ def generate_tide(t0, dt, tend, components={}, label='GenCurve', equation='tide'
         return
     # >>> create datetime array
     T_datetime = np.arange(t0, tend+dt, dt)  # array with np.datetime64 objects for generating timeseries
-    T_hours = (T_datetime - t0) / np.timedelta64(1, 'h')  # array with floats (hours) for calculating curve
+    #T_hours = (T_datetime - t0) / np.timedelta64(1, 'h')  # array with floats (hours) for calculating curve
     T_sec = (T_datetime - t0) / np.timedelta64(1, 's')  # array with floats (seconds) for calculating curve
 
     # >>> initialize curve array
     W = kwargs.get('W', 0.)  # get default elevation
-    H = np.zeros(len(T_hours)) + W
+    H = np.zeros(len(T_sec)) + W
     
     # >>> do curve calculations for each tide component and sum them
     for name, opts in components.iteritems():
@@ -74,7 +74,7 @@ def generate_tide(t0, dt, tend, components={}, label='GenCurve', equation='tide'
             H += ferris1951curve(t=T_sec, A=opts['A'], omega=opts['omega'], phi=opts['phi'], D=kwargs['D'], x=kwargs['x'])
         elif equation == 'xia':
             H += xia2007curve(t=T_sec, x=kwargs['x'],
-                A=opts['A'], omega=opts['omega']/3600., phi0=opts['phi'],
+                A=opts['A'], omega=opts['omega'], phi0=opts['phi'],
                 alpha=kwargs['alpha'], beta=kwargs['beta'], theta=kwargs['theta'],
                 L=kwargs['L'], K1=kwargs['K1'], b1=kwargs['b1'],
                 K=kwargs['K'], b=kwargs['b'],

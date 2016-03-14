@@ -13,7 +13,7 @@ from lib.functions.devlin2003 import devlin2003pandas, devlin2003, angle2bearing
 
 class gradientNode(NodeWithCtrlWidget):
     """Estimate hydraulic gradient using head data of multiple wells (method of Devlin 2003) for a given timestep"""
-    nodeName = "Gradient"
+    nodeName = "Hydraulic Gradient"
     uiTemplate = [
             {'title': 'Well X/Y coordinates', 'name': 'coords_grp', 'type': 'group', 'children': [
                 {'name': 'x', 'type': 'list', 'value': None, 'values': [None], 'tip': 'Name of the column in <coord> dataframe with x-coordinates'},

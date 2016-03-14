@@ -1,6 +1,6 @@
 {
     "filename":  "node_joincol.py",
     "classname": "joinColNode",
-    "libpath": ["Operands"],
+    "libpath": ["Table"],
     "override": true
 }

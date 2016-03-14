@@ -11,7 +11,7 @@ from lib.functions.general import isNumpyDatetime, isNumpyNumeric
 
 class tidalEfficiencyNode(NodeWithCtrlWidget):
     """Calculate Tidal Efficiency comparing given river and groundwater hydrogrpahs"""
-    nodeName = "tidalEfficiency"
+    nodeName = "Tidal Efficiency"
     uiTemplate = [
             {'name': 'river', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Column name with RIVER hydrograph data'},
             {'name': 'gw', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Column name with GROUNDWATER hydrograph data'},

@@ -10,7 +10,7 @@ from lib.common.ScatterPlotWidget import ScatterPlotWidget
 
 class scatterPlotWidgetNode(NodeWithCtrlWidget):
     """Explore data with a scatter plot widget"""
-    nodeName = "ScatterPlot"
+    nodeName = "Plot Scatter"
     uiTemplate = [ {'name': 'Plot', 'type': 'action'}]
 
     def __init__(self, name, parent=None):

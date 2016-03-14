@@ -11,7 +11,7 @@ from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 
 class readXLSNode(NodeWithCtrlWidget):
     """Read data from spreadsheet"""
-    nodeName = "readXLS"
+    nodeName = "Read XLS"
     uiTemplate = [
             {'name': 'Select File', 'type': 'action', 'value': None},
             {'name': 'Parameters', 'type': 'group', 'children': [

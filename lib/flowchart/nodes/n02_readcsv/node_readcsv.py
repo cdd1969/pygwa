@@ -11,7 +11,7 @@ from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 
 class readCSVNode(NodeWithCtrlWidget):
     """Load column-based data from ASCII file"""
-    nodeName = "readCSV"
+    nodeName = "Read CSV"
     uiTemplate = [
             {'name': 'Select File', 'type': 'action', 'value': None},
             {'name': 'Load CSV parameters', 'type': 'group', 'children': [

@@ -64,13 +64,12 @@ class addNode(NodeWithCtrlWidget):
 
 
         kwargs = self.CW().prepareInputArguments()
-        print kwargs
         # ------------------------------------------------------
         del self.df
         self.df = A.copy()  #maybe need to use deepcopy
         
         # actually do add operation
-        if kwargs['b'] in [SPACE, None]:
+        if kwargs['b'] in [SPACE, None, '']:
             self.df[kwargs['a']] += kwargs['c']
         else:
             self.df[kwargs['a']] = self.df[kwargs['a']] + B[kwargs['b']] + kwargs['c']

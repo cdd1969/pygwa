@@ -9,7 +9,7 @@ from lib.functions.detectpeaks import detectPeaks_ts
 
 class detectPeaksTSNode(NodeWithCtrlWidget):
     """Detect peaks (minima/maxima) from passed TimeSeries, check period"""
-    nodeName = "detectPeaks_ts"
+    nodeName = "Detect Peaks"
     uiTemplate = [
         {'name': 'column', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Column name with hydrograph data'},
         {'name': 'datetime', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Location of the datetime objects.'},

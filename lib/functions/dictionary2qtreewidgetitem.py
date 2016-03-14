@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QTreeWidgetItem
 from pyqtgraph import OrderedDict
 from pyqtgraph.flowchart.NodeLibrary import isNodeClass
+from pyqtgraph.Qt import QtGui
 
 
 def fill_item(item, value):
@@ -11,6 +12,11 @@ def fill_item(item, value):
             child.setText(0, unicode(key))
             if isNodeClass(val) and hasattr(val, '__doc__'):  # this means that `val` is Node instance
                 child.setToolTip(0, unicode(val.__doc__))
+            else:
+                # make group keys bold, italic and with gray background
+                font = QtGui.QFont("Ubuntu", 10, QtGui.QFont.Bold, True)
+                child.setFont(0, font)
+                child.setBackground(0, QtGui.QBrush(QtGui.QColor('#C0C0C0')))
             item.addChild(child)
             fill_item(child, val)
 

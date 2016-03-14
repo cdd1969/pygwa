@@ -5,6 +5,8 @@ from pyqtgraph.Qt import QtGui
 from pyqtgraph import configfile as configfile
 import traceback
 import os
+from pyqtgraph.flowchart.Terminal import Terminal
+from numpy import ndarray
 
 
 class customFlowchart(Flowchart):
@@ -26,6 +28,8 @@ class customFlowchart(Flowchart):
         self.inputNode.graphicsItem().hide()
         self.outputNode.graphicsItem().hide()
         self._nodeCopyPasteBuffer = None
+
+        self.widget().chartWidget.hoverOver = self.hoverOver  # this thing is not working....
 
     def loadFile(self, fileName=None, startDir=None):
         #print( 'loadFile called with fname:', fileName)
@@ -118,3 +122,31 @@ class customFlowchart(Flowchart):
         if not hasattr(item, 'node') or not isinstance(item.node, Node):
             return False
         return True
+
+
+    def hoverOver(self, items):
+        ''' overriding default method of 
+            self.widget().chartWidget.hoverOver()
+         due to decoding problem'''
+        #print "FlowchartWidget.hoverOver called."
+        wdg = self.widget().chartWidget
+        term = None
+        for item in items:
+            if item is wdg.hoverItem:
+                return
+            wdg.hoverItem = item
+            if hasattr(item, 'term') and isinstance(item.term, Terminal):
+                term = item.term
+                break
+        if term is None:
+            wdg.hoverText.setPlainText("")
+        else:
+            val = term.value()
+            if isinstance(val, ndarray):
+                val = "{0} {1} {2}".format(type(val).__name__, str(val.shape), str(val.dtype))
+            else:
+                val = str(val)
+                if len(val) > 400:
+                    val = val[:400] + "..."
+            wdg.hoverText.setPlainText("{0}.{1} = {2}".format(term.node().name(), term.name(), val).decode('utf-8'))
+            #wdg.hoverLabel.setCursorPosition(0)

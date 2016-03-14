@@ -1,11 +1,10 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
 from __future__ import division
-from math import pi as pi
-from math import log as log
-from math import exp as exp
-from math import sin as sin
-from math import cos as cos
+from math import pi
+from math import log
+from math import exp
+from math import sqrt
 import numpy as np
 
 
@@ -106,7 +105,6 @@ def h(t=[], A=0., omega=0., phi=0., D=0., x=0.):
             groundwater head at distance `x` from shoreline at time `t` with respect to
             the mean groundwater level (i.e. amplitude)
     '''
-
-    h = A * exp(-x*(omega/2./D)**0.5) * np.cos(omega*t - x*(omega/2./D)**0.5+phi)
+    h = A * exp(-x*sqrt(omega/2./D)) * np.cos(omega*t - x*sqrt(omega/2./D) + phi)
 
     return h

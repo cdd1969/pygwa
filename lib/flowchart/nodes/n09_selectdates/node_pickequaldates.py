@@ -9,7 +9,7 @@ from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 
 class pickEqualDatesNode(NodeWithCtrlWidget):
     """Select values in dataframe based on passed dates from another dataframe"""
-    nodeName = "pickEqualDates"
+    nodeName = "Select Date-Rows"
     uiTemplate = [
             {'name': 'datetime <pattern>', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Location of the datetime objects.\nBy default is `None`, meaning that datetime objects are\nlocated within `pd.DataFrame.index`. If not `None` - pass the\ncolumn-name of dataframe where datetime objects are located.'},
             {'name': 'datetime <pickFrom>', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Location of the datetime objects.\nBy default is `None`, meaning that datetime objects are\nlocated within `pd.DataFrame.index`. If not `None` - pass the\ncolumn-name of dataframe where datetime objects are located.'},

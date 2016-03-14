@@ -11,8 +11,8 @@ from lib.functions.general import isNumpyNumeric
 
 
 class genCurveNode(NodeWithCtrlWidget):
-    """Generate Curve"""
-    nodeName = "Generate Curve"
+    """Generate Signal based on different governing equations"""
+    nodeName = "Generate Signal"
     uiTemplate = [
             {'title': 'Curve Label', 'name': 'label', 'type': 'str', 'value': 'Generated Curve', 'tip': 'Label of the curve to be displayed in pd.DataFrame'},
             {'title': 'Governing Equation', 'name': 'eq', 'type': 'list', 'values':
@@ -45,17 +45,17 @@ class genCurveNode(NodeWithCtrlWidget):
 
                 {'title': 'Distance to shore', 'name': 'x', 'type': 'float', 'suffix': ' m', 'value': 0., 'limits': (0., 10.e10), 'tip': 'Distance between the observation point in aquifer and the shore-line'},
 
-                {'title': 'Skeleton compressibility', 'name': 'alpha', 'type': 'float', 'suffix': ' m*s**2/kg', 'value': 1.e-8, 'step': 0.00001, 'limits': (0., 1), 'tip': 'Compressibility of the confined aquifers skeleton. Used for calculation of Specific Storage Ss'},
-                {'title': 'Water compressibility', 'name': 'beta', 'type': 'float', 'suffix': ' m*s**2/kg', 'value': 4.8e-10, 'step': 0.00001, 'limits': (0., 1), 'tip': 'Compressibility of pore water in the confined aquifer. Used for calculation of Specific Storage Ss'},
+                {'title': 'Skeleton compressibility', 'name': 'alpha', 'type': 'float', 'suffix': ' 1/Pa', 'value': 1.e-8, 'minStep': 1.e-10, 'dec': True, 'limits': (0., 1), 'tip': 'Compressibility of the confined aquifers skeleton. Used for calculation of Specific Storage Ss (units s**2*m/kg)'},
+                {'title': 'Water compressibility', 'name': 'beta', 'type': 'float', 'suffix': ' 1/Pa', 'value': 4.8e-10, 'minStep': 1.e-10, 'dec': True, 'limits': (0., 1), 'tip': 'Compressibility of pore water in the confined aquifer. Used for calculation of Specific Storage Ss (units s**2*m/kg)'},
                 {'title': 'Porosity', 'name': 'theta', 'type': 'float', 'value': 0.40, 'step': 0.01, 'limits': (0., 1), 'tip': 'Porosity (dimensionless) of the aquifer. Used for calculation of Specific Storage Ss'},
 
                 {'title': 'Roof length', 'name': 'L', 'type': 'float', 'suffix': ' m', 'value': 100., 'limits': (0., 10.e10), 'tip': 'Distance to which aquifers roof extends into the sea'},
                 {'title': 'Infinite Roof length', 'name': 'L_inf', 'type': 'bool', 'value': False, 'tip': 'Check this to set roof length to infinity'},
-                {'title': 'Kf (roof)', 'name': 'K1', 'type': 'float', 'suffix': ' m/s', 'value': 1.e-6, 'step': 0.00001, 'limits': (0., 1), 'tip': 'Vertical hydraulic conductivity of the aquifer roof'},
-                {'title': 'b (roof)', 'name': 'b1', 'type': 'float', 'suffix': ' m', 'value': 5., 'step': 0.1, 'limits': (0., 100), 'tip': 'Thickness of the aquifer roof'},
-                {'title': 'Kf (aquifer)', 'name': 'K', 'type': 'float', 'suffix': ' m/s', 'value': 1.e-4, 'step': 0.00001, 'limits': (0., 1), 'tip': 'Hydraulic conductivity of the (leaky) confined aquifer'},
-                {'title': 'b (aquifer)', 'name': 'b', 'type': 'float', 'suffix': ' m', 'value': 20., 'step': 1, 'limits': (0., 1000), 'tip': 'Thickness of the (leaky) cofined aquifer'},
-                {'title': 'Kf (capping)', 'name': 'K_cap', 'type': 'float', 'suffix': ' m/s', 'value': 1.e-6, 'step': 0.00001, 'limits': (0., 1), 'tip': 'Permeability of the outlet-capping'},
+                {'title': 'Kf (roof)', 'name': 'K1', 'type': 'float', 'suffix': ' m/s', 'value': 1.e-6, 'minStep': 1.e-10, 'dec': True, 'limits': (0., 1), 'tip': 'Vertical hydraulic conductivity of the aquifer roof'},
+                {'title': 'b (roof)', 'name': 'b1', 'type': 'float', 'suffix': ' m', 'value': 5., 'step': 0.1, 'limits': (0.001, 100), 'tip': 'Thickness of the aquifer roof'},
+                {'title': 'Kf (aquifer)', 'name': 'K', 'type': 'float', 'suffix': ' m/s', 'value': 1.e-4, 'minStep': 1.e-10, 'dec': True, 'limits': (0., 1), 'tip': 'Hydraulic conductivity of the (leaky) confined aquifer'},
+                {'title': 'b (aquifer)', 'name': 'b', 'type': 'float', 'suffix': ' m', 'value': 20., 'dec': True, 'limits': (0.1, 1000), 'tip': 'Thickness of the (leaky) cofined aquifer'},
+                {'title': 'Kf (capping)', 'name': 'K_cap', 'type': 'float', 'suffix': ' m/s', 'value': 1.e-6, 'minStep': 1.e-10, 'dec': True, 'limits': (0., 1), 'tip': 'Permeability of the outlet-capping'},
                 {'title': 'b (capping)', 'name': 'b_cap', 'type': 'float', 'suffix': ' m', 'value': 1., 'step': 0.1, 'limits': (0., 100), 'tip': 'Thickness of the aquifers outlet-capping'},
                 {'title': 'Specific Storage', 'name': 'Ss', 'type': 'float', 'suffix': ' 1/m', 'value': -999., 'readonly': True},
                 {'title': 'Diffusivity', 'name': 'D', 'type': 'float', 'suffix': ' m**2/s', 'value': -999., 'readonly': True},

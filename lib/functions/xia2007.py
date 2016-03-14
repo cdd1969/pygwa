@@ -5,8 +5,6 @@ from math import pi
 from math import sqrt
 from math import log
 from math import exp
-from math import sin
-from math import cos
 import numpy as np
 from numpy import arctan
 
@@ -202,13 +200,62 @@ def h(t=[], x=0,
     '''
     g = 9.81  #gravity acceleration [m/s**2]
 
-    # DETERMINE THE CASE
-    if L == float('inf') and K1 != 0. and b1 != float('inf'):
-        CASE = 1  # infinite roof, leakage
-    elif L == float('inf') and (K1 == 0. or b1 == float('inf')):
-        CASE = 2  # infinite roof, no leakage
+    # -----------------------------
+    # Determine part leakage status
+    # -----------------------------
+    # Roof confining layer
+    if b1 == 0.:
+        raise ValueError('ROOF-confinig layer cannot have 0. thickness')
+    elif b1 > 0. and 0. < K1 < float('inf'):
+        ROOF = 'permeable'
+    elif b1 == float('inf') or K1 == 0.:
+        ROOF = 'impermeable'
     else:
+        raise NotImplementedError('ROOF detected with error')
+
+    # Capping
+    if b_cap == 0.:
+        CAPPING = None
+    elif b_cap > 0. and 0. < K_cap < float('inf'):
+        CAPPING = 'permeable'
+    elif b_cap == float('inf') or K_cap == 0.:
+        CAPPING = 'impermeable'
+    else:
+        raise NotImplementedError('CAPPING detected with error')
+
+    # DETERMINE THE CASE
+    CASE = None
+    if L == float('inf'):
+        if ROOF is 'permeable':
+            CASE = 1  # infinite roof, with roof leakage
+    
+        elif ROOF is 'impermeable':
+            CASE = 2  # infinite roof, without roof leakage
+    
+    elif L == 0.:
+        if CAPPING is 'permeable' and ROOF is 'permeable':
+            CASE = 3  # zero offshore length, with capping, with leakage
+    
+        elif not CAPPING and ROOF is 'permeable':
+            CASE = 4  # zero ofsshore length, without capping, with leakage
+    
+        elif not CAPPING and ROOF is 'impermeable':
+            CASE = 5  # zero ofsshore length, without capping, without leakage
+    
+    elif L != 0.:
+        if CAPPING is 'impermeable':
+            CASE = 6  # confined aquifer with an impermeable outlet
+    
+        elif CAPPING is 'permeable' and ROOF is 'impermeable':
+            CASE = 7  # confined aquifer with an impermeable roof + permeable capping
+    
+    
+    if CASE is None:
+        print('ROOF is {0}, CAPPING is {1}, ROOG LENGTH is {2}'.format(ROOF, CAPPING, L))
         raise NotImplementedError('This case is currently not implemented')
+
+    #print('ROOF is {0}, CAPPING is {1}, ROOG LENGTH is {2}'.format(ROOF, CAPPING, L))
+    #print 'xia2007 > CASE', CASE
 
     # -------------------------------------------------------------------
     # Ss = specific storage [1/m]
@@ -226,13 +273,16 @@ def h(t=[], x=0,
     Ls = K1/b1
 
     # a = Confined aquifer's tidal wave propogation parameter [1/m]
-    a = sqrt(omega/2.*S/T)
+    a = sqrt(omega/2.*Ss/K)
 
     # u = dimensionless leakage of the semipermeable layer
     u = Ls/(omega*S)
 
     # sigma = dimensionlesss leakance of the outlet-capping
-    sigma = K_cap/(a*b_cap*K)
+    try:
+        sigma = K_cap/(a*b_cap*K)
+    except ZeroDivisionError:
+        sigma = float('inf')
 
     # -------------------------------------------------------------------
     p = sqrt(sqrt(1+u**2)+u)  # [-]
@@ -244,7 +294,8 @@ def h(t=[], x=0,
     if CASE == 1:
         # -------------------------------------------------------------------
         # Case 1.
-        # Confined aquifer extending under the sea infinitely
+        # Leaky confined aquifer extending under the sea infinitely
+        # Same as Li and Jiao 2001
         # -------------------------------------------------------------------
         C_inf = 0.5 * sqrt( (u**2+Le**2)/(u**2+1) )
         phi_inf = arctan( ((1-Le)*u)/(u**2+Le) )
@@ -257,12 +308,93 @@ def h(t=[], x=0,
     elif CASE == 2:
         # -------------------------------------------------------------------
         # Case 2.
-        # Confined aquifer extending under the sea infinitely
-        # with impermeable roof
+        # Confined aquifer extending under the sea infinitely, impermeable roof
+        # Same as Van der Kamp 1972
         # -------------------------------------------------------------------
         if x >= 0.:
             h = 0.5*Le*A*exp(a*x)*np.cos(omega*t - a*x + phi0)
         else:
             h = Le*A*np.cos(omega*t+phi0) - 0.5*Le*A*exp(a*x)*np.cos(omega*t + a*x + phi0)
+
+    elif CASE == 3:
+        # -------------------------------------------------------------------
+        # Case 3.
+        # Leaky confined aquifer with zero offshore length, with capping
+        # Same as Ren et al 2007
+        # -------------------------------------------------------------------
+        if x >= 0.:
+            h = A*sigma/sqrt((p+sigma)**2+q**2) * exp(-a*p*x)*np.cos(omega*t - a*q*x - arctan(q/(sigma+p)) + phi0)
+        else:
+            raise ValueError('Invalid `x` {0}. With L=0, `x` must be >= 0'.format(x))
     
+    elif CASE == 4:
+        # -------------------------------------------------------------------
+        # Case 4.
+        # Leaky confined aquifer with zero offshore length, without capping
+        # Same as Jiao and Tang 1999
+        # -------------------------------------------------------------------
+        if x >= 0.:
+            h = A*exp(-a*p*x)*np.cos(omega*t - a*q*x + phi0)
+        else:
+            raise ValueError('Invalid `x` {0}. With L=0, `x` must be >= 0'.format(x))
+    
+    elif CASE == 5:
+        # -------------------------------------------------------------------
+        # Case 5.
+        # Confined aquifer with zero offshore length, without capping, without leakage
+        # Same as Serfes 1951
+        # -------------------------------------------------------------------
+        if x >= 0.:
+            h = A*exp(-a*x)*np.cos(omega*t - a*x + phi0)
+        else:
+            raise ValueError('Invalid `x` {0}. With L=0, `x` must be >= 0'.format(x))
+
+    elif CASE == 6:
+        # -------------------------------------------------------------------
+        # Case 6.
+        # Leaky confined aquifer with impermeable capping.
+        # Tidal River scenario with x = 0 and x = -2L representing river banks
+        # -------------------------------------------------------------------
+
+        h = A/2. * (Lambda * (exp(-a*p*x)*np.cos(omega*t - a*p*x + phi0) - exp(-a*p*(x+2*L)) *
+            np.cos(omega*t - a*q*(x+2*L) + phi0)) + mu*( exp(-a*p*x) * np.sin(omega*t - a*q*x + phi0) -
+            exp(-a*p*(x+2*L)) * np.sin(omega*t - a*q*(x+2*L) + phi0) ) )
+    
+    elif CASE == 7:
+        # -------------------------------------------------------------------
+        # Case 7.
+        # Confined aquifer with an impermeable roof and permeable capping
+        # Same as Li et al 2007
+        # -------------------------------------------------------------------
+
+        mu_Li = K_cap / (b_cap * K)  # param `mu` defined by Li2007 is different from `mu` in Xia2007
+
+        psi1 = arctan( 2.*sigma / (sigma**2 - 2.) )
+        psi2 = arctan( 1. / (1. + sigma) )
+
+        nu = Le * exp(-a*L) / (sigma**2 + 2*sigma + 2) * (1./2.*exp(-a*L) * ((sigma**2 - 2)*np.cos(2*a*L) -
+            2*sigma*np.sin(2*a*L)) + (1 - Le)/Le * ((sigma**2 + sigma)*np.cos(a*L) - sigma*np.sin(a*L)))
+
+        xi = Le * exp(-a*L) / (sigma**2 + 2*sigma + 2) * (1./2.*exp(-a*L) * (2*sigma*np.cos(2*a*L) -
+            (sigma**2 - 2)*np.sin(2*a*L)) + (1 - Le)/Le * ((sigma**2 + sigma)*np.sin(a*L) - sigma*np.cos(a*L)))
+
+        C = sqrt((nu + Le/2.)**2 + xi**2)
+        phi = arctan(2*xi / (2*nu + Le))
+        
+
+
+        if x >= 0.:
+
+            h = A*C*exp(-a*x) * np.cos(omega*t - a*x - phi + phi0)
+
+        elif x < 0. and x > -L:
+            
+            h0 = (0.5*sqrt(sigma**4+4)/(sigma**2+2*sigma+2) * exp(-a*(x+2*L)) * np.cos(omega*t - a*(x+2*L) - psi1 + phi0) +
+                sigma/sqrt(sigma**2+2*sigma+2) * (1-Le)/Le * exp(-a*(x+L)) * np.cos(omega*t - a*(x+L)) - psi2 + phi0)
+
+            h = A*Le * (np.cos(omega*t + phi0) - 0.5*exp(a*x)*np.cos(omega*t + a*x + phi0) + h0)
+        else:
+            raise ValueError('Invalid `x` {0}. Should be in range [-L, +inf]'.format(x))
+
+        
     return h

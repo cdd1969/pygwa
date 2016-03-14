@@ -18,7 +18,7 @@ from lib.common.TableView import TableView
 
 class QuickViewNode(Node):
     """View dataframe in TableView/Matplotlib-plot"""
-    nodeName = "QuickView"
+    nodeName = "Quick View"
 
     def __init__(self, name, parent=None):
         super(QuickViewNode, self).__init__(name, terminals={'In': {'io': 'in'}})

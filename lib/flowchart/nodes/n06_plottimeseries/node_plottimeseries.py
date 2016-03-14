@@ -13,7 +13,7 @@ from lib.common.DateAxisItem import DateAxisItem
 
 class plotTimeseriesNode(NodeWithCtrlWidget):
     """Convinient widget for visualizing timeseries"""
-    nodeName = "TimeseriesPlot"
+    nodeName = "Plot Curves"
     uiTemplate = [
         {'name': 'Y:Label', 'type': 'str', 'value': 'Water level', 'default': 'Water level'},
         {'name': 'Y:Units', 'type': 'str', 'value': 'm AMSL', 'default': 'm AMSL'},
