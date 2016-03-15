@@ -248,6 +248,9 @@ def h(t=[], x=0,
     
         elif CAPPING is 'permeable' and ROOF is 'impermeable':
             CASE = 7  # confined aquifer with an impermeable roof + permeable capping
+
+        elif CAPPING is 'permeable' and ROOF is 'permeable':
+            CASE = 8  # most general case
     
     
     if CASE is None:
@@ -290,7 +293,6 @@ def h(t=[], x=0,
     Lambda = (u**2 + Le)/(u**2 + 1)
     mu = - ((1-Le)*u)/(u**2+1)
 
-
     if CASE == 1:
         # -------------------------------------------------------------------
         # Case 1.
@@ -302,8 +304,12 @@ def h(t=[], x=0,
         
         if x >= 0.:
             h = A * C_inf * exp(-a*p*x) * np.cos(omega*t - a*q*x - phi_inf + phi0)
+        
+        elif x < 0. and x > -L:
+            h = Lambda*A*np.cos(omega*t + phi0) - mu*A*np.sin(omega*t + phi0) - 0.5*A*exp(
+                -a*p*x) * ( Lambda*np.cos(omega*t+a*q*x + phi0) + mu*np.sin(omega*t + a*q*x + phi0) )
         else:
-            raise NotImplementedError()
+            raise ValueError('Invalid `x` {0}. Should be in range [-L, +inf]'.format(x))
 
     elif CASE == 2:
         # -------------------------------------------------------------------
@@ -381,20 +387,43 @@ def h(t=[], x=0,
         C = sqrt((nu + Le/2.)**2 + xi**2)
         phi = arctan(2*xi / (2*nu + Le))
         
-
-
         if x >= 0.:
-
             h = A*C*exp(-a*x) * np.cos(omega*t - a*x - phi + phi0)
 
         elif x < 0. and x > -L:
-            
             h0 = (0.5*sqrt(sigma**4+4)/(sigma**2+2*sigma+2) * exp(-a*(x+2*L)) * np.cos(omega*t - a*(x+2*L) - psi1 + phi0) +
                 sigma/sqrt(sigma**2+2*sigma+2) * (1-Le)/Le * exp(-a*(x+L)) * np.cos(omega*t - a*(x+L)) - psi2 + phi0)
 
             h = A*Le * (np.cos(omega*t + phi0) - 0.5*exp(a*x)*np.cos(omega*t + a*x + phi0) + h0)
         else:
             raise ValueError('Invalid `x` {0}. Should be in range [-L, +inf]'.format(x))
+    
+    elif CASE == 8:
+        # -------------------------------------------------------------------
+        # Case 8.
+        # Leaky confined aquifer extending under the sea for L with permeable capping
+        # Most general case
+        # -------------------------------------------------------------------
+        _k1_ = exp(-a*p*L)/((sigma + p)**2 + q**2)
+        _k2_ = (sigma*(1.-Lambda)*(sigma+p) - q*mu*sigma)
+        _k3_ = (q*sigma*(1-Lambda) + sigma*mu*(sigma+p))
+        _k4_ = 0.5*exp(-a*p*L)
+        _k5_ = Lambda*(sigma-p)*(sigma+p) - Lambda*q**2 + 2.*mu*q*sigma
+        _k6_ = mu*(sigma-p)*(sigma+p) - mu*q**2 - 2.*Lambda*q*sigma
 
+        nu = _k1_ * ( _k2_*np.cos(a*q*L) - _k3_*np.sin(a*q*L) + _k4_*(_k5_*np.cos(2*a*q*L) + _k6_*np.sin(2*a*q*L)))
+        xi = _k1_ * ( _k2_*np.sin(a*q*L) - _k3_*np.cos(a*q*L) + _k4_*(_k5_*np.sin(2*a*q*L) + _k6_*np.cos(2*a*q*L)))
         
+        if x >= 0.:
+            phi = arctan( (2.*xi - mu)/(2.*nu + Lambda) )
+            Ce = sqrt((nu+Lambda/2.)**2 + (xi - nu/2.)**2)
+            h = A*Ce*exp(-a*p*x) * np.cos(omega*t - a*q*x - phi + phi0)
+        
+        elif x < 0. and x > -L:
+            h = (A*exp(-a*p*x)*( nu*np.cos(omega*t - a*q*x + phi0) + xi*np.sin(omega*t - a*q*x)) +
+                Lambda*A*np.cos(omega*t+phi0) - mu*A*np.sin(omega*t+phi0) - 0.5*exp(-a*p*x)*(
+                Lambda*A*np.cos(omega*t+a*q*x+phi0) + mu*np.sin(mu*np.sin(omega*t+a*q*x+phi0))))
+        else:
+            raise ValueError('Invalid `x` {0}. Should be in range [-L, +inf]'.format(x))
+
     return h
