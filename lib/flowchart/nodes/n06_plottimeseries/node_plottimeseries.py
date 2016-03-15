@@ -324,7 +324,7 @@ class plotTimeseriesNodeCtrlWidget(NodeCtrlWidget):
         self._gr = self._parent.graphicsWidget()
         self.on_yAxisLabelUnitsChanged()  #on init, it is important that WINDOW is already inited
 
-        self.param('Plot').sigActivated.connect(self._gr.win.show)
+        self.param('Plot').sigActivated.connect(self.on_plot_activated)
         #self.param('Label').sigValueChanged.connect(self._gr.setLabel)
         self.param('Y:Label').sigValueChanged.connect(self.on_yAxisLabelUnitsChanged)
         self.param('Y:Units').sigValueChanged.connect(self.on_yAxisLabelUnitsChanged)
@@ -343,3 +343,7 @@ class plotTimeseriesNodeCtrlWidget(NodeCtrlWidget):
         for p in self.params():
             kwargs[p.name()] = p.value()
         return kwargs
+
+    def on_plot_activated(self):
+        self._gr.win.show()
+        self._gr.win.activateWindow()

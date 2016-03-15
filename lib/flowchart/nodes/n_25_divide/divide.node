@@ -1,6 +1,6 @@
 {
     "filename":  "node_divide.py",
     "classname": "divideNode",
-    "libpath": ["Operands"],
+    "libpath": ["Table", "Operands"],
     "override": true
 }

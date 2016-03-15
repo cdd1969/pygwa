@@ -54,9 +54,8 @@ class customFlowchart(Flowchart):
             self.inputNode.graphicsItem().hide()
             self.outputNode.graphicsItem().hide()
         except Exception, err:
-            traceback.print_exc()
             self.clear()
-            QtGui.QMessageBox.warning(self.parent, "Load Flowchart", "Cannot load flowchart from file <i>{0}</i>".format(fileName))
+            QtGui.QMessageBox.warning(self.parent, "Load Flowchart", 'Cannot load flowchart from file <i>{0}</i> <br><br>  <i>{1}</i>'.format(fileName, traceback.format_exc()))
             return
     
     def saveFile(self, fileName=None, startDir=None, suggestedFileName='flowchart.fc'):

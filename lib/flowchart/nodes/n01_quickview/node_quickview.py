@@ -117,9 +117,8 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
             self.twWindow.setWindowTitle(self.parent().nodeName+': Table View')
             self.twWindow.setCentralWidget(self.tableView)
             self.twWindow.resize(1000, 800)
-            self.twWindow.show()
-        else:
-            self.twWindow.show()
+        self.twWindow.show()
+        self.twWindow.activateWindow()
 
 
 

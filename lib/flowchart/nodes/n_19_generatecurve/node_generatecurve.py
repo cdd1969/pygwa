@@ -3,7 +3,7 @@
 from __future__ import division
 from pyqtgraph.Qt import QtCore
 import numpy as np
-
+from pyqtgraph import BusyCursor
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.tide import generate_tide
 from lib.functions.general import isNumpyNumeric
@@ -22,13 +22,13 @@ class genCurveNode(NodeWithCtrlWidget):
                 },
                 'tip': 'Equation to generate curve. See documentation'
             },
+            {'title': 'Constant to add', 'name': 'W', 'type': 'float', 'value': 0., 'suffix': ' m', 'tip': 'Constant value [meters] to be added to generated signal. Usefull to fit to average water level.'},
             {'title': 'Tide Components', 'name': 'tides_grp', 'type': 'group', 'children': [
                 {'title': 'N Signal Components', 'name': 'n_sig', 'type': 'int', 'readonly': True},
                 {'title': 'Amplitude', 'name': 'A', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Name of the column with Amplitude data in dataframe in input terminal'},
                 {'title': 'Angular Velocity', 'name': 'omega', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Name of the column with Angular Velocity data in dataframe in input terminal'},
                 {'title': 'Phase Shift', 'name': 'phi', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Name of the column with Phase Shift data in dataframe in input terminal'},
             ]},
-            {'title': 'Constant to add', 'name': 'W', 'type': 'float', 'value': 0., 'suffix': ' m', 'tip': 'Constant value [meters] to be added to generated signal. Usefull to fit to average water level.'},
 
             {'title': 'Time Options', 'name': 't_grp', 'type': 'group', 'expanded': True, 'children': [
                 {'title': 'Start', 'name': 't0', 'type': 'str', 'value': '2015-12-31 00:00:00', 'default': '2015-12-31 00:00:00', 'tip': 'Datetime of the initial timestep'},
@@ -118,22 +118,22 @@ class genCurveNode(NodeWithCtrlWidget):
 
             #print i, ': a={0}, omega={1}, phi={2}'.format(kwargs['tides'][str(i)]['A'], kwargs['tides'][str(i)]['omega'], kwargs['tides'][str(i)]['phi']  )
 
+        with BusyCursor():
+            if kwargs['eq'] == 'tide':
+                df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], label=kwargs['label'], equation=kwargs['eq'])
+            elif kwargs['eq'] == 'ferris':
+                df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], label=kwargs['label'], equation=kwargs['eq'],
+                    D=kwargs['ferris']['D'], x=kwargs['ferris']['x'])
+            elif kwargs['eq'] == 'xia':
+                df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], label=kwargs['label'], equation=kwargs['eq'],
+                    x=kwargs['xia']['x'],
+                    alpha=kwargs['xia']['alpha'], beta=kwargs['xia']['beta'], theta=kwargs['xia']['theta'],
+                    L=kwargs['xia']['L'], K1=kwargs['xia']['K1'], b1=kwargs['xia']['b1'],
+                    K=kwargs['xia']['K'], b=kwargs['xia']['b'],
+                    K_cap=kwargs['xia']['K_cap'], b_cap=kwargs['xia']['b_cap'])
 
-        if kwargs['eq'] == 'tide':
-            df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], label=kwargs['label'], equation=kwargs['eq'])
-        elif kwargs['eq'] == 'ferris':
-            df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], label=kwargs['label'], equation=kwargs['eq'],
-                D=kwargs['ferris']['D'], x=kwargs['ferris']['x'])
-        elif kwargs['eq'] == 'xia':
-            df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], label=kwargs['label'], equation=kwargs['eq'],
-                x=kwargs['xia']['x'],
-                alpha=kwargs['xia']['alpha'], beta=kwargs['xia']['beta'], theta=kwargs['xia']['theta'],
-                L=kwargs['xia']['L'], K1=kwargs['xia']['K1'], b1=kwargs['xia']['b1'],
-                K=kwargs['xia']['K'], b=kwargs['xia']['b'],
-                K_cap=kwargs['xia']['K_cap'], b_cap=kwargs['xia']['b_cap'])
-
-        else:
-            df = None
+            else:
+                df = None
         return {'sig': df}
 
 
