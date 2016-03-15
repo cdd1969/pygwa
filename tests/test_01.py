@@ -37,24 +37,6 @@ else:
 
 class FlowchartNodesTest(unittest.TestCase):
     '''Test different nodes in PyGWA GUI'''
-    _nodes_ = [
-        'pipe',
-        'QuickView',
-        'readCSV',
-        'readXLS',
-        'writeXLS',
-        'makeTimeseriesCurve',
-        'TimeseriesPlot',
-        'interpolate',
-        'detectPeaks_ts',
-        'pickEqualDates',
-        'matchpeaks',
-        'tidalEfficiency',
-        'TimeLag',
-        'Serfes Filter',
-        'Plot Overhead',
-        'ScatterPlot'
-        ]
 
     def setUp(self):
         '''Create the GUI'''
@@ -126,8 +108,8 @@ class FlowchartNodesTest(unittest.TestCase):
         curve1.ctrlWidget().p.param('Y:signal').setValue(u'River')
         curve1.ctrlWidget().p.param('tz correct').setValue(1.2)
 
-        self.fc.connectTerminals(curve1['Curve'], plotNode['Items'])
-        self.fc.connectTerminals(curve2['Curve'], plotNode['Items'])
+        self.fc.connectTerminals(curve1['Curve'], plotNode['Curves'])
+        self.fc.connectTerminals(curve2['Curve'], plotNode['Curves'])
 
         plotNode.ctrlWidget().p.param('Y:Label').setValue('test label')
         plotNode.ctrlWidget().p.param('Y:Units').setValue('test units')
@@ -139,7 +121,7 @@ class FlowchartNodesTest(unittest.TestCase):
     def test_06_node_StatisticalAnalysis(self):
         ''' Load data, perform stat analysis'''
         readXLS = self.readXLS()
-        statAnalysis = self.fc.createNode('Statistical Analysis', pos=(0, 0))
+        statAnalysis = self.fc.createNode('Plot Histogram', pos=(0, 0))
 
         self.fc.connectTerminals(readXLS['output'], statAnalysis['In'])
 

@@ -8,15 +8,13 @@ from pyqtgraph import BusyCursor
 import numpy as np
 import matplotlib.pyplot as plt
 
-from lib.flowchart.package import Package
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.interpolate import applyInterpolationBasedOnRanges, createInterpolationRanges
-from lib.functions.general import returnPandasDf
 
 
 class interpolateDfNode(NodeWithCtrlWidget):
     """Interpolate missing data in given DataFrame"""
-    nodeName = "interpolate"
+    nodeName = "Interpolate"
 
     def __init__(self, name, parent=None, **kwargs):
         super(interpolateDfNode, self).__init__(name, parent=parent, terminals={'In': {'io': 'in'}, 'Out': {'io': 'out'}}, color=(250, 250, 150, 150), **kwargs)
@@ -26,7 +24,7 @@ class interpolateDfNode(NodeWithCtrlWidget):
         return interpolateDfNodeCtrlWidget(**kwargs)
         
     def process(self, In):
-        df = returnPandasDf(In)
+        df = In
         if df is None:
             self._ctrlWidget.p.clearChildren()
             return
@@ -90,7 +88,7 @@ class interpolateDfNode(NodeWithCtrlWidget):
 
         self._columnsToUpdate = list()
         gc.collect()
-        return {'Out': Package(df_out)}
+        return {'Out': df_out}
         
     def restoreState(self, state):
         """overriding standard Node method to extend it with restoring ctrlWidget state"""
@@ -122,7 +120,8 @@ class interpolateDfNode(NodeWithCtrlWidget):
             df = self.outputs()['Out'].value().unpack()
 
             #plot
-            ax = plt.subplot(211)
+            fig, axes = plt.subplots(2)
+            ax, ax2 = axes
 
             df[cn].plot(ax=ax, marker='x', color='b')
 
@@ -137,7 +136,7 @@ class interpolateDfNode(NodeWithCtrlWidget):
             df[cni].plot(ax=ax2, marker='x', color='g')
             plt.legend(loc='best')
 
-            plt.show()
+            fig.show()
         except Exception, err:
             print ("Error: Cannot plot.", Exception, err)
 

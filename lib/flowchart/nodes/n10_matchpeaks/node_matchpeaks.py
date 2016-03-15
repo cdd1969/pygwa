@@ -2,15 +2,14 @@
 # -*- coding: utf-8 -*-
 from pyqtgraph import BusyCursor
 
-from lib.flowchart.package import Package
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.detectpeaks import match_peaks
-from lib.functions.general import returnPandasDf, isNumpyDatetime
+from lib.functions.general import isNumpyDatetime
 
 
 class matchPeaksNode(NodeWithCtrlWidget):
     """Match peaks from two DataFrames. Peaks should be detected before"""
-    nodeName = "matchpeaks"
+    nodeName = "Match Peaks"
     uiTemplate = [
             {'name': 'Match Option', 'type': 'list', 'value': 'Closest Time', 'default': 'Closest Time', 'values': ['Closest Time'], 'tip': 'Match option:\n"Closest Time" - match gw_peaks which have closest datetime to w_peaks'},
             {'name': 'Closest Time', 'type': 'group', 'children': [
@@ -30,8 +29,8 @@ class matchPeaksNode(NodeWithCtrlWidget):
         
     def process(self, W_peaks, GW_peaks):
         N_md = '?'
-        df_w  = returnPandasDf(W_peaks)
-        df_gw = returnPandasDf(GW_peaks)
+        df_w  = W_peaks
+        df_gw = GW_peaks
 
         colname = [col for col in df_w.columns if isNumpyDatetime(df_w[col].dtype)]
         self._ctrlWidget.param('Closest Time', 'Match Column').setLimits(colname)
@@ -45,7 +44,7 @@ class matchPeaksNode(NodeWithCtrlWidget):
             N_md = matched_peaks['md_N'].count()
             
         self._ctrlWidget.param('MATCHED/PEAKS').setValue('{0}/{1}'.format(N_md, len(df_w)))
-        return {'matched': Package(matched_peaks)}
+        return {'matched': matched_peaks}
 
 
 class matchPeaksNodeCtrlWidget(NodeCtrlWidget):

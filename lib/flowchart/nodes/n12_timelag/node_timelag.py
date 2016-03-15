@@ -4,12 +4,12 @@ from pyqtgraph import BusyCursor
 
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.TimeLag import timelag_erskine1991_method
-from lib.functions.general import returnPandasDf, isNumpyDatetime
+from lib.functions.general import isNumpyDatetime
 
 
 class timeLagNode(NodeWithCtrlWidget):
     """Calculate Timelag comparing given river and groundwater hydrogrpahs"""
-    nodeName = "TimeLag"
+    nodeName = "Time Lag"
     uiTemplate = [
             {'name': 'river', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Column name with RIVER hydrograph data\nin `df_w` dataframe'},
             {'name': 'river_dtime', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Location of the datetime objects\nin `df_w` dataframe'},
@@ -42,9 +42,6 @@ class timeLagNode(NodeWithCtrlWidget):
 
     def process(self, df_gw, df_w, E):
         self.CW().param('tlag_grp', 'tlag = ').setValue('?')
-        
-        df_gw = returnPandasDf(df_gw)
-        df_w = returnPandasDf(df_w)
 
         colname = [col for col in df_gw.columns if not isNumpyDatetime(df_gw[col].dtype)]
         self.CW().param('gw').setLimits(colname)

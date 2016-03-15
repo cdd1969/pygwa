@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os, sys
 import traceback
+import getpass
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
 from pyqtgraph.flowchart import Node
 
@@ -11,6 +12,8 @@ from flowchart.Flowchart import customFlowchart as Flowchart
 from common.CustomQCompleter import CustomQCompleter
 import PROJECTMETA
 from lib import projectPath
+from pyqtgraph import configfile
+
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -22,28 +25,31 @@ class MainWindow(QtWidgets.QMainWindow):
         uic.loadUi(projectPath('resources/mainwindow.ui'), self)
         self.uiData = uiData(self)
         self.connectActions()
-        #self.connectSignals()
         self.initUI()
-        
+        self.initGlobalShortcuts()
+
+        # everything has been inited. Now do some actions
+        # 1) check crash status
+        self.uiData.on_crash_LoadBakFile()
+
+
+    def initGlobalShortcuts(self):
+        # for some reason action shotcuts are not always working... change them to global shortcuts
+        QtGui.QShortcut(QtGui.QKeySequence("F1"), self, self.on_actionDocumentation)
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Alt+C"), self, self.on_actionCopy_Selected_Node)
+        QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Alt+V"), self, self.on_actionPaste_Node)
+
         
 
     def initUI(self):
         self.setWindowTitle(PROJECTMETA.__label__)
-        self.center()  # center window position
-
-        self.splitter.setSizes([300, 500])  #set horizontal sizes between splitter
-
-        font = QtGui.QFont("Times", 11, QtGui.QFont.Bold, True)
-        font.setUnderline(True)
-        self.label_nodeCtrlName.setFont(font)
+        #self.center()  # center window position
         
         # create dummy widget (it will be selected if our node doesnot has ctrlWidget)
         self._dummyWidget = QtWidgets.QWidget(self)
 
         # init FlowChart
         self.initFlowchart()
-
-
 
         # connect on select QTreeWidgetItem > se text in QLineEdit
         self.treeWidget.itemActivated.connect(self.on_nodeLibTreeWidget_itemActivated)
@@ -64,13 +70,23 @@ class MainWindow(QtWidgets.QMainWindow):
         self._nodeNameCompleter.setModel(self.uiData.nodeNamesModel())
         self._nodeNameCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.lineEdit_nodeSelect.setCompleter(self._nodeNameCompleter)
-        self.lineEdit_nodeSelect.setPlaceholderText('Type Node Name Here')
         # set tree view of node library
         fill_widget(self.treeWidget, self.uiData.nodeNamesTree())
 
+        # create EMPTY Open Recent Actions
+        self.recentFileActs = []
+        for i in xrange(self.uiData.MAX_RECENT_FILES):
+            action = QtGui.QAction(self, visible=False, triggered=self.openRecentFile)
+            self.menuOpen_Recent.addAction(action)
+            self.recentFileActs.append(action)
+        self.menuOpen_Recent.addSeparator()
+        self.actionClearRecent = QtGui.QAction('Clear', self, visible=True, triggered=self.on_actionClearRecent)
+        self.menuOpen_Recent.addAction(self.actionClearRecent)
+        self.uiData.updateRecentFileActions()
+
+
     def resetNodeLibraryWidgets(self):
         #init node selector tab, set autocompletion etc
-        #self._nodeNameCompleter = QtWidgets.QCompleter(self)
         self.uiData.nodeNamesModel().setStringList(self.uiData.nodeNamesList())
         # set tree view of node library
         fill_widget(self.treeWidget, self.uiData.nodeNamesTree())
@@ -80,15 +96,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actionSave_fc.triggered.connect(self.on_actionSave_fc)
         self.actionSave_As_fc.triggered.connect(self.on_actionSave_As_fc)
         self.actionLoad_fc.triggered.connect(self.on_actionLoad_fc)
+        
         self.actionAdd_item_to_library.triggered.connect(self.on_actionAdd_item_to_library)
         self.actionLoadLibrary.triggered.connect(self.on_actionLoadLibrary)
+        self.actionReloadDefaultLib.triggered.connect(self.on_actionReloadDefaultLib)
+        
+
+        self.actionCopy_Selected_Node.triggered.connect(self.on_actionCopy_Selected_Node)
+        self.actionPaste_Node.triggered.connect(self.on_actionPaste_Node)
 
         self.actionAbout.triggered.connect(self.on_actionAbout)
         self.actionDocumentation.triggered.connect(self.on_actionDocumentation)
 
         self.actionQuit.triggered.connect(self.closeEvent)
 
-        self.uiData.sigCurrentFilenameChanged.connect(self.renameFlowchartTab)
 
     def connectFCSignals(self):
         self.fc.sigFileLoaded.connect(self.uiData.setCurrentFileName)
@@ -99,6 +120,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.lineEdit_nodeSelect.editingFinished.connect(self.on_lineEditNodeSelect_editingFinished)
  
+        self.uiData.sigCurrentFilenameChanged.connect(self.renameFlowchartTab)
 
 
     def initFlowchart(self):
@@ -149,8 +171,6 @@ class MainWindow(QtWidgets.QMainWindow):
             mappedPos = self.flowChartWidget.view.viewBox().mapSceneToView(pos)
             if nodeType in self.uiData.nodeNamesList():  # to avoid drag'n'dropping Group-names
                 self.fc.createNode(nodeType, pos=mappedPos)
-                #self.flowChartWidget.chart.createNode(nodeType, pos=mappedPos)
-
 
         self.flowChartWidget.view.dragEnterEvent = dragEnterEvent
         self.flowChartWidget.view.viewBox().setAcceptDrops(True)
@@ -177,7 +197,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if not self.doActionIfUnsavedChanges(message='Are you sure to start new Flowchart from scratch without saving this one?'):
                 return
         self.clearStackedWidget()
-        self.fc.loadFile(fileName=self.uiData.standardFileName())
+        self.fc.loadFile(fileName=self.uiData.defaultFlowchartFileName())
         #fn = self.fc.ctrlWidget().currentFileName
         self.uiData.setCurrentFileName(None)
         self.uiData.setChangesUnsaved(False)
@@ -186,33 +206,40 @@ class MainWindow(QtWidgets.QMainWindow):
     def on_actionSave_fc(self):
         self.fc.saveFile(fileName=self.uiData.currentFileName())
         fn = self.fc.widget().currentFileName
-        if fn != self.uiData.standardFileName():
+        if fn != self.uiData.defaultFlowchartFileName():
             self.uiData.setCurrentFileName(fn)
             self.uiData.setChangesUnsaved(False)
-            #self.statusBar().showMessage("File saved: "+fn, 10000)
+            self.statusBar().showMessage("File saved: "+fn, 5000)
         return True
 
 
     @QtCore.pyqtSlot()
-    def on_actionSave_As_fc(self):
-        self.fc.saveFile()
+    def on_actionSave_As_fc(self, fileName=None):
+        self.fc.saveFile(fileName=fileName)
         fn = self.fc.widget().currentFileName
-        if fn != self.uiData.standardFileName():
+        if fn != self.uiData.defaultFlowchartFileName():
             self.uiData.setCurrentFileName(fn)
             self.uiData.setChangesUnsaved(False)
-            #self.statusBar().showMessage("File saved: "+fn, 10000)
+            self.uiData.addRecentFile(fn)
+            self.statusBar().showMessage("File saved: "+fn, 5000)
         return True
     
     @QtCore.pyqtSlot()
-    def on_actionLoad_fc(self):
+    def on_actionLoad_fc(self, fileName=None):
         if self.doActionIfUnsavedChanges(message='Are you sure to load another Flowchart without saving this one?'):
             directory = os.path.join(os.getcwd(), 'examples')
-            self.fc.loadFile(startDir=directory)
+            self.fc.loadFile(startDir=directory, fileName=fileName)
             fn = self.fc.widget().currentFileName
-            if fn != self.uiData.standardFileName():
+            if fn != self.uiData.defaultFlowchartFileName():
                 self.uiData.setCurrentFileName(fn)
                 self.uiData.setChangesUnsaved(False)
-                #self.statusBar().showMessage("File loaded: "+fn)
+                self.uiData.addRecentFile(fn)
+                self.statusBar().showMessage("File loaded: "+fn, 5000)
+    
+    def openRecentFile(self):
+        action = self.sender()
+        if action:
+            self.on_actionLoad_fc(fileName=action.data())
 
     @QtCore.pyqtSlot()
     def on_actionAdd_item_to_library(self):
@@ -230,7 +257,29 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.information(self, "Add Item to Node Library", "Node <b>`{0}`</b> has been successflly added to the Library. Node information has been loaded from file <i>{1}</i>".format(data['classname'], fname))
         except Exception, err:
             QtWidgets.QMessageBox.warning(self, "Add Item to Node Library", "Cannot load Node <b>`{0}`</b> from file <i>{1}</i> <br><br> {2}".format(data['classname'], data['filename'], traceback.print_exc()))
-            
+    
+    @QtCore.pyqtSlot()
+    def on_actionReloadDefaultLib(self):
+        self.uiData.initLibrary()
+        self.resetNodeLibraryWidgets()
+        QtWidgets.QMessageBox.information(self, "Reload Default Library", 'Default library has been loaded from file <i>{0}</i>'.format(self.uiData.defaultLibFileName()))
+
+    @QtCore.pyqtSlot()
+    def on_actionLoadLibrary(self):
+        QtWidgets.QMessageBox.warning(self, "Load Node Library", "Not implemented yet")
+
+    
+    @QtCore.pyqtSlot()
+    def on_actionCopy_Selected_Node(self):
+        self.fc.copySelectedNodeToBuffer()
+        if self.fc.nodeCopyPasteBuffer() is not None:
+            self.actionPaste_Node.setEnabled(True)
+        else:
+            self.actionPaste_Node.setEnabled(False)
+
+    @QtCore.pyqtSlot()
+    def on_actionPaste_Node(self):
+        self.fc.pasteNodeFromBuffer()
 
     @QtCore.pyqtSlot()
     def on_actionAbout(self):
@@ -242,12 +291,12 @@ class MainWindow(QtWidgets.QMainWindow):
         QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/cdd1969/pygwa/wiki'))
 
     @QtCore.pyqtSlot()
-    def on_actionLoadLibrary(self):
-        QtWidgets.QMessageBox.warning(self, "Load Node Library", "Not implemented yet")
-
+    def on_actionClearRecent(self):
+        self.uiData.clearRecentFiles()
     
     @QtCore.pyqtSlot()
     def selectionChanged(self):
+        self.actionCopy_Selected_Node.setEnabled(self.fc.nodeIsSelected())  # enable action only when node is selected
         items = self.fc.scene.selectedItems()
         if len(items) != 0:
             item = items[0]
@@ -266,6 +315,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if node.ctrlWidget() is not None:
                 self.stackNodeCtrlStackedWidget.addWidget(node.ctrlWidget())
             self.on_selectedNodeChanged(node)
+        self.uiData.deleteBakFile()
 
 
     @QtCore.pyqtSlot(object, str, object)
@@ -301,6 +351,11 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             msg = 'on_sigChartChanged(): Undefined action recieved <{0}>'.format(action)
             raise KeyError(msg)
+
+
+        # save backup flowchart
+        if action in ['add', 'remove', 'rename']:
+            self.uiData.saveBakFile()
 
 
     @QtCore.pyqtSlot(Node)
@@ -352,7 +407,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 return True
             elif reply == QtWidgets.QMessageBox.Save:
                 if self.on_actionSave_fc():
-                    pass
+                    return True
             else:
                 return False
         else:
@@ -361,12 +416,17 @@ class MainWindow(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         if self._unittestmode:  # set this variable in your unittest
             # if we are running tests...
+            self.uiData.deleteBakFile()
             QtWidgets.qApp.quit()
 
         if self.doActionIfUnsavedChanges(message='Are you sure to quit?'):
+            self.uiData.deleteBakFile()
+            self.uiData.writeSettingsOnQuit()
             QtWidgets.qApp.quit()  #quit application
         else:
             event.ignore()
+
+
 
 
 
@@ -384,20 +444,28 @@ class uiData(QtCore.QObject):
 
     def __init__(self, parent=None):
         super(QtCore.QObject, self).__init__(parent=parent)
-        self.parent = parent
+        self.settings = QtCore.QSettings()
+        #self.settings.clear()
+
+        self.win = parent
+        self.MAX_RECENT_FILES = 10
+        self._defaultFlowchartFileName = projectPath('resources/defaultFlowchart.dfc')
+        self._defaultLibFileName = projectPath('resources/defaultLibrary.json')
+        
         self.initLibrary()
-        self._currentFileName  = None
-        self._changesUnsaved  = True
-        self._standardFileName = projectPath('resources/defaultFlowchart.dfc')
+        self.readSettingsOnStart()
 
+    def initLibrary(self, fname=None):
+        #if self._flowchartLib:
+        #    del self._flowchartLib
+        #    del self._nodeNamesModel
 
-
-    def initLibrary(self):
+        if fname is None:
+            fname = self.defaultLibFileName()
         self._flowchartLib = customNodeLibrary()
-        self._flowchartLib.buildDefault(projectPath('resources/defaultLibrary.json'), include_pyqtgraph=False)
+        self._flowchartLib.buildDefault(fname, include_pyqtgraph=False)
 
         # create a StringListModel of registered node names, it will be used for auto completion
-        #self._nodeNamesList  = self._flowchartLib.nodeList.keys()
         self._nodeNamesModel = QtCore.QStringListModel(self)
         self._nodeNamesModel.setStringList(self._flowchartLib.getNodeList())
 
@@ -411,15 +479,82 @@ class uiData(QtCore.QObject):
         return self._flowchartLib.getNodeTree()
 
     def currentFileName(self):
-        return self._currentFileName
+        return self.settings.value('currentSession/fileName')
+
+    def currentBakFileName(self):
+        return self.settings.value('currentSession/bakFileName')
+    
+    def setCurrentBakFileName(self, name):
+        self.settings.setValue("currentSession/bakFileName", name)
 
     def changesUnsaved(self):
-        return self._changesUnsaved
+        return self.settings.value('currentSession/changesUnsaved')
+        
+    def addRecentFile(self, fname):
+        if fname is None or fname.endswith('.bak'):
+            return
+        recentFiles = self.settings.value('RecentFiles', [])
+        if not recentFiles:
+            recentFiles = []
+        
+        fname = unicode(fname)
+        if fname not in recentFiles:
+            # fname is not here
+            recentFiles.insert(0, fname)
+
+        elif recentFiles.index(fname) != 0:
+            # fname is here and is not on top of the list
+            oldindex = recentFiles.index(fname)
+            newindex = 0
+            recentFiles.insert(newindex, recentFiles.pop(oldindex))
+
+        # cut it to 10 files
+        recentFiles = recentFiles[0:self.MAX_RECENT_FILES] if len(recentFiles) >= self.MAX_RECENT_FILES else recentFiles
+        
+        self.settings.setValue("RecentFiles", recentFiles)
+        self.updateRecentFileActions()
+
+    def removeRecentFile(self, fname):
+        recentFiles = self.settings.value('RecentFiles', [])
+        if fname not in recentFiles:
+            return
+        recentFiles.remove(fname)
+        self.settings.setValue("RecentFiles", recentFiles)
+        self.updateRecentFileActions()
+
+    def clearRecentFiles(self):
+        recentFiles = self.settings.value('RecentFiles', [])
+        if not recentFiles:
+            return
+        for fname in recentFiles:
+            self.removeRecentFile(fname)
+        self.settings.setValue("RecentFiles", [])
+
+    
+    
+    def updateRecentFileActions(self):
+        files = self.settings.value('RecentFiles', [])
+        if files is None:
+            return
+
+        numRecentFiles = min(len(files), self.MAX_RECENT_FILES)
+
+        for i in xrange(numRecentFiles):
+            if not os.path.isfile(files[i]):
+                self.win.recentFileActs[i].setVisible(False)
+                continue
+            text = self.strippedName(files[i])
+            self.win.recentFileActs[i].setText(text)
+            self.win.recentFileActs[i].setData(files[i])
+            self.win.recentFileActs[i].setVisible(True)
+
+        for j in xrange(numRecentFiles, self.MAX_RECENT_FILES):
+            self.win.recentFileActs[j].setVisible(False)
 
     def setChangesUnsaved(self, state):
         if isinstance(state, bool):
-            self._changesUnsaved = state
-            fn = self._currentFileName
+            self.settings.setValue('currentSession/changesUnsaved', state)
+            fn = self.settings.value('currentSession/fileName')
             if fn is not None:
                 # we are only emitting sigal simutaing the rename operation, without actually renaming
                 # the flowchart. This will cause TabWidget label to be renamed
@@ -429,22 +564,134 @@ class uiData(QtCore.QObject):
                     self.sigCurrentFilenameChanged.emit(fn, unicode(fn))
 
 
-    @QtCore.pyqtSlot(str)
     def setCurrentFileName(self, name):
-        oldName = self._currentFileName
-        self._currentFileName = name
+        oldName = self.settings.value('currentSession/fileName')
+        self.settings.setValue('currentSession/fileName', name)
         self.sigCurrentFilenameChanged.emit(oldName, name)
 
-    def standardFileName(self):
-        return self._standardFileName
+    def defaultFlowchartFileName(self):
+        return self._defaultFlowchartFileName
+    
+    def defaultLibFileName(self):
+        return self._defaultLibFileName
 
     def fclib(self):
         return self._flowchartLib
+
+    def writeSettingsOnQuit(self):
+        settings = QtCore.QSettings()  # do not know why i have to Initialize it once again
+        #settings = self.settings
+        
+        # user session
+        settings.setValue('currentSession/exitStatus', u'ok')
+      
+        # MainWindow state
+        settings.setValue('mainwindow/size', self.win.size())
+        settings.setValue('mainwindow/pos',  self.win.pos())
+        settings.setValue('mainwindow/fullScreen',  self.win.isFullScreen())
+        settings.setValue('mainwindow/state',  self.win.saveState())
+        settings.setValue('mainwindow/splitter_sizes',  self.win.splitter.sizes())
+        #settings.setValue('mainwindow/geometry_nodelibrary_dockwidget',  self.win.dockWidget.geometry())
+        #settings.setValue('mainwindow/geometry_nodecontrol_dockwidget',  self.win.dockWidget_2.geometry())
+
+
+
+    def readSettingsOnStart(self):
+        settings = self.settings
+
+        settings.setValue('lastSession/exitStatus', settings.value('currentSession/exitStatus', u'ok'))
+        settings.setValue('lastSession/fileName', settings.value('currentSession/fileName', None))
+        settings.setValue('lastSession/bakFileName', settings.value('currentSession/bakFileName', None))
+        settings.setValue('lastSession/user', settings.value('currentSession/user', getpass.getuser()))
+
+        settings.setValue('currentSession/exitStatus', u'crash')
+        settings.setValue('currentSession/fileName', None)
+        settings.setValue('currentSession/bakFileName', None)
+        settings.setValue('currentSession/changesUnsaved', False)
+        settings.setValue('currentSession/user', getpass.getuser())
+
+
+        # restore GUI settings if the config file was previously generated by the same user
+        if settings.value('currentSession/user') != settings.value('lastSession/user') and settings.value('lastSession/user') is not None:
+            return
+
+        self.win.resize(settings.value('mainwindow/size', QtCore.QSize(800, 800)))
+        self.win.move(settings.value('mainwindow/pos', QtCore.QPoint(400, 400)))
+        self.win.splitter.setSizes(settings.value('mainwindow/splitter_sizes', [150, 500]))
+
+        if settings.value('mainwindow/state') is not None:
+            self.win.restoreState(settings.value('mainwindow/state'))
+        #if settings.value('mainwindow/geometry_nodelibrary_dockwidget') is not None:
+        #    self.win.dockWidget.setGeometry(settings.value('mainwindow/geometry_nodelibrary_dockwidget'))
+        #if settings.value('mainwindow/geometry_nodecontrol_dockwidget') is not None:
+        #    self.win.dockWidget_2.setGeometry(settings.value('mainwindow/geometry_nodecontrol_dockwidget'))
+        
+        if settings.value('mainwindow/fullScreen', False) is True:
+            self.win.showFullScreen()
+
+        #self.updateRecentFileActions()  #>>> is moved to INIT of MainWindow since actions are not inited yet
+
+    def saveBakFile(self):
+        fname = self.currentFileName()
+        if fname is None:
+            # save somewhere
+            bakname = os.path.join(os.path.dirname(__file__), '../', 'unsaved_flowchart.fc.bak')
+        else:
+            #save to current file folder
+            bakname = fname+'.bak'
+
+        bakname = os.path.abspath(bakname)
+        configfile.writeConfigFile(self.win.fc.saveState(), bakname)
+
+        self.setCurrentBakFileName(bakname)
+        # delay dsiplaying because status bar shows other messages as well. Too lazy to make queue
+        QtCore.QTimer.singleShot(5000, lambda: self.win.statusBar().showMessage("Bak file saved: "+bakname, 5000))
+
+    def deleteBakFile(self):
+        if self.currentBakFileName() is not None:
+            if os.path.isfile(self.currentBakFileName()) and self.currentBakFileName().endswith('.bak'):
+                os.remove(self.currentBakFileName())
+            self.setCurrentBakFileName(None)
+
+    def on_crash_LoadBakFile(self):
+        ''' Checks crash status of last session and offers to load BAK file
+        Warning: use after the MainWindow has been already initialized
+        '''
+        if self.settings.value('lastSession/exitStatus') != 'crash':
+            return
+        bak = self.settings.value('lastSession/bakFileName', None)
+        if bak is None:
+            return
+        reply = QtWidgets.QMessageBox.question(self.win, "Load Backup File", 'Previous session was not closed properly. Would you like to load backup file? \br <i>{0}</i>'.format(bak), QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ok)
+
+        if reply == QtWidgets.QMessageBox.Ok:
+            self.win.on_actionLoad_fc(bak)
+            self.win.on_actionSave_As_fc(fileName=os.path.splitext(bak)[0])
+            self.deleteBakFile()
+            self.win.statusBar().showMessage("Restored after crash from BAK file: {0}".format(bak), 5000)
+
+        
+
+    def strippedName(self, fullFileName):
+        return QtCore.QFileInfo(fullFileName).canonicalFilePath()
+
+    def print_settings(self, symbol):
+        settings = self.settings
+        print '-'*20
+        for k in settings.allKeys():
+            print '{0} {2} {1}'.format(k, settings.value(k), symbol)
+        print '-'*20
+
 
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
     app.setWindowIcon(QtGui.QIcon(projectPath('resources/icon.gif')))
+    
+    # is needed for QSettings
+    app.setOrganizationName("pygwa")
+    app.setApplicationName("pygwa")
+
     ex = MainWindow()
     ex.show()
 

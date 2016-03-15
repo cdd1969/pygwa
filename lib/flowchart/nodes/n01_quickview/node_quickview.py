@@ -18,20 +18,24 @@ from lib.common.TableView import TableView
 
 class QuickViewNode(Node):
     """View dataframe in TableView/Matplotlib-plot"""
-    nodeName = "QuickView"
+    nodeName = "Quick View"
 
     def __init__(self, name, parent=None):
         super(QuickViewNode, self).__init__(name, terminals={'In': {'io': 'in'}})
         self.graphicsItem().setBrush(fn.mkBrush(150, 150, 250, 200))
         self._pandasModel = None
         self._ctrlWidget = QuickViewCtrlWidget(self)
+        self._id = None
         
     def process(self, In):
-        if self._pandasModel is not None:
+        df = In
+        if id(df) != self._id and self._pandasModel is not None:
+            self._id = None
             self._pandasModel.destroy()
             self._pandasModel = None
-        if In is not None:
-            self._pandasModel = PandasModel(In.unpack(), parent=self)
+        if df is not None:
+            self._pandasModel = PandasModel(df, parent=self)
+            self._id = id(df)
         self.ctrlWidget().update()
 
     def getPandasModel(self):
@@ -67,6 +71,7 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
     def initUI(self):
         #self.tableView = QtWidgets.QTableView()
         self.tableView = TableView(parent=self)
+        self.twWindow = None
         self.update()
 
     def setModels(self):
@@ -97,10 +102,10 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
         self.pushButton_viewPlot.setEnabled(modelsAreSet)
 
     def update(self):
-        try:
-            self.twWindow.hide()
-        except:
-            self.twWindow = None
+        #try:
+        #    self.twWindow.hide()
+        #except:
+        #    self.twWindow = None
         self.setModels()  # we enable and disable buttons also in this method
         self.tableView.resizeColumnsToContents()
 
@@ -112,29 +117,22 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
             self.twWindow.setWindowTitle(self.parent().nodeName+': Table View')
             self.twWindow.setCentralWidget(self.tableView)
             self.twWindow.resize(1000, 800)
+        self.twWindow.show()
+        self.twWindow.activateWindow()
 
-            #self.parent().getPandasModel().update()
-            self.twWindow.show()
-            
-            self.pushButton_viewTable.setChecked(True)
-        else:
-            if not self.pushButton_viewTable.isChecked():  # This is obviously a bug! Returns
-                self.twWindow.hide()
-                self.pushButton_viewTable.setChecked(False)
-            else:
-                #self.parent().getPandasModel().update()
-                self.twWindow.show()
-                self.pushButton_viewTable.setChecked(True)
 
 
     @QtCore.pyqtSlot()  #default signal
     def on_pushButton_viewPlot_clicked(self):
         """ open nice graphic representation of our data"""
-        self.matplotlibWindow = plt.figure()
-        ax = plt.subplot(111)
-        columns = self.parent().getPandasModel().selectColumns()
-        self.parent().getPandasModel().getData()[columns].plot(ax=ax)
-        plt.show()
+        try:
+            self.matplotlibWindow = plt.figure()
+            ax = plt.subplot(111)
+            columns = self.parent().getPandasModel().selectColumns()
+            self.parent().getPandasModel().getData()[columns].plot(ax=ax)
+            self.matplotlibWindow.show()
+        except Exception as exp:
+            self._parent.setException(exp)
     
     @QtCore.pyqtSlot(bool)  #default signal
     def on_radioButton_columnIndex_toggled(self, isChecked):
@@ -188,6 +186,10 @@ class PandasModel(QtCore.QAbstractTableModel):
         
         #finally call update method
         self.update()
+
+        # make sure previously hidden rows will appear
+        for i in xrange(self._headerModel.rowCount()):
+            self._parent.ctrlWidget().tableView.horizontalHeader().showSection(i)
 
         # since we reimplement function @setPandasDataframe() we need to re-emit the dataChanged signal
         #topLeft = self.createIndex(0, 0)

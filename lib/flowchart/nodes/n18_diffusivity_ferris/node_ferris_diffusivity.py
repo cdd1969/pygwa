@@ -39,31 +39,37 @@ class ferrisDiffusivityNode(NodeWithCtrlWidget):
 
 
     def process(self, E, tlag):
+       
 
-        for p_name in (('E_grp', 'E'), ('tlag_grp', 'tlag')):
-            if isinstance(p_name, (list, tuple)):
-                self.CW().disconnect_valueChanged2upd(self.CW().param(*p_name))
-            else:
-                self.CW().disconnect_valueChanged2upd(self.CW().param(p_name))
-        
-        if self.CW().param('E_grp', 'manual_E').value() is False:
-            self.CW().param('E_grp', 'E').setValue(E)
-        if self.CW().param('tlag_grp', 'manual_tlag').value() is False:
-            tlag = self.prepare_tlag(tlag)
+        # process t_lag branch:
+        if not self.CW().p['tlag_grp', 'manual_tlag']:
+            if tlag is not None:
+                tlag = self.prepare_tlag(tlag)
+            self.CW().disconnect_valueChanged2upd(self.CW().param('tlag_grp', 'tlag'))
             self.CW().param('tlag_grp', 'tlag').setValue(tlag)
-            
-        for p_name in (('E_grp', 'E'), ('tlag_grp', 'tlag')):
-            if isinstance(p_name, (list, tuple)):
-                self.CW().connect_valueChanged2upd(self.CW().param(*p_name))
-            else:
-                self.CW().connect_valueChanged2upd(self.CW().param(p_name))
-
-        kwargs = self.ctrlWidget().prepareInputArguments()
+            self.CW().connect_valueChanged2upd(self.CW().param('tlag_grp', 'tlag'))
         
-        D_e = diffusivity_from_tidal_efficiency(kwargs['E'], kwargs['x0'], kwargs['t0'])
-        D_tlag = diffusivity_from_time_lag(kwargs['tlag'], kwargs['x0'], kwargs['t0'])
-        self.CW().param('D_grp', 'D_e').setValue('{0:.4f}'.format(D_e))
-        self.CW().param('D_grp', 'D_tlag').setValue('{0:.4f}'.format(D_tlag))
+        # process E branch:
+        if not self.CW().p['E_grp', 'manual_E']:
+            self.CW().disconnect_valueChanged2upd(self.CW().param('E_grp', 'E'))
+            self.CW().param('E_grp', 'E').setValue(E)
+            self.CW().connect_valueChanged2upd(self.CW().param('E_grp', 'E'))
+        
+        kwargs = self.ctrlWidget().prepareInputArguments()
+
+        if kwargs['E'] is not None:
+            D_e = diffusivity_from_tidal_efficiency(kwargs['E'], kwargs['x0'], kwargs['t0'])
+        else:
+            D_e = None
+        if kwargs['tlag'] is not None:
+            D_tlag = diffusivity_from_time_lag(kwargs['tlag'], kwargs['x0'], kwargs['t0'])
+        else:
+            D_tlag = None
+
+        
+        self.CW().param('D_grp', 'D_tlag').setValue('{0:.4f}'.format(D_tlag) if D_tlag is not None else None)
+        self.CW().param('D_grp', 'D_e').setValue('{0:.4f}'.format(D_e) if D_e is not None else None)
+
         return {'D (E)': D_e, 'D (tlag)': D_tlag}
 
     def prepare_tlag(self, tlag):
@@ -90,6 +96,6 @@ class ferrisDiffusivityNodeCtrlWidget(NodeCtrlWidget):
         for param in self.params(ignore_groups=True):
             kwargs[param.name()] = self.p.evaluateValue(param.value())
 
-        kwargs['tlag'] *= 60.
+        kwargs['tlag'] = kwargs['tlag']*60. if kwargs['tlag'] is not None else None
         kwargs['t0'] *= 3600.
         return kwargs

@@ -1,7 +1,7 @@
-from PyQt5 import QtGui, QtCore, QtWidgets
+from pyqtgraph.Qt import QtGui, QtCore
 
 
-class TreeWidget(QtWidgets.QTreeWidget):
+class TreeWidget(QtGui.QTreeWidget):
 
     def __init__(self, parent=None):
         self._parent = parent
@@ -13,7 +13,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
         self._parent.lineEdit_nodeSelect.selectAll()
 
 
-    @QtCore.pyqtSlot(QtWidgets.QTreeWidgetItem, int)
+    @QtCore.pyqtSlot(QtGui.QTreeWidgetItem, int)
     def on_nodeLibTreeWidget_itemActivated(self, item, column):
         self.lineEdit_nodeSelect.setText(item.text(0))
         self.lineEdit_nodeSelect.selectAll()

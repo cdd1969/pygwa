@@ -5,14 +5,13 @@ from pyqtgraph import BusyCursor
 import pandas as pd
 import os
 
-from lib.flowchart.package import Package
 from lib.functions.general import getCallableArgumentList
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 
 
 class readCSVNode(NodeWithCtrlWidget):
     """Load column-based data from ASCII file"""
-    nodeName = "readCSV"
+    nodeName = "Read CSV"
     uiTemplate = [
             {'name': 'Select File', 'type': 'action', 'value': None},
             {'name': 'Load CSV parameters', 'type': 'group', 'children': [
@@ -54,7 +53,7 @@ class readCSVNode(NodeWithCtrlWidget):
         kwargs = self.ctrlWidget().prepareInputArguments()
         with BusyCursor():
             df = pd.read_csv(**kwargs)
-        return {'Out': Package(df)}
+        return {'Out': df}
 
 
 

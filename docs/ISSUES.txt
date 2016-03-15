@@ -82,3 +82,14 @@ KNOWN BUGS AND ISSUES
     fix the warning below. Mostly in *process()* method of my custom nodes:
 
     ```Warning: use of node.terminalName is deprecated; use node['terminalName'] instead.```
+
+13)
+    LIBRARY
+    After reloading the node library it becomes impossible to add new nodes to the flowchart
+    if nodes of the same type have not already been added to the fc
+
+14)
+    NODE
+    Nodes: +, -, /, *
+    When the limits are changed, value is updated but it is not visialized in combobox!
+    Old value stays there...

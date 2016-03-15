@@ -1,0 +1,6 @@
+{
+    "filename":  "node_fourierfit.py",
+    "classname": "fourierFitNode",
+    "libpath": ["Processing"],
+    "override": true
+}

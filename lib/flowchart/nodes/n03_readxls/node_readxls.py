@@ -5,14 +5,13 @@ from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph import BusyCursor
 import pandas as pd
 
-from lib.flowchart.package import Package
 from lib.functions.general import getCallableArgumentList
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 
 
 class readXLSNode(NodeWithCtrlWidget):
     """Read data from spreadsheet"""
-    nodeName = "readXLS"
+    nodeName = "Read XLS"
     uiTemplate = [
             {'name': 'Select File', 'type': 'action', 'value': None},
             {'name': 'Parameters', 'type': 'group', 'children': [
@@ -41,7 +40,7 @@ class readXLSNode(NodeWithCtrlWidget):
         kwargs = self.ctrlWidget().prepareInputArguments()
         with BusyCursor():
             df = pd.read_excel(**kwargs)
-        return {'output': Package(df)}
+        return {'output': df}
 
 
 

@@ -5,10 +5,8 @@ import copy
 from pyqtgraph.Qt import QtCore
 from pyqtgraph import BusyCursor
 
-from lib.flowchart.package import Package
 from lib.functions import filterSerfes1991 as serfes
 from lib.functions.general import isNumpyDatetime, isNumpyNumeric
-from lib.functions.general import returnPandasDf
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 
 
@@ -38,7 +36,7 @@ class serfes1991Node(NodeWithCtrlWidget):
             self._ctrlWidget.param('Apply to columns').clearChildren()
         
         with BusyCursor():
-            df = copy.deepcopy(returnPandasDf(In))
+            df = copy.deepcopy(In)
             # check out http://docs.scipy.org/doc/numpy-dev/neps/datetime-proposal.html
 
             colnames = [col for col in df.columns if isNumpyDatetime(df[col].dtype)]+[None]
@@ -59,7 +57,7 @@ class serfes1991Node(NodeWithCtrlWidget):
 
             if self._ctrlWidget.applyAllowed():
                 result = serfes.filter_wl_71h_serfes1991(df, **kwargs)
-                return {'Out': Package(result)}
+                return {'Out': result}
 
 
 

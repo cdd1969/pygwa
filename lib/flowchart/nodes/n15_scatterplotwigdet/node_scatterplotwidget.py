@@ -6,12 +6,11 @@ import pyqtgraph.parametertree.parameterTypes as pTypes
 
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.common.ScatterPlotWidget import ScatterPlotWidget
-from lib.functions.general import returnPandasDf
 
 
 class scatterPlotWidgetNode(NodeWithCtrlWidget):
     """Explore data with a scatter plot widget"""
-    nodeName = "ScatterPlot"
+    nodeName = "Plot Scatter"
     uiTemplate = [ {'name': 'Plot', 'type': 'action'}]
 
     def __init__(self, name, parent=None):
@@ -24,7 +23,6 @@ class scatterPlotWidgetNode(NodeWithCtrlWidget):
         if isinstance(In, np.recarray):
             receivedColumns = In.dtype.names
         else:
-            In = returnPandasDf(In, raiseException=False)
             if In is not None:
                 receivedColumns = In.columns
             else:

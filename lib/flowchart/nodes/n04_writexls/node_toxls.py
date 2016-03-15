@@ -5,12 +5,12 @@ from pyqtgraph import BusyCursor
 import pandas as pd
 
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
-from lib.functions.general import returnPandasDf, getCallableArgumentList
+from lib.functions.general import getCallableArgumentList
 
 
 class toXLSNode(NodeWithCtrlWidget):
     """Write data to spreadsheet or copy to clipboard"""
-    nodeName = "writeXLS"
+    nodeName = "Write XLS"
     uiTemplate = [
             {'name': 'Parameters', 'type': 'group', 'children': [
                 {'name': 'sheet_name', 'type': 'str', 'value': 'Sheet1', 'default': 'Sheet1', 'tip': '<string, default "Sheet1">\nName of sheet which will contain DataFrame'},
@@ -28,9 +28,9 @@ class toXLSNode(NodeWithCtrlWidget):
         return toXLSNodeCtrlWidget(**kwargs)
         
     def process(self, In):
+        df = In
         if self._ctrlWidget.saveAllowed():
             kwargs = self.ctrlWidget().prepareInputArguments()
-            df = returnPandasDf(In)
             fileName = QtGui.QFileDialog.getSaveFileName(None, "Save As..", "export.xlsx", "Excel files (*.xls *.xlsx)")[0]
             if fileName:
                 with BusyCursor():
@@ -38,7 +38,6 @@ class toXLSNode(NodeWithCtrlWidget):
                 
         if self._ctrlWidget.toClipbord():
             with BusyCursor():
-                df = returnPandasDf(In)
                 df.to_clipboard(excel=True)
         return
 

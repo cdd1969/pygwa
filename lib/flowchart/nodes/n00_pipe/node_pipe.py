@@ -6,7 +6,7 @@ from pyqtgraph import functions as fn
 
 class pipeNode(Node):
     """Transmits the data further without processing"""
-    nodeName = "pipe"
+    nodeName = "Pipe"
 
     def __init__(self, name, parent=None):
         super(pipeNode, self).__init__(name, terminals={'In': {'io': 'in'}, 'Out': {'io': 'out'}})

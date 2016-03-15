@@ -4,7 +4,7 @@ from pyqtgraph.Qt import QtCore
 from pyqtgraph import BusyCursor
 
 from lib.functions import plot_pandas
-from lib.functions.general import returnPandasDf, getCallableArgumentList, isNumpyNumeric
+from lib.functions.general import getCallableArgumentList, isNumpyNumeric
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 
 
@@ -48,7 +48,7 @@ class plotGWLvsWLNode(NodeWithCtrlWidget):
         return plotGWLvsWLNodeCtrlWidget(**kwargs)
         
     def process(self, In):
-        df = returnPandasDf(In)
+        df = In
         if df is not None:
             # when we recieve a new dataframe into terminal - update possible selection list
             if not self._ctrlWidget.plotAllowed():

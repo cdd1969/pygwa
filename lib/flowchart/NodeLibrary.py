@@ -126,8 +126,8 @@ class customNodeLibrary(NodeLibrary):
             from pyqtgraph.flowchart.library import Data
             from pyqtgraph.flowchart.library import Display
             #for mod, node in zip((Data, Display), (Data.EvalNode, Display.PlotCurve)):
-            for mod, node in zip((Display,), (Display.PlotCurve,)):
-                self.addNodeType(node, [(mod.__name__.split('.')[-1],)])
+            #for mod, node in zip((Display,), (Display.PlotCurve,)):
+            #    self.addNodeType(node, [(mod.__name__.split('.')[-1],)])
         
         if json_lib:
             with open(json_lib) as lib_file:

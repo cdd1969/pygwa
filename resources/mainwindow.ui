@@ -11,7 +11,10 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>GWL Analyzer</string>
+   <string>pygwa</string>
+  </property>
+  <property name="tabShape">
+   <enum>QTabWidget::Rounded</enum>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -53,17 +56,6 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="tab_2">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="statusTip">
-         <string>Create new flowchart</string>
-        </property>
-        <attribute name="title">
-         <string>+</string>
-        </attribute>
-       </widget>
       </widget>
      </widget>
     </item>
@@ -82,24 +74,20 @@
     <property name="title">
      <string>Menu</string>
     </property>
-    <widget class="QMenu" name="menuFlowchart">
+    <widget class="QMenu" name="menuOpen_Recent">
      <property name="title">
-      <string>Flowchart</string>
+      <string>Open Recent</string>
      </property>
-     <addaction name="actionNew_fc"/>
-     <addaction name="actionSave_fc"/>
-     <addaction name="actionSave_As_fc"/>
-     <addaction name="actionLoad_fc"/>
-    </widget>
-    <widget class="QMenu" name="menuLibrary">
-     <property name="title">
-      <string>Library</string>
+     <property name="icon">
+      <iconset theme="document-open-recent"/>
      </property>
-     <addaction name="actionAdd_item_to_library"/>
-     <addaction name="actionLoadLibrary"/>
+     <addaction name="separator"/>
     </widget>
-    <addaction name="menuFlowchart"/>
-    <addaction name="menuLibrary"/>
+    <addaction name="actionNew_fc"/>
+    <addaction name="actionLoad_fc"/>
+    <addaction name="menuOpen_Recent"/>
+    <addaction name="actionSave_fc"/>
+    <addaction name="actionSave_As_fc"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -111,7 +99,24 @@
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionCopy_Selected_Node"/>
+    <addaction name="actionPaste_Node"/>
+   </widget>
+   <widget class="QMenu" name="menuLib">
+    <property name="title">
+     <string>Lib</string>
+    </property>
+    <addaction name="actionAdd_item_to_library"/>
+    <addaction name="actionLoadLibrary"/>
+    <addaction name="actionReloadDefaultLib"/>
+   </widget>
    <addaction name="menuMenu"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuLib"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -120,7 +125,7 @@
     <string>toolBar</string>
    </property>
    <property name="toolButtonStyle">
-    <enum>Qt::ToolButtonTextOnly</enum>
+    <enum>Qt::ToolButtonFollowStyle</enum>
    </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
@@ -129,9 +134,11 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionNew_fc"/>
+   <addaction name="actionLoad_fc"/>
    <addaction name="actionSave_fc"/>
    <addaction name="actionSave_As_fc"/>
-   <addaction name="actionLoad_fc"/>
+   <addaction name="actionCopy_Selected_Node"/>
+   <addaction name="actionPaste_Node"/>
   </widget>
   <widget class="QDockWidget" name="dockWidget">
    <property name="sizePolicy">
@@ -142,8 +149,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>105</width>
-     <height>156</height>
+     <width>108</width>
+     <height>158</height>
     </size>
    </property>
    <property name="font">
@@ -154,6 +161,9 @@
    </property>
    <property name="features">
     <set>QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
    </property>
    <property name="windowTitle">
     <string>Node Library</string>
@@ -168,10 +178,10 @@
        <item>
         <widget class="QLineEdit" name="lineEdit_nodeSelect">
          <property name="toolTip">
-          <string>Quick Node selection. Type Node name</string>
+          <string>Quick Node selection via node type</string>
          </property>
          <property name="statusTip">
-          <string>Quick Node selection. Type Node name</string>
+          <string>Quick Node selection via node type</string>
          </property>
          <property name="inputMask">
           <string/>
@@ -182,6 +192,9 @@
          <property name="dragEnabled">
           <bool>true</bool>
          </property>
+         <property name="placeholderText">
+          <string>Node type (e.g. readXLS)</string>
+         </property>
          <property name="clearButtonEnabled">
           <bool>true</bool>
          </property>
@@ -189,6 +202,11 @@
        </item>
        <item>
         <widget class="QTreeWidget" name="treeWidget">
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
          <property name="editTriggers">
           <set>QAbstractItemView::NoEditTriggers</set>
          </property>
@@ -201,6 +219,9 @@
          <property name="defaultDropAction">
           <enum>Qt::IgnoreAction</enum>
          </property>
+         <property name="indentation">
+          <number>10</number>
+         </property>
          <property name="rootIsDecorated">
           <bool>true</bool>
          </property>
@@ -209,6 +230,12 @@
          </property>
          <attribute name="headerVisible">
           <bool>false</bool>
+         </attribute>
+         <attribute name="headerCascadingSectionResizes">
+          <bool>true</bool>
+         </attribute>
+         <attribute name="headerHighlightSections">
+          <bool>true</bool>
          </attribute>
          <column>
           <property name="text">
@@ -231,8 +258,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>129</width>
-     <height>368</height>
+     <width>135</width>
+     <height>369</height>
     </size>
    </property>
    <property name="font">
@@ -254,7 +281,7 @@
     <string>Node Options</string>
    </property>
    <attribute name="dockWidgetArea">
-    <number>1</number>
+    <number>2</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_3">
     <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -262,6 +289,17 @@
       <layout class="QVBoxLayout" name="layout_stackNodeCtrlWidget">
        <item>
         <widget class="QLabel" name="label_nodeCtrlName">
+         <property name="font">
+          <font>
+           <family>Times New Roman</family>
+           <weight>75</weight>
+           <bold>true</bold>
+           <underline>true</underline>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">qproperty-alignment: 'AlignVCenter | AlignHCenter'</string>
+         </property>
          <property name="text">
           <string>Select the Node</string>
          </property>
@@ -290,11 +328,17 @@
    </widget>
   </widget>
   <action name="actionAbout">
+   <property name="icon">
+    <iconset theme="help-about"/>
+   </property>
    <property name="text">
     <string>About</string>
    </property>
   </action>
   <action name="actionNew_fc">
+   <property name="icon">
+    <iconset theme="document-new"/>
+   </property>
    <property name="text">
     <string>New</string>
    </property>
@@ -303,24 +347,36 @@
    </property>
   </action>
   <action name="actionQuit">
+   <property name="icon">
+    <iconset theme="application-exit"/>
+   </property>
    <property name="text">
     <string>Quit</string>
    </property>
   </action>
   <action name="actionAdd_item_to_library">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Add Node to Library</string>
    </property>
   </action>
   <action name="actionLoad_fc">
+   <property name="icon">
+    <iconset theme="document-open"/>
+   </property>
    <property name="text">
-    <string>Load</string>
+    <string>Open</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
    </property>
   </action>
   <action name="actionSave_fc">
+   <property name="icon">
+    <iconset theme="document-save"/>
+   </property>
    <property name="text">
     <string>Save</string>
    </property>
@@ -329,6 +385,9 @@
    </property>
   </action>
   <action name="actionSave_As_fc">
+   <property name="icon">
+    <iconset theme="document-save-as"/>
+   </property>
    <property name="text">
     <string>Save As...</string>
    </property>
@@ -337,6 +396,9 @@
    </property>
   </action>
   <action name="actionDocumentation">
+   <property name="icon">
+    <iconset theme="help-contents"/>
+   </property>
    <property name="text">
     <string>Documentation</string>
    </property>
@@ -345,8 +407,50 @@
    </property>
   </action>
   <action name="actionLoadLibrary">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Load Library</string>
+   </property>
+  </action>
+  <action name="actionReloadDefaultLib">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Reload Default Lib</string>
+   </property>
+  </action>
+  <action name="actionCopy_Selected_Node">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="edit-copy"/>
+   </property>
+   <property name="text">
+    <string>Copy Node</string>
+   </property>
+   <property name="toolTip">
+    <string>Copy Selected Node</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+C</string>
+   </property>
+  </action>
+  <action name="actionPaste_Node">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="edit-paste"/>
+   </property>
+   <property name="text">
+    <string>Paste Node</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+V</string>
    </property>
   </action>
  </widget>

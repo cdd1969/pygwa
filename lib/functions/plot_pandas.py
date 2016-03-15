@@ -415,7 +415,7 @@ def plot_pandas_scatter_special1(df, x=[0], y=[1], saveName=None, xlabel=None, y
     if saveName:
         fig.savefig(saveName, dpi=300, tight_layout=True, format='pdf')
         print( 'saving figure... :', saveName)
-    plt.show()
+    fig.show()
 
 
 
@@ -531,7 +531,7 @@ def plot_statistical_analysis(data, data2=None,
         label3 = 'Cumulative Density Histogram'
 
 
-    plt.figure(tight_layout=True)
+    fig = plt.figure(tight_layout=True)
 
     ax1 = plt.subplot2grid((2, 2), (0, 0), colspan=2)
     ax2 = plt.subplot2grid((2, 2), (1, 0))
@@ -637,7 +637,7 @@ def plot_statistical_analysis(data, data2=None,
     
     
     plt.get_current_fig_manager().window.showMaximized()
-    plt.show()
+    fig.show()
 
 
 
