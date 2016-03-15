@@ -9,46 +9,50 @@ import numpy as np
 from numpy import arctan
 
 
-def diffusivity_from_tidal_efficiency(E, x0, t0):
+def diffusivity(x0=None, E=None, tlag=None, omega=None, **kwargs):
     ''' Calculate Diffusivity `D` (ratio of Transmissivity `T` to Storage `S`) based on
-    equation of Ferris 1951 for a groundwater head in a tidal influenced aquifer.
-    Calculations are done based on Tidal Efficiency (amplitude dumping). Input para-
-    meters represent properties of an observation well (E, x0) and of the governing
-    tide (t0).
+    equation of Xia 2007 equation for a groundwater head in a tidal influenced aquifer.
+    Calculations are done based on Tidal Efficiency (amplitude dumping).
 
-        Ferris 1951 equation:
+        Xia 2007 equation:
 
-            h(x,t) = h0 * exp(-x*(pi/t0*S/T)**0.5) * sin(2*pi*t/t0 - x*(pi/t0*S/T)**0.5)
+            h(x,t) = A*Ce*exp(-a*p*x) * np.cos(omega*t - a*q*x - phi + phi0)
 
         From there:
-            (eq.1) E = exp(-x*(pi/t0*S/T)**0.5)
+            E    = Ce*exp(-a*p*x0)
+            tlag = 1./omega*(a*q*x0 + phi)
 
     Args:
     -----
+        x0 (float) [m]:
+            Distance from an observation well to shoreline/river in [METERS]
         E (float) [-]:
             Dimensionless Tidal Efficiency Factor. The value can be estimated with
             Erskine 1991 method, as the ration of standart deviations of two sets
             of readings
-        t0 (float) [s]:
-            Period of a tidal oscillation in [seconds]
-        x0 (float) [m]:
-            Distance from an observation well to shoreline/river in [METERS]
+        tlag (float) [sec]:
+            Time lag (phase shift) of the signal in [seconds]
+        omega0 (float) [rad/s]:
+            Angulat velocity of a tidal oscillation in [rad/sec]
 
     Return:
     ------
         D_e (float) [m**2/s]:
             Diffusivity (T/S) calculated from (eq.1) in [m**2/s]
     '''
-    alpha=beta=theta=rho=b=K1=b1=omega=K_cap=b_cap=K=T=L= 0.
-    g = 9.81  #gravity acceleration [m/s**2]
+    alpha   = kwargs.get('alpha', None)
+    beta    = kwargs.get('beta', None)
+    theta   = kwargs.get('theta', None)
+    rho     = kwargs.get('rho', 1000.)
+    b       = kwargs.get('b', None)
+    K       = kwargs.get('K', None)
+    b1      = kwargs.get('b1', None)
+    K1      = kwargs.get('K1', None)
+    b_cap   = kwargs.get('b_cap', None)
+    K_cap   = kwargs.get('K_cap', None)
+    L       = kwargs.get('L', None)
 
-    # DETERMINE THE CASE
-    if L == float('inf') and K1 != 0. and b1 != float('inf'):
-        CASE = 1  # infinite roof, leakage
-    elif L == float('inf') and (K1 == 0. or b1 == float('inf')):
-        CASE = 2  # infinite roof, no leakage
-    else:
-        raise NotImplementedError()
+    g = 9.81  #gravity acceleration [m/s**2]
 
     # -------------------------------------------------------------------
     # Ss = specific storage [1/m]
@@ -64,7 +68,7 @@ def diffusivity_from_tidal_efficiency(E, x0, t0):
     Ls = K1/b1
 
     # a = Confined aquifer's tidal wave propogation parameter [1/m]
-    a = sqrt(omega/2.*S/T)
+    a = sqrt(omega/2.*Ss/K)
 
     # u = dimensionless leakage of the semipermeable layer
     u = Ls/(omega*S)
@@ -79,64 +83,28 @@ def diffusivity_from_tidal_efficiency(E, x0, t0):
     mu = - ((1-Le)*u)/(u**2+1)
 
 
-    if CASE == 1:
-        # -------------------------------------------------------------------
-        # Case 1.
-        # Confined aquifer extending under the sea infinitely
-        # -------------------------------------------------------------------
-        C_inf = 0.5 * sqrt( (u**2+Le**2)/(u**2+1) )
-        phi_inf = arctan( ((1-Le)*u)/(u**2+Le) )
-        
-        if x >= 0.:
-            h = A * C_inf * exp(-a*p*x) * np.cos(omega*t - a*q*x - phi_inf + phi0)
-        else:
-            raise NotImplementedError()
+    _k1_ = exp(-a*p*L)/((sigma + p)**2 + q**2)
+    _k2_ = (sigma*(1.-Lambda)*(sigma+p) - q*mu*sigma)
+    _k3_ = (q*sigma*(1-Lambda) + sigma*mu*(sigma+p))
+    _k4_ = 0.5*exp(-a*p*L)
+    _k5_ = Lambda*(sigma-p)*(sigma+p) - Lambda*q**2 + 2.*mu*q*sigma
+    _k6_ = mu*(sigma-p)*(sigma+p) - mu*q**2 - 2.*Lambda*q*sigma
 
-    elif CASE == 2:
-        # -------------------------------------------------------------------
-        # Case 2.
-        # Confined aquifer extending under the sea infinitely
-        # with impermeable roof
-        # -------------------------------------------------------------------
-        if x >= 0.:
-            h = 0.5*Le*A*exp(a*x)*np.cos(omega*t - a*x + phi0)
-        else:
-            h = Le*A*np.cos(omega*t+phi0) - 0.5*Le*A*exp(a*x)*np.cos(omega*t + a*x + phi0)
+    nu = _k1_ * ( _k2_*np.cos(a*q*L) - _k3_*np.sin(a*q*L) + _k4_*(_k5_*np.cos(2*a*q*L) + _k6_*np.sin(2*a*q*L)))
+    xi = _k1_ * ( _k2_*np.sin(a*q*L) - _k3_*np.cos(a*q*L) + _k4_*(_k5_*np.sin(2*a*q*L) + _k6_*np.cos(2*a*q*L)))
     
 
-    D = ((-x0)**2 * (pi/t0)) / (log(E)**2)
+    phi = arctan( (2.*xi - mu)/(2.*nu + Lambda) )
+    Ce = sqrt((nu+Lambda/2.)**2 + (xi - nu/2.)**2)
+    
+    if E is not None:
+        # D based on E
+        E    = Ce*exp(-a*p*x0)
+        ''' this is wrong, since Ce is dependent on `a` (and therefore on `D`) as well...'''
+        D = ((Ce*p*x0)/-log(E))**2 * omega/2.
+    
     return D
 
-
-def diffusivity_from_time_lag(tlag, x0, t0):
-    ''' Calculate Diffusivity `D` (ratio of Transmissivity `T` to Storage `S`) based on
-    equation of Ferris 1951 for a groundwater head in a tidal influenced aquifer.
-    Calculations are done based on Time Lag (phase shifting). Input parameters represent
-    properties of an observation well (tlag, x0) and of the governing tide (t0).
-
-        Ferris 1951 equation:
-
-            h(x,t) = h0 * exp(-x*(pi/t0*S/T)**0.5) * sin(2*pi*t/t0 - x*(pi/t0*S/T)**0.5)
-
-        From there:
-            tlag = x*(pi/t0*S/T)**0.5
-
-    Args:
-    -----
-        tlag (float) [s]:
-            Time lag (phase shift) of the signal in [seconds]
-        t0 (float) [seconds]:
-            Period of a tidal oscillation in [seconds]
-        x0 (float) [m]:
-            Distance from an observation well to shoreline/river in [METERS]
-
-    Return:
-    ------
-        D_tlag (float) [m**2/s]:
-            Diffusivity (T/S) calculated from (eq.2) in [m**2/s]
-    '''
-    D = (t0*x0**2) / (4*pi*tlag**2)
-    return D
 
 
 def h(t=[], x=0,
