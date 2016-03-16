@@ -61,7 +61,7 @@ def devlin2003(X):
     b = float(A[1])
     c = float(A[2])
 
-    gradient = sqrt(a**2 + b**2)/c
+    gradient = sqrt( (a**2 + b**2)/c**2 )
     angle = atan2(b, a)*180./pi  # angle off x-axis (east) in degrees, counter clock-wise is positive direction.
 
     return ((a, b, c), gradient, angle)
@@ -129,7 +129,7 @@ if __name__ == '__main__':
         60.00,   95.00,  99.566''')
     print devlin2003(X_devlin2003_example1)
 
-    print 'Correct answer: gradient=0.0051347, angle=89.496 degrees'
+    print 'Correct answer: gradient=0.0051347, angle=89.496 degrees counter-clockwise'
 
     print '-'*20
     X_devlin2003_example2 = np.matrix('''
@@ -138,4 +138,14 @@ if __name__ == '__main__':
         0.00,   165.,  26.26''')
     print devlin2003(X_devlin2003_example2)
     print 'Correct answer: gradient=0.00097, angle=23 degrees clockwise'
+
+
+    print '-'*20
+    X_devlin2003_example3 = np.matrix('''
+    3467351.0 ,  5897242.0 ,  0.93;
+    3467373.0 ,  5897249.0 ,  0.90;
+    3467368.0 ,  5897160.0 ,  0.98''')
+    print devlin2003(X_devlin2003_example3)
+    angle = devlin2003(X_devlin2003_example3)[2]
+    print angle2bearing(angle, origin='N')[0]
 
