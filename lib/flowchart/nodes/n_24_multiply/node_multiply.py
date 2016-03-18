@@ -51,7 +51,7 @@ class multiplyNode(NodeWithCtrlWidget):
         kwargs = self.CW().prepareInputArguments()
         # ------------------------------------------------------
         del self.df
-        self.df = A.copy()  #maybe need to use deepcopy
+        self.df = A.copy(deep=False)  #maybe need to use deepcopy
         
         # actually do add operation
         if kwargs['b'] is None:

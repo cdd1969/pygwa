@@ -61,7 +61,7 @@ class joinColNode(NodeWithCtrlWidget):
 
         kwargs = self.CW().prepareInputArguments()
         # ------------------------------------------------------
-        self.df = A.copy()  #maybe need to use deepcopy
+        self.df = A.copy(deep=False)  #maybe need to use deepcopy
         
         for col_name in kwargs['cols']:
             if col_name in self.df.columns:
