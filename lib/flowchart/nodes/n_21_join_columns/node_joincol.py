@@ -18,7 +18,7 @@ class ScalableGroup(pTypes.GroupParameter):
 
 
 class joinColNode(NodeWithCtrlWidget):
-    """Join columns from table B to table A. Returns new table C"""
+    """Join columns from table B to table A. Returns new table"""
     nodeName = "Join Columns"
     uiTemplate = [
             ScalableGroup(title='Columns to join from B', name='grp', children=[
@@ -27,7 +27,7 @@ class joinColNode(NodeWithCtrlWidget):
         ]
 
     def __init__(self, name, parent=None):
-        terms = {'A': {'io': 'in'}, 'B': {'io': 'in'}, 'C': {'io': 'out'}}
+        terms = {'A': {'io': 'in'}, 'B': {'io': 'in'}, 'Out': {'io': 'out'}}
         super(joinColNode, self).__init__(name, parent=parent, terminals=terms, color=(255, 170, 255, 150))
         self.id_A = None
         self.id_B = None
@@ -50,7 +50,7 @@ class joinColNode(NodeWithCtrlWidget):
             self.id_A = None
         
         if A is None or B is None:
-            return {'C': self.df}
+            return {'Out': self.df}
         
         if len(A) != len(B):
             raise ValueError('Number of rows in both DataFrames must be equal. A has {0} rows, B has {1} rows'.format(len(A), len(B)))
@@ -68,7 +68,7 @@ class joinColNode(NodeWithCtrlWidget):
                 continue
             self.df[col_name] = B[col_name]
 
-        return {'C': self.df}
+        return {'Out': self.df}
 
 
 class joinColNodeCtrlWidget(NodeCtrlWidget):

@@ -16,7 +16,7 @@ class divideNode(NodeWithCtrlWidget):
         ]
 
     def __init__(self, name, parent=None):
-        terms = {'A': {'io': 'in'}, 'B': {'io': 'in'}, 'C': {'io': 'out'}}
+        terms = {'A': {'io': 'in'}, 'B': {'io': 'in'}, 'Out': {'io': 'out'}}
         super(divideNode, self).__init__(name, parent=parent, terminals=terms, color=(255, 170, 255, 150))
         self.df = None
 
@@ -29,7 +29,7 @@ class divideNode(NodeWithCtrlWidget):
         if A is None:
             del self.df
             self.df = None
-            return {'C': self.df}
+            return {'Out': self.df}
         else:
             self.CW().disconnect_valueChanged2upd(self.CW().param('a'))
             cols_A = [col for col in A.columns if isNumpyNumeric(A[col].dtype)]
@@ -59,7 +59,7 @@ class divideNode(NodeWithCtrlWidget):
         else:
             self.df[kwargs['a']] = self.df[kwargs['a']] / B[kwargs['b']] / kwargs['c']
 
-        return {'C': self.df}
+        return {'Out': self.df}
 
 
 class divideNodeCtrlWidget(NodeCtrlWidget):
