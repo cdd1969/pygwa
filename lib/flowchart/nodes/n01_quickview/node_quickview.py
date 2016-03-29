@@ -14,6 +14,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from lib.common.TableView import TableView
+from lib.functions.general import isNumpyDatetime, isNumpyNumeric
 
 
 class QuickViewNode(Node):
@@ -129,7 +130,15 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
             self.matplotlibWindow = plt.figure()
             ax = plt.subplot(111)
             columns = self.parent().getPandasModel().selectColumns()
-            self.parent().getPandasModel().getData()[columns].plot(ax=ax)
+            df = self.parent().getPandasModel().getData()[columns]  #slice of the input dataframe with selected columns
+
+            datetime_cols = [col for col in df.columns if isNumpyDatetime(df[col].dtype)]
+            numeric_cols  = [col for col in df.columns if isNumpyNumeric (df[col].dtype)]
+
+            datetime_col = datetime_cols[0] if len(datetime_cols) > 0 else None   #plot with x=datetime if possible
+
+            for numeric_col in numeric_cols:
+                df.plot(x=datetime_col, y=numeric_col, ax=ax)
             self.matplotlibWindow.show()
         except Exception as exp:
             self._parent.setException(exp)
@@ -239,7 +248,7 @@ class PandasModel(QtCore.QAbstractTableModel):
 
     def selectColumns(self):
         ''' This method can be used to pass specific column names in method @createNumpyData
-            Selected column is the clumn which name IS CHECKED
+            "Selected column" is the column, which name IS CHECKED
 
             <columns> is a list of strings (i.e. ['datetime', 'col1', 'col2']) or None
         '''
