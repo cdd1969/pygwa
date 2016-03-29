@@ -203,7 +203,7 @@ def pandas_fourier_analysis(df, sig_name, date_name=None, ranges=(), **kwargs):
             string representation of the computed function. Function can be generated with:
                 exec(f_str)
         f (function):
-            function y=f(t) which accepts t as array of time value in seconds
+            function y=f(t) which accepts t as array of time values in seconds
         fig (matplotlib figure|None):
             instance of the generated figure or None. Is usefull for displaying later
     '''
@@ -212,16 +212,19 @@ def pandas_fourier_analysis(df, sig_name, date_name=None, ranges=(), **kwargs):
         time_vector = df.index
         timestep = df.index.diff()[1].total_seconds()  # we assume that dt is uniform al over the df
     elif date_name is not None:
-        time_vector = df[date_name]
-        timestep = df[date_name].diff()[1].total_seconds()  # we assume that dt is uniform al over the df
         if ranges:
-            df = df.set_index(date_name)
+            df = df.set_index(date_name)  #create a copy of original df
             NEW_DF_CREATED = True
+            time_vector = df.index
+            timestep = (df.index[1] - df.index[0]).total_seconds()  # we assume that dt is uniform al over the df
+        else:
+            time_vector = df[date_name]
+            timestep = df[date_name].diff()[1].total_seconds()
     else:
         raise ValueError('Set proper column name to param `date_name` or None if datetime index')
 
     if ranges:
-        time_vector = time_vector[ranges[0]:ranges[1]].values
+        time_vector = df.ix[ranges[0]:ranges[1]].index.values
         sig = df[sig_name][ranges[0]:ranges[1]].values
     else:
         time_vector = time_vector.values

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import gc
 import copy
-from pyqtgraph.Qt import QtCore
+from pyqtgraph.Qt import QtCore, QtGui
 from pyqtgraph import BusyCursor
 
 from lib.functions import filterSerfes1991 as serfes
@@ -18,7 +18,7 @@ class serfes1991Node(NodeWithCtrlWidget):
         {'name': 'N', 'type': 'str', 'value': None, 'default': None, 'tip': '<int or None>\nExplicit number of measurements in 24 hours. By\ndefault `N=None`, meaning that script will try to determine\nnumber of measurements per 24 hours based on real datetime\ninformation provided with `datetime` argument'},
         {'name': 'Calculate N', 'type': 'action'},
         {'name': 'verbose', 'type': 'bool', 'value': False, 'default': False, 'tip': 'If `True` - will keep all three iterations\nin the output. If `False` - will save only final (3rd) iteration.\nThis may useful for debugging, or checking this filter.'},
-        {'name': 'log', 'type': 'bool', 'value': False, 'default': False, 'tip': 'flag to show some prints in console'},
+        {'name': 'log', 'type': 'bool', 'value': False, 'default': False, 'visible': False, 'tip': 'flag to show some prints in console'},
         {'name': 'Apply to columns', 'type': 'group', 'children': []},
         {'name': 'Apply Filter', 'type': 'action'},
         ]
@@ -56,6 +56,9 @@ class serfes1991Node(NodeWithCtrlWidget):
                 self._ctrlWidget.param('N').setValue(N)
 
             if self._ctrlWidget.applyAllowed():
+                if kwargs['N'] in [None, '']:
+                    QtGui.QMessageBox.warning(None, "Node: {0}".format(self.nodeName), 'First set number of measurements per day in parameter `N`')
+                    raise ValueError('First set number of measurements per day in parameter `N`')
                 result = serfes.filter_wl_71h_serfes1991(df, **kwargs)
                 return {'Out': result}
 
