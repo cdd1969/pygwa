@@ -178,6 +178,7 @@ def detectPeaks(array1D, order=5, split=False, removeRegions=True, mode='clip', 
         peakVals_all = array1D[peakIndices_all]
         
         if removeRegions:
+            # remove those nasty regions (see example at docstring of the `remove_region` func)
             peakVals_all, peakIndices_all = remove_region(peakVals_all, peakIndices_all)
         if plot:
             f = plt.figure()
