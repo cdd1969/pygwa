@@ -16,7 +16,7 @@ class multiplyNode(NodeWithCtrlWidget):
         ]
 
     def __init__(self, name, parent=None):
-        terms = {'A': {'io': 'in'}, 'B': {'io': 'in'}, 'C': {'io': 'out'}}
+        terms = {'A': {'io': 'in'}, 'B': {'io': 'in'}, 'Out': {'io': 'out'}}
         super(multiplyNode, self).__init__(name, parent=parent, terminals=terms, color=(255, 170, 255, 150))
         self.df = None
 
@@ -29,7 +29,7 @@ class multiplyNode(NodeWithCtrlWidget):
         if A is None:
             del self.df
             self.df = None
-            return {'C': self.df}
+            return {'Out': self.df}
         else:
             self.CW().disconnect_valueChanged2upd(self.CW().param('a'))
             cols_A = [col for col in A.columns if isNumpyNumeric(A[col].dtype)]
@@ -51,7 +51,7 @@ class multiplyNode(NodeWithCtrlWidget):
         kwargs = self.CW().prepareInputArguments()
         # ------------------------------------------------------
         del self.df
-        self.df = A.copy()  #maybe need to use deepcopy
+        self.df = A.copy(deep=False)  #maybe need to use deepcopy
         
         # actually do add operation
         if kwargs['b'] is None:
@@ -59,7 +59,7 @@ class multiplyNode(NodeWithCtrlWidget):
         else:
             self.df[kwargs['a']] = self.df[kwargs['a']] * B[kwargs['b']] * kwargs['c']
 
-        return {'C': self.df}
+        return {'Out': self.df}
 
 
 class multiplyNodeCtrlWidget(NodeCtrlWidget):

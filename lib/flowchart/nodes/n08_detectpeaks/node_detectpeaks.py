@@ -11,16 +11,16 @@ class detectPeaksTSNode(NodeWithCtrlWidget):
     """Detect peaks (minima/maxima) from passed TimeSeries, check period"""
     nodeName = "Detect Peaks"
     uiTemplate = [
-        {'name': 'column', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Column name with hydrograph data'},
+        {'title': 'data', 'name': 'column', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Column name with hydrograph data'},
         {'name': 'datetime', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Location of the datetime objects.'},
         {'name': 'Peak Detection Params', 'type': 'group', 'children': [
             {'name': 'order', 'type': 'int', 'value': 100, 'default': 100, 'limits': (0, int(10e6)), 'tip': 'How many points on each side to use for the comparison'},
             {'name': 'mode', 'type': 'list', 'values': ['clip', 'wrap'], 'value': 'clip', 'default': 'clip', 'tip': 'How the edges of the vector are treated. ‘wrap’ (wrap around)\nor ‘clip’ (treat overflow as the same as the last (or first) element)'},
-            {'name': 'removeRegions', 'type': 'bool', 'value': True, 'readonly': True, 'default': True, 'tip': "remove possible multiple peaks that go one-by-one"}
+            {'name': 'removeRegions', 'type': 'bool', 'value': True, 'readonly': True, 'default': True, 'visible': False, 'tip': "remove possible multiple peaks that go one-by-one"}
         ]},
-        {'name': 'Period Check Params', 'type': 'group', 'children': [
+        {'title': 'Plausibility Check Params', 'name': 'Period Check Params', 'type': 'group', 'children': [
             {'name': 'T', 'type': 'str', 'value': 12.42, 'default': None, 'tip': 'Awaited period of the signal in hours. If `None`, will calculate\nthe Period `T` as the mean of difference between peaks, multiplied\nby two (i.e. T = peaks["time"].diff().mean()*2)'},
-            {'name': 'hMargin', 'type': 'float', 'value': 1.5, 'default': 1.5, 'limits': (0., 100.), 'tip': 'Number of hours, safety margin when comparing period length.\nSee formula below:\nT/2 - hMargin < T_i/2 < T/2 + hMargin'},
+            {'name': 'hMargin', 'type': 'float', 'value': 1.5, 'default': 1.5, 'limits': (0., 100.), 'suffix': ' hours', 'tip': 'Number of hours, safety margin when comparing period length.\nSee formula below:\nT/2 - hMargin < T_i/2 < T/2 + hMargin'},
             {'name': 'Warnings', 'type': 'str', 'value': '?', 'default': '?', 'tip': 'Number of period-check warnings detected after detecting peaks.\nWarnings are raised where period condition is not met.\tHit `Plot` button to visualize errors', 'readonly': True},
         ]},
         {'name': 'Plot', 'type': 'action'}]

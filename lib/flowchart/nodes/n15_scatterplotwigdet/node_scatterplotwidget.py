@@ -3,7 +3,7 @@
 import numpy as np
 from pyqtgraph.Qt import QtCore
 import pyqtgraph.parametertree.parameterTypes as pTypes
-
+from pyqtgraph import BusyCursor
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.common.ScatterPlotWidget import ScatterPlotWidget
 
@@ -26,16 +26,17 @@ class scatterPlotWidgetNode(NodeWithCtrlWidget):
             if In is not None:
                 receivedColumns = In.columns
             else:
-                self.deleteAllColumns()
-                self._ctrlWidget.setFields()
+                with BusyCursor():
+                    self.deleteAllColumns()
+                    self._ctrlWidget.setFields()
                 return
+        with BusyCursor():
+            for colName in receivedColumns:
+                self._ctrlWidget.addDfColumn(colName)
+                self._ctrlWidget.param(colName, 'name').setValue(colName)
 
-        for colName in receivedColumns:
-            self._ctrlWidget.addDfColumn(colName)
-            self._ctrlWidget.param(colName, 'name').setValue(colName)
-
-        self._ctrlWidget.spw().setData(In)
-        self._ctrlWidget.setFields()
+            self._ctrlWidget.spw().setData(In)
+            self._ctrlWidget.setFields()
         return
 
     def restoreState(self, state):
@@ -53,7 +54,6 @@ class scatterPlotWidgetNode(NodeWithCtrlWidget):
 
     def deleteAllColumns(self):
         currentColumns = [item.name() for item in self._ctrlWidget.p.children()]
-        currentColumns.remove('Plot')  # we have this Extra button
         for colName in currentColumns:
             self._ctrlWidget.removeDfColumn(colName)
 
@@ -68,6 +68,7 @@ class scatterPlotWidgetNodeCtrlWidget(NodeCtrlWidget):
     def __init__(self, **kwargs):
         super(scatterPlotWidgetNodeCtrlWidget, self).__init__(update_on_statechange=False, **kwargs)
         self._spw = ScatterPlotWidget(self)
+        self.setFields()
 
     def initUserSignalConnections(self):
         self.param('Plot').sigActivated.connect(self.on_plot_clicked)
@@ -78,10 +79,8 @@ class scatterPlotWidgetNodeCtrlWidget(NodeCtrlWidget):
     @QtCore.pyqtSlot()  #default signal
     def on_plot_clicked(self):
         if self._spw.isHidden():
-            self.setFields()
             self._spw.show()
-        else:
-            self._spw.hide()
+        self._spw.activateWindow()
 
     @QtCore.pyqtSlot(object)  #default signal
     def on_param_valueChanged(self, sender):

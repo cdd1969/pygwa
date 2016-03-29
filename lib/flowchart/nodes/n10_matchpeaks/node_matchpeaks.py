@@ -16,7 +16,7 @@ class matchPeaksNode(NodeWithCtrlWidget):
                 {'name': 'Match Column', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Data will be matched based on this column'},
                 {'name': 'side', 'type': 'list', 'values': ['right (>=t)', 'right (>t)', 'left (<=t)', 'left (<t)', 'both'], 'value': 'right (>=t)', 'default': 'right (>=t)', 'tip': 'search direction with respect to `t`.\n"right (>=t)"  - search after or at `t`\n"right (>t)" - search after `t`\n"left (<=t)" - search before or at `t`\n"left (<t)" - search before `t`\n"both"  - search before and after `t` or at `t`'},
                 {'name': 'use_window', 'type': 'bool', 'value': False, 'default': False, 'tip': 'Search matching peaks within time-window\n[t-window : t+window]\nEnables `window` float spinbox'},
-                {'name': 'window', 'type': 'float', 'value': 0, 'default': 0, 'limits': (0, int(10e6)), 'tip': 'Is read only if `use_window` is checked!\nNumber of hours to determine time-window'},
+                {'name': 'window', 'type': 'float', 'value': 0, 'default': 0, 'limits': (0, int(10e6)), 'suffix': ' hours', 'tip': 'Is read only if `use_window` is checked!\nNumber of hours to determine time-window'},
             ]},
             {'name': 'MATCHED/PEAKS', 'type': 'str', 'value': '?/?', 'readonly': True},
             ]
