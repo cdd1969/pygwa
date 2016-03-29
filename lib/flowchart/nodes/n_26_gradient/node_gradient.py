@@ -21,7 +21,7 @@ class gradientNode(NodeWithCtrlWidget):
 
             ]},
             {'name': 'Datetime', 'type': 'list', 'value': None, 'values': [None], 'tip': 'Name of the column in <data> dataframe with datetime'},
-            {'title': 'Timestep', 'name': 't', 'type': 'str', 'value': ''},
+            {'title': 'Timestep', 'name': 't', 'type': 'str', 'value': 'YYYY-MM-DD HH:MM:SS', 'tip': 'Datetime of a single timestep to be calculated in format YYYY-MM-DD HH:MM:SS'},
             
             {'title': 'Gradient', 'name': 'grad', 'type': 'float', 'value': None, 'readonly': True},
             {'title': 'Direction', 'name': 'angle', 'type': 'float', 'value': None, 'readonly': True, 'suffix': ' degrees N'},

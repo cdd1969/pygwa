@@ -67,8 +67,8 @@ class ferrisDiffusivityNode(NodeWithCtrlWidget):
             D_tlag = None
 
         
-        self.CW().param('D_grp', 'D_tlag').setValue('{0:.4f}'.format(D_tlag) if D_tlag is not None else None)
-        self.CW().param('D_grp', 'D_e').setValue('{0:.4f}'.format(D_e) if D_e is not None else None)
+        self.CW().param('D_grp', 'D_tlag').setValue('{0:.4f} m**2/s'.format(D_tlag) if D_tlag is not None else None)
+        self.CW().param('D_grp', 'D_e').setValue('{0:.4f} m**2/s'.format(D_e) if D_e is not None else None)
 
         return {'D (E)': D_e, 'D (tlag)': D_tlag}
 

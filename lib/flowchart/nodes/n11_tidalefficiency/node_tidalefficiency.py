@@ -57,7 +57,7 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
             elif kwargs['method'] == '2) Cyclic amplitude':
                 if matched_peaks is None:
                     QtGui.QMessageBox.warning(None, "Node: {0}".format(self.nodeName), 'To use method `Cyclic amplitude` please provide data in terminal `matched_peaks` (a valid data-set can be created with node `Match Peaks`)')
-                    return
+                    raise ValueError('To use method `Cyclic amplitude` please provide data in terminal `matched_peaks` (a valid data-set can be created with node `Match Peaks`)')
                 self.CW().disconnect_valueChanged2upd(self.CW().param('gw'))
                 self.CW().param('gw').setWritable(False)
                 self.CW().param('gw').setLimits(['see matched peaks'])
@@ -69,8 +69,8 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
 
             elif kwargs['method'] == '3) Cyclic STD':
                 if matched_peaks is None:
-                    QtGui.QMessageBox.warning(None, "Node: {0}".format(self.nodeName), 'To use method `Cyclic amplitude` please provide data in terminal `matched_peaks` (a valid data-set can be created with node `Match Peaks`)')
-                    return
+                    QtGui.QMessageBox.warning(None, "Node: {0}".format(self.nodeName), 'To use method `Cyclic STD` please provide data in terminal `matched_peaks` (a valid data-set can be created with node `Match Peaks`)')
+                    raise ValueError('To use method `Cyclic STD` please provide data in terminal `matched_peaks` (a valid data-set can be created with node `Match Peaks`)')
                 self.CW().disconnect_valueChanged2upd(self.CW().param('gw'))
                 self.CW().param('gw').setWritable(False)
                 self.CW().param('gw').setLimits(['see matched peaks'])
