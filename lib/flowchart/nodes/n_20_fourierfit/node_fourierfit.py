@@ -17,7 +17,7 @@ class fourierFitNode(NodeWithCtrlWidget):
             {'title': 'Signal', 'name': 'sig', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Name of the column with waterlevel data.'},
             {'title': 'Datetime', 'name': 'datetime', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Name of the column with datetime (or __index__)'},
             
-            {'title': 'Number of Sinusoids', 'name': 'N_MAX_POW', 'type': 'int', 'value': 1, 'limits': (1, 10e10), 'tip': 'Number of partial sinusoids used to fit data. Sinusoids with most powerful frequencies are selected. See docs'},
+            {'title': 'Number of Waves', 'name': 'N_MAX_POW', 'type': 'int', 'value': 1, 'limits': (1, 10e10), 'tip': 'Number of partial waves used to generate equation. Partial waves with most powerful frequencies are selected at first. See docs'},
 
             {'title': 'Slice datetime', 'name': 'ranges', 'type': 'bool', 'value': False},
 
@@ -31,7 +31,7 @@ class fourierFitNode(NodeWithCtrlWidget):
         ]
 
     def __init__(self, name, parent=None):
-        terms = {'df': {'io': 'in'}, 'params': {'io': 'out'}, 'f(t)': {'io': 'out'}}
+        terms = {'In': {'io': 'in'}, 'params': {'io': 'out'}, 'f(t)': {'io': 'out'}}
         super(fourierFitNode, self).__init__(name, parent=parent, terminals=terms, color=(250, 250, 150, 150))
         self._PLOT_REQUESTED = False
         self.fig = None
@@ -42,7 +42,8 @@ class fourierFitNode(NodeWithCtrlWidget):
         return fourierFitNodeCtrlWidget(**kwargs)
 
 
-    def process(self, df):
+    def process(self, In):
+        df = In
         if df is None:
             return
 
@@ -113,7 +114,7 @@ class fourierFitNodeCtrlWidget(NodeCtrlWidget):
     def prepareInputArguments(self):
         kwargs = dict()
 
-        kwargs['ranges']  = (np.datetime64(self.p['t0'])+'Z', np.datetime64(self.p['t1']))+'Z' if self.p['ranges'] else None
+        kwargs['ranges']  = (np.datetime64(self.p['t0']+'Z'), np.datetime64(self.p['t1']+'Z')) if self.p['ranges'] else None
         kwargs['sig'] = self.p['sig']
         kwargs['datetime'] = self.p['datetime']
         kwargs['N_MAX_POW'] = self.p['N_MAX_POW']
