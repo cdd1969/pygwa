@@ -27,6 +27,7 @@
     "23": "lib/flowchart/nodes/n_23_substract/substract.node",
     "24": "lib/flowchart/nodes/n_24_multiply/multiply.node",
     "25": "lib/flowchart/nodes/n_25_divide/divide.node",
-    "26": "lib/flowchart/nodes/n_26_gradient/gradient.node"
+    "26": "lib/flowchart/nodes/n_26_gradient/gradient.node",
+    "27": "lib/flowchart/nodes/n_27_dropna/dropna.node"
 
 }
