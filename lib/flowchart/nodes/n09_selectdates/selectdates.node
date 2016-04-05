@@ -1,6 +1,6 @@
 {
     "filename":  "node_pickequaldates.py",
     "classname": "pickEqualDatesNode",
-    "libpath": ["Table"],
+    "libpath": ["4.Table"],
     "override": true
 }

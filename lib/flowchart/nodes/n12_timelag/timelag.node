@@ -1,6 +1,6 @@
 {
     "filename":  "node_timelag.py",
     "classname": "timeLagNode",
-    "libpath": ["Processing"],
+    "libpath": ["2.Processing"],
     "override": true
 }

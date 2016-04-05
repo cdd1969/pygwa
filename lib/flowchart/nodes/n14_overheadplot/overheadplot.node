@@ -1,6 +1,6 @@
 {
     "filename":  "node_plot_overheadvsriverwl.py",
     "classname": "plotGWLvsWLNode",
-    "libpath": ["Display"],
+    "libpath": ["3.Display"],
     "override": true
 }

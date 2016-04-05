@@ -1,6 +1,6 @@
 {
     "filename":  "node_plottimeseries.py",
     "classname": "plotTimeseriesNode",
-    "libpath": ["Display", "Widgets"],
+    "libpath": ["3.Display", "Widgets"],
     "override": true
 }

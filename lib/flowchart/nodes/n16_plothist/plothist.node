@@ -1,6 +1,6 @@
 {
     "filename":  "node_plothist.py",
     "classname": "plotHistNode",
-    "libpath": ["Display"],
+    "libpath": ["3.Display"],
     "override": true
 }

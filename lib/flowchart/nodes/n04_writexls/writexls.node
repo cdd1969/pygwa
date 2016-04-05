@@ -1,6 +1,6 @@
 {
     "filename":  "node_toxls.py",
     "classname": "toXLSNode",
-    "libpath": ["Input/Output"],
+    "libpath": ["1.Input/Output"],
     "override": true
 }

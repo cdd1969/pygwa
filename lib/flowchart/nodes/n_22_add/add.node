@@ -1,6 +1,6 @@
 {
     "filename":  "node_add.py",
     "classname": "addNode",
-    "libpath": ["Table", "Operands"],
+    "libpath": ["4.Table", "Operands"],
     "override": true
 }

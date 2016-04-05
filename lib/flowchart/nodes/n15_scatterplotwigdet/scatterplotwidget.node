@@ -1,6 +1,6 @@
 {
     "filename":  "node_scatterplotwidget.py",
     "classname": "scatterPlotWidgetNode",
-    "libpath": ["Display", "Widgets"],
+    "libpath": ["3.Display", "Widgets"],
     "override": true
 }
