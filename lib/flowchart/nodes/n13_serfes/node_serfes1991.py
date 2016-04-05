@@ -18,6 +18,7 @@ class serfes1991Node(NodeWithCtrlWidget):
         {'name': 'N', 'type': 'str', 'value': None, 'default': None, 'tip': '<int or None>\nExplicit number of measurements in 24 hours. By\ndefault `N=None`, meaning that script will try to determine\nnumber of measurements per 24 hours based on real datetime\ninformation provided with `datetime` argument'},
         {'name': 'Calculate N', 'type': 'action'},
         {'name': 'verbose', 'type': 'bool', 'value': False, 'default': False, 'tip': 'If `True` - will keep all three iterations\nin the output. If `False` - will save only final (3rd) iteration.\nThis may useful for debugging, or checking this filter.'},
+        {'title': 'Keep Original Data', 'name': 'keep_origin', 'type': 'bool', 'value': True, 'default': True, 'tip': 'If `True` - will keep original data and append new columns with results.\nIf `False` - will create new table only with results.'},
         {'name': 'log', 'type': 'bool', 'value': False, 'default': False, 'visible': False, 'tip': 'flag to show some prints in console'},
         {'name': 'Apply to columns', 'type': 'group', 'children': []},
         {'name': 'Apply Filter', 'type': 'action'},
@@ -93,7 +94,7 @@ class serfes1991NodeCtrlWidget(NodeCtrlWidget):
         self._calculateNAllowed = False
 
     def prepareInputArguments(self):
-        validArgs = ['datetime', 'N', 'verbose', 'log']
+        validArgs = ['datetime', 'N', 'verbose', 'log', 'keep_origin']
         kwargs = dict()
         for param in self.params(ignore_groups=True):
             if param.name() in validArgs:
