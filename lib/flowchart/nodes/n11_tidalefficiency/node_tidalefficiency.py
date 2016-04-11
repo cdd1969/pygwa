@@ -78,7 +78,9 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
                 with BusyCursor():
                     mPeaks_slice = matched_peaks.loc[~matched_peaks['md_N'].isin([np.nan, None])]
 
-                    E, N = tidalEfficiency_method3(df,  kwargs['river'], kwargs['gw'], kwargs['datetime'],
+                    river_name = mPeaks_slice['name'][0]
+                    well_name  = mPeaks_slice['md_name'][0]
+                    E, N = tidalEfficiency_method3(df, river_name, well_name, kwargs['datetime'],
                         mPeaks_slice['time_min'], mPeaks_slice['time_max'],
                         mPeaks_slice['md_time_min'], mPeaks_slice['md_time_max'])
                 #print( 'Method3: Calculated E with {0} tidal-cycles'.format(N))
