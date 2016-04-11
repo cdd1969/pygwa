@@ -121,12 +121,12 @@ def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, keep_ori
             output[col] = data[col]
 
     for col_name in numeric_columns:
-        output[col_name+'_averaging1'] = pd.rolling_mean(data[col_name], window=N, min_periods=N, center=True).values
-        output[col_name+'_averaging2'] = pd.rolling_mean(output[col_name+'_averaging1'], window=N, min_periods=N, center=True).values
-        output[col_name+'_timeAverage'] = pd.rolling_mean(output[col_name+'_averaging2'], window=N, min_periods=N, center=True).values
+        output[col_name+'_sequence1'] = pd.rolling_mean(data[col_name], window=N, min_periods=N, center=True).values
+        output[col_name+'_sequence2'] = pd.rolling_mean(output[col_name+'_sequence1'], window=N, min_periods=N, center=True).values
+        output[col_name+'_mean'] = pd.rolling_mean(output[col_name+'_sequence2'], window=N, min_periods=N, center=True).values
 
-        if not verbose: del output[col_name+'_averaging1']
-        if not verbose: del output[col_name+'_averaging2']
+        if not verbose: del output[col_name+'_sequence1']
+        if not verbose: del output[col_name+'_sequence2']
 
     gc.collect()
     return output

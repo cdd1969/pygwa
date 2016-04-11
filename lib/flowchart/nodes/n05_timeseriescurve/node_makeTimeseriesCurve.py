@@ -83,7 +83,7 @@ class makeTimeseriesCurveNode(NodeWithCtrlWidget):
             
             self.item.setSymbol(kwargs['symbol'])
             if kwargs['symbol'] is not None:
-                #self.item.setSymbolPen(kwargs['color'])
+                self.item.setSymbolPen(kwargs['color'])
                 self.item.setSymbolBrush(kwargs['color'])
                 self.item.setSymbolSize(kwargs['symbolSize'])
         return {'Curve': self.item, 'pd.Series': timeSeries }

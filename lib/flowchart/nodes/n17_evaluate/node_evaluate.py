@@ -29,7 +29,6 @@ class pumpedEvalNode(EvalNode):
         # see this thread about decoding
         # http://stackoverflow.com/questions/27662653/get-unicode-string-from-a-pyqt5-plaintextedit
         text = str(self.text.toPlainText().encode('utf-8'))
-        print text
         if text != self.lastText:
             self.lastText = text
             self.update()
