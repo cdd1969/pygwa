@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.python2_3 import asUnicode
 from pyqtgraph import BusyCursor
 import pandas as pd
 
@@ -58,22 +59,25 @@ class readXLSNodeCtrlWidget(NodeCtrlWidget):
     def on_selectFile_clicked(self):
         fname = None
         filters = "Excel Spreadsheet (*.xls *.xlsx *.xlrd);; All files (*.*)"
-        fname = unicode(QtGui.QFileDialog.getOpenFileName(self, 'Open Spreadsheet Data File', filter=filters)[0])
+        fname = asUnicode(QtGui.QFileDialog.getOpenFileName(self, 'Open Spreadsheet Data File', filter=filters)[0]).encode('UTF-8')
         if fname:
             self.param('Select File').setValue(fname)
 
     @QtCore.pyqtSlot(object)  #default signal
     def on_selectFile_valueChanged(self, value):
         button  = self.param('Select File').items.items()[0][0].button
-        fname = self.param('Select File').value()
+        fname = asUnicode(self.param('Select File').value()).encode('UTF-8')
         self._parent.sigUIStateChanged.emit(self)
 
         if fname is not None and os.path.isfile(fname):
-            button.setToolTip('File is selected: {0}'.format(fname))
-            button.setStatusTip('File is selected: {0}'.format(fname))
+            #print fname, type(fname)
+            #print u'File is selected: {0}'.format(fname)
+            #print type(asUnicode('File is selected: {0}'.format(fname)))
+            button.setToolTip(asUnicode('File is selected: {0}'.format(fname)))
+            button.setStatusTip(asUnicode('File is selected: {0}'.format(fname)))
         else:
-            button.setToolTip('Select File')
-            button.setStatusTip('Select File')
+            button.setToolTip(asUnicode('Select File'))
+            button.setStatusTip(asUnicode('Select File'))
     
     def prepareInputArguments(self):
         valid_arg_list = getCallableArgumentList(pd.read_excel, get='args')
