@@ -69,7 +69,10 @@ def timelag_erskine1991_method(df_gw, cn_gw_v, cn_gw_t,
     #print( 'shifting, amplifying well data...')
     # h'(t) = <T> + (h(t)- <h>)/E
     #   where <T> means "mean T"
-    df_GW['shifted_amplified_'+cn_gw_v] = df_W[cn_w_v].mean() + (df_GW[cn_gw_v] - df_GW[cn_gw_v].mean()) / float(E)
+    h      = df_GW[cn_gw_v]
+    h_mean = df_GW[cn_gw_v].mean()
+    T_mean = df_W[cn_w_v].mean()
+    df_GW['shifted_amplified_'+cn_gw_v] = T_mean + (h - h_mean) * 1./float(E)
 
 
     # loop over gw wells and USERDEFINED possible timelags
@@ -81,9 +84,9 @@ def timelag_erskine1991_method(df_gw, cn_gw_v, cn_gw_t,
 
 
     if len(tlag_tuple) == 3:
-        tlag_iterator = xrange(tlag_tuple[0], tlag_tuple[1], tlag_tuple[2])
+        tlag_iterator = xrange(tlag_tuple[0], tlag_tuple[1]+1, tlag_tuple[2])
     elif len(tlag_tuple) == 2:
-        tlag_iterator = xrange(tlag_tuple[0], tlag_tuple[1])
+        tlag_iterator = xrange(tlag_tuple[0], tlag_tuple[1]+1)
     else:
         raise NotImplementedError('tlag_iterator should be a tuple of 2 or 3 elements')
 
@@ -95,7 +98,7 @@ def timelag_erskine1991_method(df_gw, cn_gw_v, cn_gw_t,
         tlag_timedelta = datetime.timedelta(minutes=tlag)  # convert minutes to timedelta object
         df_GW['current_t_minus_tlag'] = df_GW[cn_gw_t] - tlag_timedelta
         df_GW['current_river_h'] = df_W.loc[df_GW['current_t_minus_tlag']][cn_w_v].values
-        df_GW['current_erskine_to_sum'] = (df_GW[cn_gw_v] - df_GW['current_river_h'])**2
+        df_GW['current_erskine_to_sum'] = (df_GW['shifted_amplified_'+cn_gw_v] - df_GW['current_river_h'])**2
         
         summ = df_GW['current_erskine_to_sum'].sum()
         if log: print( 'timelag = {0} >>> summ = {1}'.format(tlag_timedelta, summ))
@@ -105,6 +108,9 @@ def timelag_erskine1991_method(df_gw, cn_gw_v, cn_gw_t,
     timelag = TLAG_LIST[SUMM_LIST.index(min(SUMM_LIST))]
     
     if log:
+        print('-'*100)
+        for s, t in zip (SUMM_LIST, TLAG_LIST):
+            print( '\t {0:.1f} >>> {1} min'.format(s, t.total_seconds()/60.))
         print('-'*100)
         print( '\t minimal SUMM       : {0}'.format(min(SUMM_LIST)))
         print( '\t corresponding TLAG : {0}'.format(timelag))

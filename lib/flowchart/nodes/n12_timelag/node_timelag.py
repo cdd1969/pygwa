@@ -18,11 +18,11 @@ class timeLagNode(NodeWithCtrlWidget):
             {'name': 'method', 'type': 'list', 'value': '1) Erskine 1991', 'default': '1) Erskine 1991', 'values': ['1) Erskine 1991'], 'tip': 'Method to calculate TimeLag. Read docs'},
             
             {'title': 'Tidal Efficiency Parameters', 'name': 'E_grp', 'type': 'group', 'tip': '', 'expanded': True, 'children': [
-                {'title': 'Tidal Efficiency', 'name': 'E', 'type': 'float', 'value': None, 'tip': 'Tidal Efficiency (dimensionless)'},
+                {'title': 'Tidal Efficiency', 'name': 'E', 'type': 'float', 'value': None, 'limits': (0, 1), 'step': 0.1, 'tip': 'Tidal Efficiency (dimensionless)'},
                 {'title': 'Set `E` Manually', 'name': 'manual_E', 'type': 'bool', 'value': False, 'tip': 'Use `E` value received in terminal or set manually'}
                 ]},
             {'title': 'Time Lag Parameters', 'name': 'tlag_grp', 'type': 'group', 'tip': '', 'expanded': True, 'children': [
-                {'name': 't1', 'type': 'int', 'value': 1, 'default': 1, 'limits': (0, int(10e3)), 'tip': 'First value for timelag-iteration tuple. In minutes. Read docs'},
+                {'name': 't1', 'type': 'int', 'value': 0, 'default': 0, 'limits': (0, int(10e3)), 'tip': 'First value for timelag-iteration tuple. In minutes. Read docs'},
                 {'name': 't2', 'type': 'int', 'value': 60, 'default': 60, 'limits': (0, int(10e3)), 'tip': 'Last value for timelag-iteration tuple. In minutes. Read docs'},
                 {'name': 't_step', 'type': 'int', 'value': 1, 'default': 1, 'limits': (1, int(10e3)), 'tip': 'Step value for timelag-iteration tuple. In minutes. Read docs'},
                 {'name': 'tlag = ', 'type': 'str', 'readonly': True, 'value': None}
@@ -61,7 +61,7 @@ class timeLagNode(NodeWithCtrlWidget):
         kwargs = self.CW().prepareInputArguments()
         E = kwargs['E']
         # and i would have to block the signals here...
-        #print ('Calculating with E=', E)
+        print ('Calculating with E=', E)
         with BusyCursor():
             if kwargs['method'] == '1) Erskine 1991':
                 tlag = timelag_erskine1991_method(df_gw, kwargs['gw'], kwargs['gw_dtime'],
