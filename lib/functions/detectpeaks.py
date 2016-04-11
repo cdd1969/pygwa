@@ -248,8 +248,8 @@ def detectPeaks_ts(data, col, T=None, datetime=None, hMargin=1., detectPeaksFlag
             'time' - datetime of the peak
             'val'  - value of the peaks, consecutively max,min,max,min,...
             'time_diff'  - difference in time between two neighbor peaks
-            'check'  - if the condition (T/2 - hMargin < time_diff < T/2 + hMargin)
-                is met
+            'check'  - if the condition (T/2 - hMargin < time_diff < T/2 + hMargin) is met
+            'name'  - name of the signal
 
     '''
     if datetime is None:
@@ -345,6 +345,7 @@ def detectPeaks_ts(data, col, T=None, datetime=None, hMargin=1., detectPeaksFlag
         return halfT-epsilon < peaks.iloc[currentIndex]['time_diff'] < halfT+epsilon
 
     peaks['check'] = peaks.apply(checkDT, axis=1)
+    peaks['name']  = col
     
     if drop_dummy_rows and kwargs['split'] and len(DUMMY_ROWS) > 0:
         peaks = peaks.drop(peaks.index[DUMMY_ROWS])
@@ -587,6 +588,7 @@ def match_peaks(peaks_w, peaks_gw, match_colName='time_min', **kwargs):
                 'md_time_max' - matched datetime of max peak
                 'md_val_min'  - matched value of min peak
                 'md_val_max'  - matched value of max peak
+                'md_name'     - name of the matched signal
     '''
     match_col_index = peaks_w.columns.get_loc(match_colName)
 
@@ -616,6 +618,7 @@ def match_peaks(peaks_w, peaks_gw, match_colName='time_min', **kwargs):
             peaks_matched.ix[i, 'md_val_max']  = peaks_gw.iloc[j, peaks_gw.columns.get_loc('val_max')]
 
     peaks_matched['md_tidal_range']  = np.abs(peaks_matched['md_val_max'] - peaks_matched['md_val_min'])
+    peaks_matched['md_name']     = peaks_gw['name'].values[0]  # we take value at 0 index , since they are equal everywhere
     return peaks_matched
     
 
