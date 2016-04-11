@@ -21,7 +21,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self._unittestmode = False  #set this to True if running a unittest
-        #self.setupUi(self)
         uic.loadUi(projectPath('resources/mainwindow.ui'), self)
         self.uiData = uiData(self)
         self.connectActions()
@@ -82,6 +81,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menuOpen_Recent.addSeparator()
         self.actionClearRecent = QtGui.QAction('Clear', self, visible=True, triggered=self.on_actionClearRecent)
         self.menuOpen_Recent.addAction(self.actionClearRecent)
+
+        # create a tool bar menu button to open recent files and connect it to proper QMenu
+        for widget in self.actionLoad_fc.associatedWidgets():
+            # loop over assosiated widgets and search for QToolButton, assuming that only one is connected.
+            if isinstance(widget, QtWidgets.QToolButton):
+                widget.setMenu(self.menuOpen_Recent)
+                widget.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
+
+        # now populate recent files QMenu
         self.uiData.updateRecentFileActions()
 
 
@@ -215,7 +223,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot()
     def on_actionSave_As_fc(self, fileName=None):
-        self.fc.saveFile(fileName=fileName)
+        try:
+            startDir = os.path.dirname(self.uiData.currentFileName())
+        except:
+            startDir = None
+        self.fc.saveFile(fileName=fileName, startDir=startDir)
         fn = self.fc.widget().currentFileName
         if fn != self.uiData.defaultFlowchartFileName():
             self.uiData.setCurrentFileName(fn)
@@ -227,8 +239,12 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def on_actionLoad_fc(self, fileName=None):
         if self.doActionIfUnsavedChanges(message='Are you sure to load another Flowchart without saving this one?'):
-            directory = os.path.join(os.getcwd(), 'examples')
-            self.fc.loadFile(startDir=directory, fileName=fileName)
+            #directory = os.path.join(os.getcwd(), 'examples')
+            try:
+                startDir = os.path.dirname(self.uiData.currentFileName())
+            except:
+                startDir = None
+            self.fc.loadFile(startDir=startDir, fileName=fileName)
             fn = self.fc.widget().currentFileName
             if fn != self.uiData.defaultFlowchartFileName():
                 self.uiData.setCurrentFileName(fn)

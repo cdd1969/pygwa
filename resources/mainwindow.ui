@@ -79,7 +79,9 @@
       <string>Open Recent</string>
      </property>
      <property name="icon">
-      <iconset theme="document-open-recent"/>
+      <iconset theme="document-open-recent">
+       <normaloff/>
+      </iconset>
      </property>
      <addaction name="separator"/>
     </widget>
@@ -329,7 +331,9 @@
   </widget>
   <action name="actionAbout">
    <property name="icon">
-    <iconset theme="help-about"/>
+    <iconset theme="help-about">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>About</string>
@@ -337,7 +341,9 @@
   </action>
   <action name="actionNew_fc">
    <property name="icon">
-    <iconset theme="document-new"/>
+    <iconset theme="document-new">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>New</string>
@@ -348,7 +354,9 @@
   </action>
   <action name="actionQuit">
    <property name="icon">
-    <iconset theme="application-exit"/>
+    <iconset theme="application-exit">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Quit</string>
@@ -364,7 +372,9 @@
   </action>
   <action name="actionLoad_fc">
    <property name="icon">
-    <iconset theme="document-open"/>
+    <iconset theme="document-open">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Open</string>
@@ -375,7 +385,9 @@
   </action>
   <action name="actionSave_fc">
    <property name="icon">
-    <iconset theme="document-save"/>
+    <iconset theme="document-save">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Save</string>
@@ -386,7 +398,9 @@
   </action>
   <action name="actionSave_As_fc">
    <property name="icon">
-    <iconset theme="document-save-as"/>
+    <iconset theme="document-save-as">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Save As...</string>
@@ -397,7 +411,9 @@
   </action>
   <action name="actionDocumentation">
    <property name="icon">
-    <iconset theme="help-contents"/>
+    <iconset theme="help-contents">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Documentation</string>
@@ -427,7 +443,9 @@
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset theme="edit-copy"/>
+    <iconset theme="edit-copy">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Copy Node</string>
@@ -444,7 +462,9 @@
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset theme="edit-paste"/>
+    <iconset theme="edit-paste">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Paste Node</string>
