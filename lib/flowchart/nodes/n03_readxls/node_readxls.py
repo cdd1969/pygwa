@@ -87,5 +87,5 @@ class readXLSNodeCtrlWidget(NodeCtrlWidget):
             if param.name() in valid_arg_list and self.p.evaluateValue(param.value()) != '':
                 kwargs[param.name()] = self.p.evaluateValue(param.value())
 
-        kwargs['io'] = self.paramValue('Select File')
+        kwargs['io'] = os.path.abspath(self.paramValue('Select File'))
         return kwargs

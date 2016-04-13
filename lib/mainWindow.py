@@ -11,9 +11,9 @@ from flowchart.NodeLibrary import readNodeFile
 from flowchart.Flowchart import customFlowchart as Flowchart
 from common.CustomQCompleter import CustomQCompleter
 import PROJECTMETA
-from lib import projectPath
+from lib import projectPath, version_info
 from pyqtgraph import configfile
-
+from lib.common.basic import ErrorPopupMessagBox
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -74,7 +74,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # create EMPTY Open Recent Actions
         self.recentFileActs = []
-        for i in xrange(self.uiData.MAX_RECENT_FILES):
+        for i in xrange(GlobalOptions.n_recent_files):
             action = QtGui.QAction(self, visible=False, triggered=self.openRecentFile)
             self.menuOpen_Recent.addAction(action)
             self.recentFileActs.append(action)
@@ -120,10 +120,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def connectFCSignals(self):
+        '''
+        self.fc.sigFileLoaded - file is loaded
+        self.fc.sigFileSaved - file saved
+        self.fc.sigChartChanged - flowchart is changed
+        self.fc.sigChartLoaded - flowchart is loaded (restoreState finished with OK)
+        '''
         self.fc.sigFileLoaded.connect(self.uiData.setCurrentFileName)
+        self.fc.sigFileLoaded.connect(self.on_sigFileLoaded)
+
         self.fc.sigFileSaved.connect(self.uiData.setCurrentFileName)
-        self.fc.sigChartChanged.connect(self.on_sigChartChanged)
+        self.fc.sigFileSaved.connect(self.on_sigFileSaved)
+
+        self.fc.sigChartChanged.connect(self.on_sigChartChanged)  # when the flowchart is loaded
         self.fc.sigChartLoaded.connect(self.on_sigChartLoaded)
+        
         self.fc.scene.selectionChanged.connect(self.selectionChanged)
 
         self.lineEdit_nodeSelect.editingFinished.connect(self.on_lineEditNodeSelect_editingFinished)
@@ -213,13 +224,7 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def on_actionSave_fc(self):
         self.fc.saveFile(fileName=self.uiData.currentFileName())
-        fn = self.fc.widget().currentFileName
-        if fn != self.uiData.defaultFlowchartFileName():
-            self.uiData.setCurrentFileName(fn)
-            self.uiData.setChangesUnsaved(False)
-            self.statusBar().showMessage("File saved: "+fn, 5000)
         return True
-
 
     @QtCore.pyqtSlot()
     def on_actionSave_As_fc(self, fileName=None):
@@ -228,14 +233,19 @@ class MainWindow(QtWidgets.QMainWindow):
         except:
             startDir = None
         self.fc.saveFile(fileName=fileName, startDir=startDir)
+        return True
+    
+    def on_sigFileSaved(self):
+        '''
+            Executed after the Flowchart() has sended signal sigFileSaved
+        '''
         fn = self.fc.widget().currentFileName
         if fn != self.uiData.defaultFlowchartFileName():
             self.uiData.setCurrentFileName(fn)
             self.uiData.setChangesUnsaved(False)
             self.uiData.addRecentFile(fn)
             self.statusBar().showMessage("File saved: "+fn, 5000)
-        return True
-    
+
     @QtCore.pyqtSlot()
     def on_actionLoad_fc(self, fileName=None):
         if self.doActionIfUnsavedChanges(message='Are you sure to load another Flowchart without saving this one?'):
@@ -245,13 +255,19 @@ class MainWindow(QtWidgets.QMainWindow):
             except:
                 startDir = None
             self.fc.loadFile(startDir=startDir, fileName=fileName)
-            fn = self.fc.widget().currentFileName
-            if fn != self.uiData.defaultFlowchartFileName():
-                self.uiData.setCurrentFileName(fn)
-                self.uiData.setChangesUnsaved(False)
-                self.uiData.addRecentFile(fn)
-                self.statusBar().showMessage("File loaded: "+fn, 5000)
+            
     
+    def on_sigFileLoaded(self):
+        '''
+            Executed after the Flowchart() has sended signal sigFileLoaded
+        '''
+        fn = self.fc.widget().currentFileName
+        if fn != self.uiData.defaultFlowchartFileName():
+            self.uiData.setCurrentFileName(fn)
+            self.uiData.setChangesUnsaved(False)
+            self.uiData.addRecentFile(fn)
+            self.statusBar().showMessage("File loaded: "+fn, 5000)
+
     def openRecentFile(self):
         action = self.sender()
         if action:
@@ -265,14 +281,14 @@ class MainWindow(QtWidgets.QMainWindow):
         try:
             data = readNodeFile(fname)
         except Exception, err:
-            QtWidgets.QMessageBox.warning(self, "Add Item to Node Library", "Cannot load information from file <i>{0}</i> <br><br> {1}".format(fname, traceback.print_exc()))
+            ErrorPopupMessagBox(self, 'Add Item to Node Library', 'Cannot load information from file <i>{0}</i>'.format(fname))
             return
         try:
             self.uiData.fclib().registerExternalNode(fname)
             self.resetNodeLibraryWidgets()
             QtWidgets.QMessageBox.information(self, "Add Item to Node Library", "Node <b>`{0}`</b> has been successflly added to the Library. Node information has been loaded from file <i>{1}</i>".format(data['classname'], fname))
         except Exception, err:
-            QtWidgets.QMessageBox.warning(self, "Add Item to Node Library", "Cannot load Node <b>`{0}`</b> from file <i>{1}</i> <br><br> {2}".format(data['classname'], data['filename'], traceback.print_exc()))
+            ErrorPopupMessagBox(self, 'Add Item to Node Library', 'Cannot load Node <b>`{0}`</b> from file <i>{1}</i>'.format(data['classname'], data['filename']))
     
     @QtCore.pyqtSlot()
     def on_actionReloadDefaultLib(self):
@@ -299,8 +315,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot()
     def on_actionAbout(self):
-        QtWidgets.QMessageBox.about(self, "About...", "{0}\n\nVersion: {1}\nAuthor: {2}\nContact: {3}".format(
-            PROJECTMETA.about, PROJECTMETA.__version__, PROJECTMETA.__author__, PROJECTMETA.__contact__))
+        versions_str = ''
+        for n, v in version_info().iteritems():
+            versions_str += '<br>{0} == {1}'.format(n, v)
+        QtWidgets.QMessageBox.about(self, "About...", "{0}<br><br>Version: {1}<br>Author: {2}<br>Contact: {3}<br><hr>Configuration<br>{4}".format(
+            PROJECTMETA.about, PROJECTMETA.__version__, PROJECTMETA.__author__, PROJECTMETA.__contact__, versions_str)
+            )
 
     @QtCore.pyqtSlot()
     def on_actionDocumentation(self):
@@ -360,7 +380,10 @@ class MainWindow(QtWidgets.QMainWindow):
         elif action == 'rename':
             #print( 'on_sigChartChanged(): rename')
             if self.stackNodeCtrlStackedWidget.currentWidget() is node.ctrlWidget():
-                self.label_nodeCtrlName.setText("Node: <"+node.name()+">")
+                if hasattr(node, 'nodeName'):
+                    self.label_nodeCtrlName.setText("Node Type:{0}<br>Node Name:{1}".format(node.nodeName, node.name()))
+                else:
+                    self.label_nodeCtrlName.setText("Node Name:{0}".format(node.name()))
         
         elif action == 'uiChanged':
             pass
@@ -381,7 +404,10 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.stackNodeCtrlStackedWidget.setCurrentWidget(self._dummyWidget)
 
-        self.label_nodeCtrlName.setText("Node: <"+node.name()+">")
+        if hasattr(node, 'nodeName'):
+            self.label_nodeCtrlName.setText("Node Type:{0}<br>Node Name:{1}".format(node.nodeName, node.name()))
+        else:
+            self.label_nodeCtrlName.setText("Node Name:{0}".format(node.name()))
 
 
     @QtCore.pyqtSlot(unicode, unicode)
@@ -447,6 +473,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 from lib.flowchart.NodeLibrary import customNodeLibrary
 
 
@@ -464,7 +502,7 @@ class uiData(QtCore.QObject):
         #self.settings.clear()
 
         self.win = parent
-        self.MAX_RECENT_FILES = 10
+        GlobalOptions.n_recent_files = 10
         self._defaultFlowchartFileName = projectPath('resources/defaultFlowchart.dfc')
         self._defaultLibFileName = projectPath('resources/defaultLibrary.json')
         
@@ -525,7 +563,7 @@ class uiData(QtCore.QObject):
             recentFiles.insert(newindex, recentFiles.pop(oldindex))
 
         # cut it to 10 files
-        recentFiles = recentFiles[0:self.MAX_RECENT_FILES] if len(recentFiles) >= self.MAX_RECENT_FILES else recentFiles
+        recentFiles = recentFiles[0:GlobalOptions.n_recent_files] if len(recentFiles) >= GlobalOptions.n_recent_files else recentFiles
         
         self.settings.setValue("RecentFiles", recentFiles)
         self.updateRecentFileActions()
@@ -553,7 +591,7 @@ class uiData(QtCore.QObject):
         if files is None:
             return
 
-        numRecentFiles = min(len(files), self.MAX_RECENT_FILES)
+        numRecentFiles = min(len(files), GlobalOptions.n_recent_files)
 
         for i in xrange(numRecentFiles):
             if not os.path.isfile(files[i]):
@@ -564,7 +602,7 @@ class uiData(QtCore.QObject):
             self.win.recentFileActs[i].setData(files[i])
             self.win.recentFileActs[i].setVisible(True)
 
-        for j in xrange(numRecentFiles, self.MAX_RECENT_FILES):
+        for j in xrange(numRecentFiles, GlobalOptions.n_recent_files):
             self.win.recentFileActs[j].setVisible(False)
 
     def setChangesUnsaved(self, state):
@@ -648,16 +686,23 @@ class uiData(QtCore.QObject):
         #self.updateRecentFileActions()  #>>> is moved to INIT of MainWindow since actions are not inited yet
 
     def saveBakFile(self):
+        if not GlobalOptions.save_bak:
+            return
         fname = self.currentFileName()
         if fname is None:
-            # save somewhere
+            # save in pygwa root folder
             bakname = os.path.join(os.path.dirname(__file__), '../', 'unsaved_flowchart.fc.bak')
         else:
             #save to current file folder
             bakname = fname+'.bak'
 
         bakname = os.path.abspath(bakname)
-        configfile.writeConfigFile(self.win.fc.saveState(), bakname)
+        try:
+            configfile.writeConfigFile(self.win.fc.saveState(), bakname)
+        except Exception, e:
+            if GlobalOptions.notify_on_savebak_error:
+                ErrorPopupMessagBox(self, 'Save Backup File', 'Cannot save backup file at <i>{0}</i>'.format(bakname))
+                return
 
         self.setCurrentBakFileName(bakname)
         # delay dsiplaying because status bar shows other messages as well. Too lazy to make queue
@@ -697,6 +742,16 @@ class uiData(QtCore.QObject):
         for k in settings.allKeys():
             print '{0} {2} {1}'.format(k, settings.value(k), symbol)
         print '-'*20
+
+
+
+class GlobalOptions(object):
+    '''
+        global options (may be implemented in future into Options Menu)
+    '''
+    n_recent_files = 10  # number of recent files
+    save_bak = True  # try to save backup file
+    notify_on_savebak_error = True  # notify, when bak cannot be saved
 
 
 
