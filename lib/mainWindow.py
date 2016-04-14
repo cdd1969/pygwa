@@ -753,6 +753,10 @@ class GlobalOptions(object):
     save_bak = True  # try to save backup file
     notify_on_savebak_error = True  # notify, when bak cannot be saved
 
+    # to do....
+    logger_on = True  #toggle logger
+    logfile_location = 'path/to/log/file'
+
 
 
 def main():
