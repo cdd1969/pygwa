@@ -52,9 +52,14 @@ def get_number_of_measurements_per_day(data, datetime=None, log=False):
 def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, keep_origin=True, verbose=False, log=False):
     ''' Calculate mean water-level according to Serfes1991.
 
-    Perform a column-wise time averaging in three iterations. This function is
-    a modified version of original Serfes filter: it is not limited to hourly
-    measurements.
+    Perform a column-wise time averaging in three iterations.
+        1) The first sequence averages 24 hours of measurements
+        2) The second sequence averages 24 hours of first sequence
+        3) The third sequence averages all values of second sequence that were
+        generated when the filter was applied to 71h
+
+    This function is a modified version of original Serfes filter: it is not
+    limited to hourly measurements.
 
     Args:
         data (pd.DataFrame): input data, where indexes are Datetime objects,
@@ -120,11 +125,19 @@ def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, keep_ori
         for col in datetime_columns:
             output[col] = data[col]
 
+    nX = int(N/24.*71 - (N-1))  # number of elements in sequence_1
+    nY = nX - (N-1)             # number of elements in sequence_2
+    #print (N, nX, nY)
     for col_name in numeric_columns:
-        output[col_name+'_sequence1'] = pd.rolling_mean(data[col_name], window=N, min_periods=N, center=True).values
-        output[col_name+'_sequence2'] = pd.rolling_mean(output[col_name+'_sequence1'], window=N, min_periods=N, center=True).values
-        output[col_name+'_mean'] = pd.rolling_mean(output[col_name+'_sequence2'], window=N, min_periods=N, center=True).values
-
+        if float('.'.join(pd.__version__ .split('.')[0:2])) < 0.18:  # if version is less then 0.18 (OLD API)
+            output[col_name+'_sequence1'] = pd.rolling_mean(data[col_name], window=N, min_periods=N, center=True).values
+            output[col_name+'_sequence2'] = pd.rolling_mean(output[col_name+'_sequence1'], window=N, min_periods=N, center=True).values
+            output[col_name+'_mean'] = pd.rolling_mean(output[col_name+'_sequence2'], window=nY, min_periods=nY, center=True).values
+        else:
+            # new API
+            output[col_name+'_sequence1'] = data[col_name].rolling(window=N, min_periods=N, center=True).mean().values
+            output[col_name+'_sequence2'] = output[col_name+'_sequence1'].rolling(window=N, min_periods=N, center=True).mean().values
+            output[col_name+'_mean']      = output[col_name+'_sequence2'].rolling(window=nY, min_periods=nY, center=True).mean().values
         if not verbose: del output[col_name+'_sequence1']
         if not verbose: del output[col_name+'_sequence2']
 
