@@ -29,6 +29,12 @@ class pickEqualDatesNode(NodeWithCtrlWidget):
     def process(self, pattern, pickFrom):
         df1 = pickFrom
         df2 = pattern
+        
+        self.CW().disconnect_valueChanged2upd(self.CW().param('slice', 'Start'))
+        self.CW().disconnect_valueChanged2upd(self.CW().param('slice', 'End'))
+        if self.CW().p['slice'] is True:
+            self.CW().connect_valueChanged2upd(self.CW().param('slice', 'Start'))
+            self.CW().connect_valueChanged2upd(self.CW().param('slice', 'End'))
 
         if df1 is None:
             self.CW().disconnect_valueChanged2upd(self.CW().param('datetime <pickFrom>'))
@@ -59,15 +65,9 @@ class pickEqualDatesNode(NodeWithCtrlWidget):
             t_vals = df1[self.CW().p['datetime <pickFrom>']].values
             t_min, t_max = pd.to_datetime(str(min(t_vals))), pd.to_datetime(str(max(t_vals)))
 
-            self.CW().disconnect_valueChanged2upd(self.CW().param('slice', 'Start'))
-            self.CW().disconnect_valueChanged2upd(self.CW().param('slice', 'End'))
-            self.CW().param('slice', 'Start').setValue(t_min.strftime('%Y-%m-%d %H:%M:%S'))
             self.CW().param('slice', 'Start').setDefault(t_min.strftime('%Y-%m-%d %H:%M:%S'))
-            self.CW().param('slice', 'End').setValue(t_max.strftime('%Y-%m-%d %H:%M:%S'))
             self.CW().param('slice', 'End').setDefault(t_max.strftime('%Y-%m-%d %H:%M:%S'))
-            if self.CW().p['slice'] is True:
-                self.CW().connect_valueChanged2upd(self.CW().param('slice', 'Start'))
-                self.CW().connect_valueChanged2upd(self.CW().param('slice', 'End'))
+
         
         kwargs = self.ctrlWidget().prepareInputArguments()
 
