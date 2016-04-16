@@ -1,0 +1,41 @@
+pos: (0.0, 0.0)
+connects: []
+terminals:
+    dataOut:
+        multi: False
+        io: 'out'
+        renamable: False
+        multiable: False
+        removable: False
+        optional: False
+    dataIn:
+        multi: False
+        io: 'in'
+        renamable: False
+        multiable: False
+        removable: False
+        optional: False
+bypass: False
+inputNode:
+    terminals:
+        dataIn:
+            multi: False
+            io: 'out'
+            renamable: False
+            multiable: False
+            removable: False
+            optional: False
+    pos: (-150.0, 0.0)
+    bypass: False
+nodes: [{'state': {'crtlWidget': {'expanded': True, 'name': 'params', 'strictNaming': False, 'default': None, 'enabled': True, 'title': None, 'renamable': False, 'value': None, 'visible': True, 'readonly': False, 'removable': False, 'type': 'group', 'children': OrderedDict([('x0', {'expanded': True, 'suffix': 'm', 'limits': (0.0, 10000000.0), 'strictNaming': False, 'default': 0.0, 'tip': 'Distance between an observed well and shoreline (in meters)', 'title': 'Distance', 'renamable': False, 'value': 5.0, 'visible': True, 'readonly': False, 'removable': False, 'type': 'float', 'enabled': True, 'name': 'x0'}), ('t0', {'expanded': True, 'suffix': 'hours', 'limits': (0.0, 100000000000.0), 'strictNaming': False, 'default': 12.42, 'tip': 'Period of the tide (in hours)', 'title': 'Tide Period', 'renamable': False, 'value': 12.42, 'visible': True, 'readonly': False, 'removable': False, 'type': 'float', 'enabled': True, 'name': 't0'}), ('E_grp', {'expanded': True, 'name': 'E_grp', 'strictNaming': False, 'default': None, 'enabled': True, 'title': 'Tidal Efficiency Parameters', 'renamable': False, 'value': None, 'visible': True, 'readonly': False, 'tip': '', 'removable': False, 'type': 'group', 'children': OrderedDict([('E', {'expanded': True, 'name': 'E', 'strictNaming': False, 'default': 1.0, 'enabled': True, 'title': 'Tidal Efficiency', 'renamable': False, 'value': 0.5, 'visible': True, 'readonly': False, 'tip': 'Estimated or guessed Tidal Efficiency of an aquifer near an observed well (dimensionless).', 'removable': False, 'type': 'float'}), ('manual_E', {'expanded': True, 'name': 'manual_E', 'strictNaming': False, 'default': False, 'enabled': True, 'title': 'Set `E` Manually', 'renamable': False, 'value': True, 'visible': True, 'readonly': False, 'tip': 'Use Tidal Efficiency value received in terminal or set manually. If checked - set manually', 'removable': False, 'type': 'bool'})])}), ('tlag_grp', {'expanded': True, 'name': 'tlag_grp', 'strictNaming': False, 'default': None, 'enabled': True, 'title': 'Time Lag Parameters', 'renamable': False, 'value': None, 'visible': True, 'readonly': False, 'tip': '', 'removable': False, 'type': 'group', 'children': OrderedDict([('tlag', {'expanded': True, 'suffix': 'min', 'limits': (0.0, 600.0), 'strictNaming': False, 'default': 0.0, 'tip': 'Estimated or guessed Time Lag (in minutes) of the groundwater fluctuation-signal in observed well.', 'title': 'Time Lag', 'renamable': False, 'value': 5.0, 'visible': True, 'readonly': False, 'removable': False, 'type': 'float', 'enabled': True, 'name': 'tlag'}), ('manual_tlag', {'expanded': True, 'name': 'manual_tlag', 'strictNaming': False, 'default': False, 'enabled': True, 'title': 'Set `tlag` Manually', 'renamable': False, 'value': True, 'visible': True, 'readonly': False, 'tip': 'Use Time Lag value received in terminal or set manually. If checked - set manually', 'removable': False, 'type': 'bool'})])}), ('D_grp', {'expanded': True, 'name': 'D_grp', 'strictNaming': False, 'default': None, 'enabled': True, 'title': 'Calculated Diffusivity', 'renamable': False, 'value': None, 'visible': True, 'readonly': False, 'tip': '', 'removable': False, 'type': 'group', 'children': OrderedDict([('D_e', {'expanded': True, 'name': 'D_e', 'strictNaming': False, 'default': '', 'enabled': True, 'title': 'Diffusivity (E)', 'renamable': False, 'value': '0.0037 m**2/s', 'visible': True, 'readonly': True, 'removable': False, 'type': 'str'}), ('D_tlag', {'expanded': True, 'name': 'D_tlag', 'strictNaming': False, 'default': '', 'enabled': True, 'title': 'Diffusivity (tlag)', 'renamable': False, 'value': '0.9884 m**2/s', 'visible': True, 'readonly': True, 'removable': False, 'type': 'str'})])})])}, 'pos': (6.023622764169829, 2.5186017453337968), 'bypass': False}, 'pos': (6.023622764169829, 2.5186017453337968), 'class': 'Diffusivity (Ferris)', 'name': u'Diffusivity (Ferris).0'}]
+outputNode:
+    terminals:
+        dataOut:
+            multi: False
+            io: 'in'
+            renamable: False
+            multiable: False
+            removable: False
+            optional: False
+    pos: (300.0, 0.0)
+    bypass: False

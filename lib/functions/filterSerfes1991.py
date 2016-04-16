@@ -4,6 +4,7 @@ from __future__ import print_function
 import numpy as np
 import gc
 import pandas as pd
+from lib.functions.general import isNumpyDatetime, isNumpyNumeric
 
 
 def get_number_of_measurements_per_day(data, datetime=None, log=False):
@@ -48,12 +49,17 @@ def get_number_of_measurements_per_day(data, datetime=None, log=False):
 
 
 #@profile
-def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, verbose=False, log=False):
+def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, keep_origin=True, verbose=False, log=False):
     ''' Calculate mean water-level according to Serfes1991.
 
-    Perform a column-wise time averaging in three iterations. This function is
-    a modified version of original Serfes filter: it is not limited to hourly
-    measurements.
+    Perform a column-wise time averaging in three iterations.
+        1) The first sequence averages 24 hours of measurements
+        2) The second sequence averages 24 hours of first sequence
+        3) The third sequence averages all values of second sequence that were
+        generated when the filter was applied to 71h
+
+    This function is a modified version of original Serfes filter: it is not
+    limited to hourly measurements.
 
     Args:
         data (pd.DataFrame): input data, where indexes are Datetime objects,
@@ -76,6 +82,10 @@ def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, verbose=
             (i.e. int32, int64, float32, float64). Default value is `None`
             meaning that all numerical columns will be processed.
 
+        keep_origin (Optional[bool]): if `True` - will keep original columns
+            in the output dataframe. If `False` - will return dataframe which
+            has only results columns and original DateTime columns
+
         verbose (Optional[bool]): if `True` - will keep all three iterations
             in the output. If `False` - will save only final (3rd) iteration.
             This may useful for debugging, or checking this filter.
@@ -91,18 +101,11 @@ def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, verbose=
     # if convert all columns...
     if usecols is None:
         # select only numeric columns...
-        numeric_columns = list()
-        for col_name in data.columns:  # cycle through each column...
-            if data[col_name].dtype in (np.float64 , np.int64, np.float32, np.int32):
-                numeric_columns.append(col_name)
+        numeric_columns = [col for col in data.columns if isNumpyNumeric(data[col].dtype)]
     # or covert only user defined columns....
     else:
         # select only numeric columns...
-        numeric_columns = list()
-        for col_name in usecols:  # cycle through each column...
-            if data[col_name].dtype in (np.float64 , np.int64, np.float32, np.int32):
-                numeric_columns.append(col_name)
-
+        numeric_columns = [col for col in data.columns if (isNumpyNumeric(data[col].dtype) and col in usecols)]
     #if user has not explicitly passed number of measurements in a day, find it out!
     if N is None:
         N = get_number_of_measurements_per_day(data, datetime=datetime, log=log)
@@ -112,13 +115,31 @@ def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, verbose=
         print ('Numeric colums:', numeric_columns)
         print ('i will use following number of entries per day: ', N)
 
-    for col_name in numeric_columns:
-        data[col_name+'_averaging1'] = pd.rolling_mean(data[col_name], window=N, min_periods=N, center=True).values
-        data[col_name+'_averaging2'] = pd.rolling_mean(data[col_name+'_averaging1'], window=N, min_periods=N, center=True).values
-        data[col_name+'_timeAverage'] = pd.rolling_mean(data[col_name+'_averaging2'], window=N, min_periods=N, center=True).values
+    if keep_origin:
+        output = data
+    else:
+        output = pd.DataFrame()
 
-        if not verbose: del data[col_name+'_averaging1']
-        if not verbose: del data[col_name+'_averaging2']
+        #copy datetime columns
+        datetime_columns = [col for col in data.columns if isNumpyDatetime(data[col].dtype)]
+        for col in datetime_columns:
+            output[col] = data[col]
+
+    nX = int(N/24.*71 - (N-1))  # number of elements in sequence_1
+    nY = nX - (N-1)             # number of elements in sequence_2
+    #print (N, nX, nY)
+    for col_name in numeric_columns:
+        if float('.'.join(pd.__version__ .split('.')[0:2])) < 0.18:  # if version is less then 0.18 (OLD API)
+            output[col_name+'_sequence1'] = pd.rolling_mean(data[col_name], window=N, min_periods=N, center=True).values
+            output[col_name+'_sequence2'] = pd.rolling_mean(output[col_name+'_sequence1'], window=N, min_periods=N, center=True).values
+            output[col_name+'_mean'] = pd.rolling_mean(output[col_name+'_sequence2'], window=nY, min_periods=nY, center=True).values
+        else:
+            # new API
+            output[col_name+'_sequence1'] = data[col_name].rolling(window=N, min_periods=N, center=True).mean().values
+            output[col_name+'_sequence2'] = output[col_name+'_sequence1'].rolling(window=N, min_periods=N, center=True).mean().values
+            output[col_name+'_mean']      = output[col_name+'_sequence2'].rolling(window=nY, min_periods=nY, center=True).mean().values
+        if not verbose: del output[col_name+'_sequence1']
+        if not verbose: del output[col_name+'_sequence2']
 
     gc.collect()
-    return data
+    return output

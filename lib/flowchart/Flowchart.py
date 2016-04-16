@@ -7,6 +7,7 @@ import traceback
 import os
 from pyqtgraph.flowchart.Terminal import Terminal
 from numpy import ndarray
+from lib.common.basic import ErrorPopupMessagBox
 
 
 class customFlowchart(Flowchart):
@@ -47,16 +48,15 @@ class customFlowchart(Flowchart):
         try:
             state = configfile.readConfigFile(fileName)
             self.restoreState(state, clear=True)
-            self.viewBox.autoRange()
-            #self.emit(QtCore.SIGNAL('fileLoaded'), fileName)
-            self.sigFileLoaded.emit(fileName)
-
-            self.inputNode.graphicsItem().hide()
-            self.outputNode.graphicsItem().hide()
         except Exception, err:
             self.clear()
-            QtGui.QMessageBox.warning(self.parent, "Load Flowchart", 'Cannot load flowchart from file <i>{0}</i> <br><br>  <i>{1}</i>'.format(fileName, traceback.format_exc()))
+            ErrorPopupMessagBox(self.parent, "Load Flowchart", 'Cannot load flowchart from file <i>{0}</i>'.format(fileName))
             return
+
+        self.viewBox.autoRange()
+        self.sigFileLoaded.emit(fileName)
+        self.inputNode.graphicsItem().hide()
+        self.outputNode.graphicsItem().hide()
     
     def saveFile(self, fileName=None, startDir=None, suggestedFileName='flowchart.fc'):
         if fileName is None:
@@ -73,7 +73,11 @@ class customFlowchart(Flowchart):
         fileName = unicode(fileName)
         if os.path.splitext(fileName)[1] != '.fc':
             fileName += u'.fc'
-        configfile.writeConfigFile(self.saveState(), fileName)
+        try:
+            configfile.writeConfigFile(self.saveState(), fileName)
+        except Exception, err:
+            ErrorPopupMessagBox(self.parent, "Save Flowchart", 'Cannot save flowchart to file <i>{0}</i>'.format(fileName))
+            return
         self.sigFileSaved.emit(fileName)
 
     def addNode(self, node, name, pos=None):

@@ -1,6 +1,6 @@
 {
     "filename":  "node_detectpeaks.py",
     "classname": "detectPeaksTSNode",
-    "libpath": ["Processing"],
+    "libpath": ["2.Processing"],
     "override": true
 }

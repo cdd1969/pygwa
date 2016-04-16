@@ -151,7 +151,7 @@ def fourier_analysis(sig, timestep, N_MAX_POW=1, generate_plot=False, display_pl
             ax2.set_xlabel('Time [hours]')
         else:
             T = datetime_plot
-        ax2.scatter(T, sig, color='g', label='Original signal', s=5)
+        ax2.scatter(T, sig, color='g', label='Original signal', marker='x', s=50, linewidths=1.2)
         #ax2.plot(fftpack.ifft(sig_fft), 'b-.', lw=2., label='Fitted signal')
         ax2.plot(T, y, 'r-', lw=2., label='Fitted signal (simplified)')
         ax2.plot(T, y-sig, 'm--', lw=1., label='Residuals')

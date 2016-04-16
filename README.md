@@ -6,7 +6,7 @@
 
 **PyGWA** is a GUI-tool based on [PyQtGraph][pyqtgraph] for analysis of the groundwater hydrograph data.
 
-The workflow concept is the "flowchart", meaning that the typical usage will include splitting the whole job into small parts and solving them step-by-step using small subprograms -- so-called "Nodes" (gui-wrapped processing scripts). For example the task "determine the mean hydraulic gradient in tidal-influenced aquifer" may have following solution algorithm: *Read well data > Interpolate missing data > Check data plausability > Filter out tidal influence > Calculate mean hydraulic gradient > Visualize result > Export result*. The idea behind PyGWA is to provide the library of scripts for solving this kind of small tasks as well as to give user the possibility to extend the library by adding his own "Nodes".
+The work-flow concept is the "flowchart", meaning that the typical usage will include splitting the whole job into small parts and solving them step-by-step using small subprograms -- so-called "Nodes" (gui-wrapped processing scripts). For example the task "determine the mean hydraulic gradient in tidal-influenced aquifer" may have following solution algorithm: *Read well data > Interpolate missing data > Check data plausibility > Filter out tidal influence > Calculate mean hydraulic gradient > Visualize result > Export result*. The idea behind PyGWA is to provide the library of scripts for solving this kind of small tasks as well as to give user the possibility to extend the library by adding his own "Nodes".
 
 ## Installation
 Find all information on [Wiki Installation][wiki_inst] page.
@@ -18,7 +18,7 @@ Check out the project's [wiki][wiki].
 ## Author
 Copyright 2016, Nikolai Chernikov ([nikolai.chernikov.ru@gmail.com][my_mail]), Hamburg University of Technology
 
-## Licence
+## License
 [MIT](https://opensource.org/licenses/MIT)
 
 

@@ -40,19 +40,19 @@ def diffusivity(x0=None, E=None, tlag=None, omega=None, **kwargs):
         D_e (float) [m**2/s]:
             Diffusivity (T/S) calculated from (eq.1) in [m**2/s]
     '''
-    alpha   = kwargs.get('alpha', None)
-    beta    = kwargs.get('beta', None)
-    theta   = kwargs.get('theta', None)
-    rho     = kwargs.get('rho', 1000.)
-    b       = kwargs.get('b', None)
-    K       = kwargs.get('K', None)
-    b1      = kwargs.get('b1', None)
-    K1      = kwargs.get('K1', None)
-    b_cap   = kwargs.get('b_cap', None)
-    K_cap   = kwargs.get('K_cap', None)
-    L       = kwargs.get('L', None)
+    alpha   = kwargs.get('alpha', None)     # Aquifer (confined) Compressibility [s**2*m/kg]
+    beta    = kwargs.get('beta', None)      # Pore Water Compressibility [s**2*m/kg]
+    theta   = kwargs.get('theta', None)     # Total Porosity of a confined aquifer [-]
+    rho     = kwargs.get('rho', 1000.)      # Ground Water Density [kg/m**3]
+    b       = kwargs.get('b', None)         # Thickness of the confined aquifer [m]
+    K       = kwargs.get('K', None)         # Hydraulic Conductivity (horizontal) of the confined aquifer [m/s]
+    b1      = kwargs.get('b1', None)        # Thickness of aquitard (semi-permeable layer) [m]
+    K1      = kwargs.get('K1', None)        # Hydraulic Conductivity (vertical) of aquitard (semi-permeable layer) [m/s]
+    b_cap   = kwargs.get('b_cap', None)     # Thickness of the outlet-capping [m]
+    K_cap   = kwargs.get('K_cap', None)     # Hydraulic Conductivity (horizontal) of the outlet-capping [m/s]
+    L       = kwargs.get('L', None)         # Offshore length of the roof [m]
+    g       = kwargs.get('g', 9.81)         # Gravity acceleration [m/s**2]
 
-    g = 9.81  #gravity acceleration [m/s**2]
 
     # -------------------------------------------------------------------
     # Ss = specific storage [1/m]
@@ -201,8 +201,8 @@ def h(t=[], x=0,
             CASE = 2  # infinite roof, without roof leakage
     
     elif L == 0.:
-        if CAPPING is 'permeable' and ROOF is 'permeable':
-            CASE = 3  # zero offshore length, with capping, with leakage
+        if CAPPING is 'permeable' and (ROOF is 'permeable' or ROOF is 'impermeable'):
+            CASE = 3  # zero offshore length, with capping, with/-out leakage
     
         elif not CAPPING and ROOF is 'permeable':
             CASE = 4  # zero ofsshore length, without capping, with leakage
@@ -222,8 +222,8 @@ def h(t=[], x=0,
     
     
     if CASE is None:
-        print('ROOF is {0}, CAPPING is {1}, ROOG LENGTH is {2}'.format(ROOF, CAPPING, L))
-        raise NotImplementedError('This case is currently not implemented')
+        msg = 'ROOF is {0}, CAPPING is {1}, ROOG LENGTH is {2}'.format(ROOF, CAPPING, L)
+        raise NotImplementedError(msg+'\nThis case is currently not implemented')
 
     #print('ROOF is {0}, CAPPING is {1}, ROOG LENGTH is {2}'.format(ROOF, CAPPING, L))
     #print 'xia2007 > CASE', CASE

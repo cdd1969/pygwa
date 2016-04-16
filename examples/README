@@ -1,0 +1,2 @@
+Examples in this folder MUST be run from pygwa root directory,
+since nodes "Read XLS" have predefined relative paths to data files

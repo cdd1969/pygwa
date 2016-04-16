@@ -4,7 +4,7 @@ import numpy as np
 
 
 
-def tidalEfficiency_method1(df, river, gw, log=False):
+def tidalEfficiency_method1(df, canal, well, log=False):
     '''
     Calculate Tidal Efficiency according to Erskine 1991, as the ratio
     of the standard deviation of the two sets of reading.
@@ -16,11 +16,11 @@ def tidalEfficiency_method1(df, river, gw, log=False):
     Args:
     -----
         df (pandas.DataFrame):
-            data to be processed; columns with names given in `river`
-            and `gw` must exist
-        river (str):
+            data to be processed; columns with names given in `canal`
+            and `well` must exist
+        canal (str):
             column name of the water measurements
-        gw (str):
+        well (str):
             column name of the ground-water measurements
 
     Returns:
@@ -28,7 +28,7 @@ def tidalEfficiency_method1(df, river, gw, log=False):
         E (float):
             tidal efficiency factor
     '''
-    E = df[gw].std()/float(df[river].std())
+    E = df[well].std()/float(df[canal].std())
 
     return E
 
@@ -36,7 +36,7 @@ def tidalEfficiency_method1(df, river, gw, log=False):
 
 
 
-def tidalEfficiency_method2(river_cycle_amp, gw_cycle_amp):
+def tidalEfficiency_method2(tr_canal_cycle, tr_well_cycle):
     '''
     Calculate Tidal Efficiency according to Smith 1994, as the mean
     of the amplitude ratios for every tidal-cycle.
@@ -49,10 +49,10 @@ def tidalEfficiency_method2(river_cycle_amp, gw_cycle_amp):
 
     Args:
     -----
-        river_cycle_amp (pandas.Series, 1-D array_like):
+        tr_canal_cycle (pandas.Series, 1-D array_like):
             amplitudes of the river for every tidal cycle
             Note, DATA MUST BE CLEAN!
-        gw_cycle_amp (pandas.Series, 1-D array_like):
+        tr_well_cycle (pandas.Series, 1-D array_like):
             amplitudes of the groundwater well for every tidal cycle
             Note, DATA MUST BE CLEAN!
 
@@ -64,8 +64,8 @@ def tidalEfficiency_method2(river_cycle_amp, gw_cycle_amp):
     
     # 1. check amplitudes
     #   1.1 they should have equal length
-    if len(river_cycle_amp) != len(gw_cycle_amp):
-        raise Exception('Length of *peak* arrays is not equal: peaks_river = % d, peaks_gw = % d' % len(river_cycle_amp), len(gw_cycle_amp))
+    if len(tr_canal_cycle) != len(tr_well_cycle):
+        raise Exception('Length of *peak* arrays is not equal: peaks_river = % d, peaks_gw = % d' % len(tr_canal_cycle), len(tr_well_cycle))
         # Error
 
 
@@ -73,8 +73,8 @@ def tidalEfficiency_method2(river_cycle_amp, gw_cycle_amp):
     ERROR = False
     # if pd.Series or np.ndarray - do quick
     try:
-        E_array = gw_cycle_amp/river_cycle_amp
-        if len(E_array) != len(gw_cycle_amp):
+        E_array = tr_well_cycle/tr_canal_cycle
+        if len(E_array) != len(tr_well_cycle):
             ERROR = True
         else:
             E_sum = E_array.sum()
@@ -84,12 +84,12 @@ def tidalEfficiency_method2(river_cycle_amp, gw_cycle_amp):
     # if not... do with row-iterations, slow
     if ERROR:
         E_sum = 0.
-        for a_w, a_gw in zip(river_cycle_amp, gw_cycle_amp):
+        for a_w, a_gw in zip(tr_canal_cycle, tr_well_cycle):
             E_sum += a_gw/float(a_w)
 
-    E = E_sum/len(gw_cycle_amp)
+    E = E_sum/len(tr_well_cycle)
 
-    return E, len(gw_cycle_amp)
+    return E, len(tr_well_cycle)
 
 
 
@@ -137,7 +137,8 @@ def tidalEfficiency_method3(df, river, gw, datetime_col, river_cycle_time_min, r
         E (float):
             tidal efficiency factor
     '''
-    
+    log = True
+
     # 1. check peaks
     #   1.1 they should have equal length
     l1 = len(river_cycle_time_min)
@@ -152,10 +153,13 @@ def tidalEfficiency_method3(df, river, gw, datetime_col, river_cycle_time_min, r
     # 2. Determine period
     T = (river_cycle_time_max-river_cycle_time_min).mean()*2
 
+    if log:
+        print('Period: T=', T)
+        print('River: ', river)
+        print('Well: ', gw)
 
     # 3. Do the calculations
-    E_sum = 0.
-    N = 0  # number of cycles
+    E_cycles = list()
 
     for w_tmin, w_tmax, gw_tmin, gw_tmax in zip(river_cycle_time_min, river_cycle_time_max, gw_cycle_time_min, gw_cycle_time_max):
         # 3.2 find the index of the entry closest to specific datetime
@@ -168,40 +172,36 @@ def tidalEfficiency_method3(df, river, gw, datetime_col, river_cycle_time_min, r
         except:
             continue
             
-        std_w  = df.ix[w_i1:w_i2, river].std()
-        std_gw  = df.ix[gw_i1:gw_i2, gw].std()
+        hydr_w  = df.ix[w_i1:w_i2, river]
+        hydr_gw  = df.ix[gw_i1:gw_i2, gw]
 
-        E_i = std_gw/std_w
-        E_sum += E_i
-        N += 1
+        E_i = hydr_gw.std()/hydr_w.std()
+        E_cycles.append(E_i)
+        if log:
+            print('-'*50)
+            print('River cycle: {0}:{1}\tSTD={2}'.format(w_i1, w_i2, hydr_w.std()))
+            print('Well  cycle: {0}:{1}\tSTD={2}'.format(gw_i1, gw_i2, hydr_gw.std()))
+            print('E={0:.3f}'.format(E_i))
+            print('-'*50)
 
+    if log:
+        for i, e in enumerate(E_cycles):
+            print('Cycle #{0}: E={1:.3f}'.format(i, e))
+    E = sum(E_cycles)/len(E_cycles)
+    return E, len(E_cycles)
 
-    E = E_sum/float(N)
-
-    return E, N
-
-# ///////////////////////////////////////////////////////////
-# ///////////////////////////////////////////////////////////
-# ///////////////////////////////////////////////////////////
-# ///////////////////////////////////////////////////////////
-# ///////////////////////////////////////////////////////////
 
 
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    import random
     import datetime
     import pandas as pd
-    import numpy as np
-
-
 
     delta_t = datetime.timedelta(hours=24)
     now = datetime.datetime.now()
-    print(now -(now+2*delta_t))
-    print(now -(now+2*delta_t)) < delta_t
-    print(abs(now -(now+2*delta_t)))
-    print(abs(now -(now+2*delta_t)) < delta_t)
+    print(now - (now+2*delta_t))
+    print(now - (now+2*delta_t)) < delta_t
+    print(abs(now - (now+2*delta_t)))
+    print(abs(now - (now+2*delta_t)) < delta_t)
     for i in xrange(1, 5, 2):
         print (i)
 
@@ -218,4 +218,3 @@ if __name__ == '__main__':
     print (df['a'].count())
     print (df['a'].sum())
     print (df.loc[df['a'] == True].size)
-    

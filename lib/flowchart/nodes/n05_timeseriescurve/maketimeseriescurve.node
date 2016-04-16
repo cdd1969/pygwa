@@ -1,6 +1,6 @@
 {
     "filename":  "node_makeTimeseriesCurve.py",
     "classname": "makeTimeseriesCurveNode",
-    "libpath": ["Display"],
+    "libpath": ["3.Display"],
     "override": true
 }

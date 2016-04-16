@@ -5,6 +5,7 @@ from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from PyQt5.QtCore import Qt
 from pyqtgraph.flowchart.Node import Node
 from pyqtgraph import functions as fn
+from pyqtgraph.python2_3 import asUnicode
 
 import re
 import gc
@@ -186,7 +187,7 @@ class PandasModel(QtCore.QAbstractTableModel):
         # append header of the newly set data to our HeaderModel
         self._headerModel.clear()  #flush previous model
         for name in self.getDataHeader():
-            item = QtGui.QStandardItem('{0} ;; dtype <{1}>'.format(name, self._dataPandas[name].dtype))
+            item = QtGui.QStandardItem(asUnicode('{0} ;; dtype <{1}>'.format(name.encode('UTF-8'), self._dataPandas[name].dtype)))
             item.setCheckable(True)
             item.setEditable(False)
             item.setCheckState(Qt.Checked)
@@ -321,7 +322,7 @@ class PandasModel(QtCore.QAbstractTableModel):
     def data(self, index, role=Qt.DisplayRole):
         if index.isValid():
             if role == Qt.DisplayRole:
-                return unicode(self._data[index.row(), index.column()])
+                return asUnicode(self._data[index.row(), index.column()])
         return QtCore.QVariant()
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):

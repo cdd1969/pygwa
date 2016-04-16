@@ -1,6 +1,6 @@
 {
     "filename":  "node_interpolateDf.py",
     "classname": "interpolateDfNode",
-    "libpath": ["Processing"],
+    "libpath": ["2.Processing"],
     "override": true
 }

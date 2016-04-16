@@ -1,6 +1,6 @@
 {
     "filename":  "node_serfes1991.py",
     "classname": "serfes1991Node",
-    "libpath": ["Processing"],
+    "libpath": ["2.Processing"],
     "override": true
 }

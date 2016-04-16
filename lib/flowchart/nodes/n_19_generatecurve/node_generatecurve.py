@@ -23,6 +23,7 @@ class genCurveNode(NodeWithCtrlWidget):
                 'tip': 'Equation to generate curve. See documentation'
             },
             {'title': 'Constant to add', 'name': 'W', 'type': 'float', 'value': 0., 'suffix': ' m', 'tip': 'Constant value [meters] to be added to generated signal. Usefull to fit to average water level.'},
+            {'title': 'Constant to Multiply', 'name': 'F', 'type': 'float', 'value': 1., 'limits': (0., 10), 'step': 0.01, 'tip': 'A factor by which the generated values will be multiplied\n(before adding the value from `Constant to Add`)'},
             {'title': 'Tide Components', 'name': 'tides_grp', 'type': 'group', 'children': [
                 {'title': 'N Signal Components', 'name': 'n_sig', 'type': 'int', 'readonly': True},
                 {'title': 'Amplitude', 'name': 'A', 'type': 'list', 'value': None, 'default': None, 'values': [None], 'tip': 'Name of the column with Amplitude data in dataframe in input terminal'},
@@ -64,7 +65,7 @@ class genCurveNode(NodeWithCtrlWidget):
 
     def __init__(self, name, parent=None):
         terms = {'tides': {'io': 'in'}, 'sig': {'io': 'out'}}
-        super(genCurveNode, self).__init__(name, parent=parent, terminals=terms, color=(100, 250, 100, 150))
+        super(genCurveNode, self).__init__(name, parent=parent, terminals=terms, color=(250, 250, 150, 150))
 
         self.CW().param('xia_grp', 'theta').setValue(0.35)  # to trigger computation of Ss and D
         self._df_id = None
@@ -120,12 +121,12 @@ class genCurveNode(NodeWithCtrlWidget):
 
         with BusyCursor():
             if kwargs['eq'] == 'tide':
-                df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], label=kwargs['label'], equation=kwargs['eq'])
+                df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], F=kwargs['F'], label=kwargs['label'], equation=kwargs['eq'])
             elif kwargs['eq'] == 'ferris':
-                df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], label=kwargs['label'], equation=kwargs['eq'],
+                df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], F=kwargs['F'], label=kwargs['label'], equation=kwargs['eq'],
                     D=kwargs['ferris']['D'], x=kwargs['ferris']['x'])
             elif kwargs['eq'] == 'xia':
-                df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], label=kwargs['label'], equation=kwargs['eq'],
+                df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], F=kwargs['F'], label=kwargs['label'], equation=kwargs['eq'],
                     x=kwargs['xia']['x'],
                     alpha=kwargs['xia']['alpha'], beta=kwargs['xia']['beta'], theta=kwargs['xia']['theta'],
                     L=kwargs['xia']['L'], K1=kwargs['xia']['K1'], b1=kwargs['xia']['b1'],
@@ -197,6 +198,7 @@ class genCurveNodeCtrlWidget(NodeCtrlWidget):
 
         kwargs['eq']    = self.p['eq']
         kwargs['W']     = self.p['W']
+        kwargs['F']     = self.p['F']
 
         kwargs['t0']    = np.datetime64(self.p['t_grp', 't0'] + 'Z')  # zulu time
         kwargs['dt']    = np.timedelta64(self.p['t_grp', 'dt'], 's')

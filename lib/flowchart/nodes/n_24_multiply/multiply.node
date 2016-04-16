@@ -1,6 +1,6 @@
 {
     "filename":  "node_multiply.py",
     "classname": "multiplyNode",
-    "libpath": ["Table", "Operands"],
+    "libpath": ["4.Table", "4.1.Operands"],
     "override": true
 }
