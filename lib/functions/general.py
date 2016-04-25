@@ -1,7 +1,6 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
 import pandas as pd
-from lib.flowchart import package
 import numpy as np
 import inspect
 

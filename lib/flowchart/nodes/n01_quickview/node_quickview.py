@@ -4,6 +4,7 @@ import os
 from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from PyQt5.QtCore import Qt
 from pyqtgraph.flowchart.Node import Node
+from pyqtgraph import BusyCursor
 from pyqtgraph import functions as fn
 from pyqtgraph.python2_3 import asUnicode
 
@@ -127,22 +128,25 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
     @QtCore.pyqtSlot()  #default signal
     def on_pushButton_viewPlot_clicked(self):
         """ open nice graphic representation of our data"""
-        try:
-            self.matplotlibWindow = plt.figure()
-            ax = plt.subplot(111)
-            columns = self.parent().getPandasModel().selectColumns()
-            df = self.parent().getPandasModel().getData()[columns]  #slice of the input dataframe with selected columns
+        with BusyCursor():
+            try:
 
-            datetime_cols = [col for col in df.columns if isNumpyDatetime(df[col].dtype)]
-            numeric_cols  = [col for col in df.columns if isNumpyNumeric (df[col].dtype)]
+                self.matplotlibWindow = plt.figure()
+                ax = plt.subplot(111)
+                columns = self.parent().getPandasModel().selectColumns()
+                df = self.parent().getPandasModel().getData()[columns]  #slice of the input dataframe with selected columns
 
-            datetime_col = datetime_cols[0] if len(datetime_cols) > 0 else None   #plot with x=datetime if possible
+                datetime_cols = [col for col in df.columns if isNumpyDatetime(df[col].dtype)]
+                numeric_cols  = [col for col in df.columns if isNumpyNumeric (df[col].dtype)]
 
-            for numeric_col in numeric_cols:
-                df.plot(x=datetime_col, y=numeric_col, ax=ax)
-            self.matplotlibWindow.show()
-        except Exception as exp:
-            self._parent.setException(exp)
+                datetime_col = datetime_cols[0] if len(datetime_cols) > 0 else None   #plot with x=datetime if possible
+
+                for numeric_col in numeric_cols:
+                    df.plot(x=datetime_col, y=numeric_col, ax=ax)
+                self.matplotlibWindow.show()
+            except Exception as exp:
+                self._parent.setException(exp)
+                return
     
     @QtCore.pyqtSlot(bool)  #default signal
     def on_radioButton_columnIndex_toggled(self, isChecked):
