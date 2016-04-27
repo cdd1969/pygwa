@@ -44,7 +44,7 @@ class genCurveNode(NodeWithCtrlWidget):
 
             {'title': 'Xia Parameters', 'name': 'xia_grp', 'type': 'group', 'expanded': False, 'children': [
 
-                {'title': 'Distance to shore', 'name': 'x', 'type': 'float', 'suffix': ' m', 'value': 0., 'limits': (0., 10.e10), 'tip': 'Distance between the observation point in aquifer and the shore-line'},
+                {'title': 'Distance to shore', 'name': 'x', 'type': 'float', 'suffix': ' m', 'value': 0., 'limits': (-10000., 10.e10), 'tip': 'Distance between the observation point in aquifer and the shore-line'},
 
                 {'title': 'Skeleton compressibility', 'name': 'alpha', 'type': 'float', 'suffix': ' 1/Pa', 'value': 1.e-8, 'minStep': 1.e-10, 'dec': True, 'limits': (0., 1), 'tip': 'Compressibility of the confined aquifers skeleton. Used for calculation of Specific Storage Ss (units s**2*m/kg)'},
                 {'title': 'Water compressibility', 'name': 'beta', 'type': 'float', 'suffix': ' 1/Pa', 'value': 4.8e-10, 'minStep': 1.e-10, 'dec': True, 'limits': (0., 1), 'tip': 'Compressibility of pore water in the confined aquifer. Used for calculation of Specific Storage Ss (units s**2*m/kg)'},
