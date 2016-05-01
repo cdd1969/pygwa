@@ -6,6 +6,8 @@ from pyqtgraph.Qt import QtCore
 
 from pyqtgraph.parametertree import ParameterTree, Parameter
 from lib.common.Parameter import customParameter
+import logging
+logger = logging.getLogger(__name__)
 
 
 class NodeWithCtrlWidget(Node):
@@ -19,12 +21,14 @@ class NodeWithCtrlWidget(Node):
         self._parent = parent
         kwargs['terminals'] = kwargs.get('terminals', {'In': {'io': 'in'}, 'Out': {'io': 'out'}})
         super(NodeWithCtrlWidget, self).__init__(name, **kwargs)
+        logger.debug("creating node [{0}] of type [{1}]".format(self.name(), self.nodeName))
         self._init_at_first()
         self.graphicsItem().setBrush(fn.mkBrush(color))
 
         if ui is None:
             ui = getattr(self, 'uiTemplate', [])
         self._ctrlWidget = self._createCtrlWidget(parent=self, ui=ui)
+        logger.info("node [{0}] of type [{1}] created".format(self.name(), self.nodeName))
 
     def _init_at_first(self):
         ''' Reimplemented this method to init something at very beginning'''
@@ -56,7 +60,9 @@ class NodeWithCtrlWidget(Node):
         
     def restoreState(self, state, update=False):
         """overwriting standard Node method to extend it with restoring ctrlWidget state"""
+        logger.debug("restoring [{0}] Node's state".format(self.name()))
         Node.restoreState(self, state)
+        logger.debug("restored state of [{0}] Node".format(self.name()))
         # additionally restore state of the control widget
         self._ctrlWidget.restoreState(state['crtlWidget'])
         if update:
@@ -69,7 +75,9 @@ class NodeCtrlWidget(ParameterTree):
      
     def __init__(self, parent=None, ui=[], update_on_statechange=True, **kwargs):
         super(NodeCtrlWidget, self).__init__()
+        logger.debug("creacting CtrlWidget of node [{0}]".format(parent.name()))
         #print ('INTING NODE_CTRL_WDG {0} with parent {1}'.format(self, parent))
+
         self._parent = parent
         self._ui = ui
 
@@ -83,10 +91,9 @@ class NodeCtrlWidget(ParameterTree):
         else:
             #actually connect but without UPD flag
             self.disconnect_all_valueChanged2upd(**kwargs)
-        # save default state
-        self._savedState = self.saveState()
 
         self.initUserSignalConnections()
+        logger.debug("CtrlWidget of node [{0}] created".format(parent.name()))
 
     def parent(self):
         return self._parent
@@ -155,7 +162,9 @@ class NodeCtrlWidget(ParameterTree):
         return self.p.saveState()
     
     def restoreState(self, state):
+        logger.debug("restoring [{0}]-CtrlWidget's state".format(self._parent.name()))
         self.p.restoreState(state)
+        logger.debug("[{0}]-CtrlWidget's state restored".format(self._parent.name()))
 
     def param(self, *names):
         ''' alias to p.child'''

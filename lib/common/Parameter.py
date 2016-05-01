@@ -1,5 +1,6 @@
 from pyqtgraph.parametertree import Parameter as pyqtgraphParameter
-
+import logging
+logger = logging.getLogger(__name__)
 
 class customParameter(pyqtgraphParameter):
     """
@@ -149,3 +150,11 @@ class customParameter(pyqtgraphParameter):
         else:
             if log: print ('Warning! Value {0} is of invalid type {1}. Must be one of these type : {3}. Will convert to unicode and return {2}'.format(valueEval, type(valueEval), unicode(valueEval), allowed_datatypes))
             return unicode(valueEval)
+
+    def restoreState(self, state):
+        logger.debug("restoring [{0}] param's state".format(self.name()))
+        try:
+            super(customParameter, self).restoreState(state)
+        except Exception, err:
+            logger.error("Failed to restore [{0}] param's state".format(self.name()), exc_info=True)
+        logger.debug("[{0}] param's state restored".format(self.name()))

@@ -14,6 +14,9 @@ import PROJECTMETA
 from lib import projectPath, version_info
 from pyqtgraph import configfile
 from lib.common.basic import ErrorPopupMessagBox
+import pygwa_logger
+import logging
+logger = logging.getLogger(__name__)
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -464,6 +467,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.doActionIfUnsavedChanges(message='Are you sure to quit?'):
             self.uiData.deleteBakFile()
             self.uiData.writeSettingsOnQuit()
+
+            logger.info('Quit application')
             QtWidgets.qApp.quit()  #quit application
         else:
             event.ignore()
@@ -647,6 +652,7 @@ class uiData(QtCore.QObject):
         settings.setValue('mainwindow/splitter_sizes',  self.win.splitter.sizes())
         #settings.setValue('mainwindow/geometry_nodelibrary_dockwidget',  self.win.dockWidget.geometry())
         #settings.setValue('mainwindow/geometry_nodecontrol_dockwidget',  self.win.dockWidget_2.geometry())
+        logger.info('Settings file saved [{0}]'.format(settings.fileName()))
 
 
 
@@ -684,6 +690,7 @@ class uiData(QtCore.QObject):
             self.win.showFullScreen()
 
         #self.updateRecentFileActions()  #>>> is moved to INIT of MainWindow since actions are not inited yet
+        logger.info('Settings file loaded [{0}]'.format(settings.fileName()))
 
     def saveBakFile(self):
         if not GlobalOptions.save_bak:
@@ -760,6 +767,12 @@ class GlobalOptions(object):
 
 
 def main():
+
+    # load logging configuration
+    pygwa_logger.setup_logging()
+    logger.info('Starting the application')
+
+
     app = QtWidgets.QApplication(sys.argv)
     app.setWindowIcon(QtGui.QIcon(projectPath('resources/icon.gif')))
     

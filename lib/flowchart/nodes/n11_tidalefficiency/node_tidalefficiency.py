@@ -3,6 +3,7 @@
 from pyqtgraph.Qt import QtGui
 from pyqtgraph import BusyCursor
 import numpy as np
+import pandas as pd
 
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.TidalEfficiency import tidalEfficiency_method1, tidalEfficiency_method2, tidalEfficiency_method3
@@ -22,7 +23,8 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
 
     def __init__(self, name, parent=None):
         terms = {'df': {'io': 'in'},
-                 'matched_peaks': {'io': 'in'},
+                 'md_peaks': {'io': 'in'},
+                 'E_cyclic': {'io': 'out'},
                  'E': {'io': 'out'}}
         super(tidalEfficiencyNode, self).__init__(name, parent=parent, terminals=terms, color=(250, 250, 150, 150))
     
@@ -32,7 +34,7 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
     def p(self):
         return self.CW().p
 
-    def process(self, df, matched_peaks):
+    def process(self, df, md_peaks):
         E = None
         self.CW().param('E = ').setValue(str(E))
         self.CW().param('gw').setWritable(True)
@@ -53,42 +55,41 @@ class tidalEfficiencyNode(NodeWithCtrlWidget):
             
             if kwargs['method'] == '1) STD':
                 E = tidalEfficiency_method1(df, kwargs['river'], kwargs['gw'])
+                E_c = None
 
-            elif kwargs['method'] == '2) Cyclic amplitude':
-                if matched_peaks is None:
-                    QtGui.QMessageBox.warning(None, "Node: {0}".format(self.nodeName), 'To use method `Cyclic amplitude` please provide data in terminal `matched_peaks` (a valid data-set can be created with node `Match Peaks`)')
-                    raise ValueError('To use method `Cyclic amplitude` please provide data in terminal `matched_peaks` (a valid data-set can be created with node `Match Peaks`)')
+            elif kwargs['method'] == '2) Cyclic amplitude' or kwargs['method'] == '3) Cyclic STD':
+                if md_peaks is None:
+                    msg = 'To use method `{0}` please provide "matched-peaks" data in terminal `md_peaks` (a valid data-set can be created with node `Match Peaks`)'.format(kwargs['method'])
+                    QtGui.QMessageBox.warning(None, "Node: {0}".format(self.nodeName), msg)
+                    raise ValueError(msg)
                 self.CW().disconnect_valueChanged2upd(self.CW().param('gw'))
                 self.CW().param('gw').setWritable(False)
                 self.CW().param('gw').setLimits(['see matched peaks'])
                 self.CW().connect_valueChanged2upd(self.CW().param('gw'))
-                # select only valid cycles
-                df_slice = matched_peaks.loc[~matched_peaks['md_N'].isin([np.nan, None])]
-                E, N = tidalEfficiency_method2(df_slice['tidal_range'], df_slice['md_tidal_range'])
-                #print( 'Method2: Calculated E with {0} tidal-cycles'.format(N))
+                
+                mPeaks_slice = md_peaks.loc[~md_peaks['md_N'].isin([np.nan, None])]  # select only valid cycles
 
-            elif kwargs['method'] == '3) Cyclic STD':
-                if matched_peaks is None:
-                    QtGui.QMessageBox.warning(None, "Node: {0}".format(self.nodeName), 'To use method `Cyclic STD` please provide data in terminal `matched_peaks` (a valid data-set can be created with node `Match Peaks`)')
-                    raise ValueError('To use method `Cyclic STD` please provide data in terminal `matched_peaks` (a valid data-set can be created with node `Match Peaks`)')
-                self.CW().disconnect_valueChanged2upd(self.CW().param('gw'))
-                self.CW().param('gw').setWritable(False)
-                self.CW().param('gw').setLimits(['see matched peaks'])
-                self.CW().connect_valueChanged2upd(self.CW().param('gw'))
-                with BusyCursor():
-                    mPeaks_slice = matched_peaks.loc[~matched_peaks['md_N'].isin([np.nan, None])]
+                if kwargs['method'] == '2) Cyclic amplitude':
+                    E, E_cyclic = tidalEfficiency_method2(mPeaks_slice['tidal_range'], mPeaks_slice['md_tidal_range'])
 
-                    river_name = mPeaks_slice['name'][0]
-                    well_name  = mPeaks_slice['md_name'][0]
-                    E, N = tidalEfficiency_method3(df, river_name, well_name, kwargs['datetime'],
-                        mPeaks_slice['time_min'], mPeaks_slice['time_max'],
-                        mPeaks_slice['md_time_min'], mPeaks_slice['md_time_max'])
-                #print( 'Method3: Calculated E with {0} tidal-cycles'.format(N))
+                elif kwargs['method'] == '3) Cyclic STD':
+                    with BusyCursor():
+                        river_name  = mPeaks_slice['name'][0]
+                        well_name   = mPeaks_slice['md_name'][0]
+                        E, E_cyclic = tidalEfficiency_method3(df, river_name, well_name, kwargs['datetime'],
+                            mPeaks_slice['time_min'], mPeaks_slice['time_max'],
+                            mPeaks_slice['md_time_min'], mPeaks_slice['md_time_max'])
+
+                # now do nice output table
+                E_c = pd.DataFrame({'N': mPeaks_slice['N'],
+                                    'md_N': mPeaks_slice['md_N'],
+                                    'E_cyclic': E_cyclic,
+                                    })
             else:
-                raise Exception('Method <%s> not yet implemented' % kwargs['method'])
+                raise Exception('Method <%s> is not yet implemented' % kwargs['method'])
         
             self.CW().param('E = ').setValue('{0:.4f}'.format(E))
-        return {'E': E}
+        return {'E': E, 'E_cyclic': E_c}
 
 
 
