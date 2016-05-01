@@ -8,6 +8,8 @@ import os
 from pyqtgraph.flowchart.Terminal import Terminal
 from numpy import ndarray
 from lib.common.basic import ErrorPopupMessagBox
+import logging
+logger = logging.getLogger(__name__)
 
 
 class customFlowchart(Flowchart):
@@ -33,7 +35,7 @@ class customFlowchart(Flowchart):
         self.widget().chartWidget.hoverOver = self.hoverOver  # this thing is not working....
 
     def loadFile(self, fileName=None, startDir=None):
-        #print( 'loadFile called with fname:', fileName)
+        logger.info('loading file [{0}]'.format(fileName))
         if fileName is None:
             if startDir is None:
                 startDir = self.filePath
@@ -49,6 +51,7 @@ class customFlowchart(Flowchart):
             state = configfile.readConfigFile(fileName)
             self.restoreState(state, clear=True)
         except Exception, err:
+            logger.error('Failed to Load file [{0}]'.format(fileName), exc_info=True)
             self.clear()
             ErrorPopupMessagBox(self.parent, "Load Flowchart", 'Cannot load flowchart from file <i>{0}</i>'.format(fileName))
             return
@@ -57,6 +60,7 @@ class customFlowchart(Flowchart):
         self.sigFileLoaded.emit(fileName)
         self.inputNode.graphicsItem().hide()
         self.outputNode.graphicsItem().hide()
+        logger.info('file loaded [{0}]'.format(fileName))
     
     def saveFile(self, fileName=None, startDir=None, suggestedFileName='flowchart.fc'):
         if fileName is None:
@@ -70,15 +74,19 @@ class customFlowchart(Flowchart):
             else:
                 return
 
+        logger.info('saving file [{0}]'.format(fileName))
+
         fileName = unicode(fileName)
         if os.path.splitext(fileName)[1] != '.fc':
             fileName += u'.fc'
         try:
             configfile.writeConfigFile(self.saveState(), fileName)
         except Exception, err:
+            logger.error('Failed to Save file [{0}]'.format(fileName), exc_info=True)
             ErrorPopupMessagBox(self.parent, "Save Flowchart", 'Cannot save flowchart to file <i>{0}</i>'.format(fileName))
             return
         self.sigFileSaved.emit(fileName)
+        logger.info('file saved [{0}]'.format(fileName))
 
     def addNode(self, node, name, pos=None):
         super(customFlowchart, self).addNode(node, name, pos=pos)
