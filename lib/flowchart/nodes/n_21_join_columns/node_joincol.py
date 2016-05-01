@@ -61,7 +61,7 @@ class joinColNode(NodeWithCtrlWidget):
 
         kwargs = self.CW().prepareInputArguments()
         # ------------------------------------------------------
-        self.df = A.copy(deep=False)  #maybe need to use deepcopy
+        self.df = A.copy(deep=True)  #maybe need to use deepcopy
         
         for col_name in kwargs['cols']:
             if col_name in self.df.columns:
@@ -86,10 +86,10 @@ class joinColNodeCtrlWidget(NodeCtrlWidget):
         
         return kwargs
 
-    #def restoreState(self, state, **kwargs):
-    #    # for some reason normal state restore eats children > simply add param once again
-    #    self.p.clearChildren()
-    #    self.p.addChild(ScalableGroup(title='Columns to add from B', name='grp'))
-    #    self.disconnect_valueChanged2upd(self.param('grp'))
-    #    self.param('grp').sigChildAdded.connect(self._parent.update)
-    #    self.param('grp').sigChildRemoved.connect(self._parent.update)
+    def restoreState(self, state, **kwargs):
+        # for some reason normal state restore its children > simply add param once again
+        self.p.clearChildren()
+        self.p.addChild(ScalableGroup(title='Columns to add from B', name='grp'))
+        self.disconnect_valueChanged2upd(self.param('grp'))
+        self.param('grp').sigChildAdded.connect(self._parent.update)
+        self.param('grp').sigChildRemoved.connect(self._parent.update)
