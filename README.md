@@ -36,4 +36,4 @@ Copyright 2016, Nikolai Chernikov ([nikolai.chernikov.ru@gmail.com][my_mail]), H
 
 
 [wiki]: <https://github.com/cdd1969/pygwa/wiki>
-[wiki_inst]: <https://github.com/cdd1969/pygwa/wiki/Installation>
+[wiki_inst]: <https://github.com/cdd1969/pygwa/wiki/Install-Dependencies>
