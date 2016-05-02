@@ -135,6 +135,8 @@ def tidalEfficiency_method3(df, river, gw, datetime_col, river_cycle_time_min, r
         E_cyclic (1D-nd.array):
             tidal efficiency caclulated for each tidal cycle
     '''
+    log = False
+    
     # 1. check peaks
     #   1.1 they should have equal length
     l1 = len(river_cycle_time_min)

@@ -9,6 +9,8 @@ import pandas as pd
 from datetime import timedelta
 import matplotlib.pyplot as plt
 from datetime import datetime as dtime
+import logging
+logger = logging.getLogger(__name__)
 
 
 def remove_region(peak_value_array, peak_index_array, order=1):
@@ -484,7 +486,7 @@ def find_index_closest_value(val, ts, side=None):
     return row
 
 
-def find_index_of_closest_time(t, df, colName, side='both', window=None):
+def find_index_of_closest_time(t, df, colName, side='both', window=None, use_window=False):
     ''' Find time and index of the entry in `df[colName]`, which match
     passed conditions.
     
@@ -511,6 +513,8 @@ def find_index_of_closest_time(t, df, colName, side='both', window=None):
             'right (>t)'  - search after `t`
             'right (>=t)' - search after `t` or at `t`
             'both'        - search before and after `t` or at `t`
+        use_window (bool):
+            if True -- apply window selection. Defaults to False
         window (float):
             Number of hours to specify search-region with respect to `t`
             [t-window : t+window]. Default is `None`, meaning that will
@@ -527,7 +531,7 @@ def find_index_of_closest_time(t, df, colName, side='both', window=None):
 
     #   based on side....
     i = find_index_closest_value(t, df[colName], side=side)
-    time = df.iloc[i,  df.columns.get_loc(colName)]
+    time = df.iloc[i, df.columns.get_loc(colName)]
 
     if side in ['right (>=t)']:
         if not time >= t:
@@ -543,13 +547,12 @@ def find_index_of_closest_time(t, df, colName, side='both', window=None):
             return (None, None)
     
     #   based on time-window...
-    if window is None:
-        pass
-    else:
+    if use_window not in [None, False]:
         t_min = t-timedelta(hours=window)
         t_max = t+timedelta(hours=window)
 
         if not (t_min <= time <= t_max):
+            logger.warning('t_min <= time <= t_maxt\t\t {0} <= {1} <= {2}, where t={3}'.format(t_min, time, t_max, t))
             return (None, None)
     return (i, time)
 
@@ -602,8 +605,9 @@ def match_peaks(peaks_w, peaks_gw, match_colName='time_min', **kwargs):
     peaks_matched['md_time_max'] = pd.NaT
     peaks_matched['md_val_min']  = np.nan
     peaks_matched['md_val_max']  = np.nan
-    
-    for row in peaks_w.itertuples():
+    peaks_matched['md_name']     = peaks_gw['name'].values[0]  # we take value at 0 index , since they are equal everywhere
+
+    for row in peaks_w.itertuples():  # this adds a column `Index` at first position
         i = row.Index
 
         t = row[match_col_index+1]  #+1 because we have aaditional column Index now
@@ -617,70 +621,20 @@ def match_peaks(peaks_w, peaks_gw, match_colName='time_min', **kwargs):
             peaks_matched.ix[i, 'md_val_min']  = peaks_gw.iloc[j, peaks_gw.columns.get_loc('val_min')]
             peaks_matched.ix[i, 'md_val_max']  = peaks_gw.iloc[j, peaks_gw.columns.get_loc('val_max')]
 
+            # for debugging
+            if i > 0 and peaks_matched.ix[i, 'md_N'] == peaks_matched.ix[i-1, 'md_N']:
+                logger.debug('This row has `md_N` as the previous one. Below the current row is printed')
+                logger.debug(row)
+
     peaks_matched['md_tidal_range']  = np.abs(peaks_matched['md_val_max'] - peaks_matched['md_val_min'])
-    peaks_matched['md_name']     = peaks_gw['name'].values[0]  # we take value at 0 index , since they are equal everywhere
+
+    # check unique values. This can happen that one peak will be matched two times. This is wrong => notify user
+    unique = peaks_matched['md_N'].unique()
+    if peaks_matched['md_N'].size != unique.size:
+        msg = 'One of the peaks matched multiple times (number of unique entries in `md_N` {0} is less than its size {1}). Try different matching mode.'.format(unique.size, peaks_matched['md_N'].size)
+        logger.error(msg)
+        for i, val in enumerate(peaks_matched['md_N']):
+            if val not in unique:
+                logger.error('The `md_N` in this line is not unique:\n'+str(peaks_matched.ix[i, ...]))
+        raise ValueError(msg)
     return peaks_matched
-    
-
-
-
-
-
-
-# ///////////////////////////////////////////////////////////
-# ///////////////////////////////////////////////////////////
-# ///////////////////////////////////////////////////////////
-# ///////////////////////////////////////////////////////////
-# ///////////////////////////////////////////////////////////
-
-
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    import random
-    order = 10
-
-
-    x = np.arange(0, 30, 0.1)
-    #y = np.array([np.sin(xi) for xi in x])
-    y = np.array([np.sin(xi)+random.random() for xi in x])
-    y[30:33] = 5.
-    y[50:59] = -2.
-    y[60:66] = 5.
-    y[90:92] = -3.
-
-    f, axarr = plt.subplots(2, 2)
-    axarr[0, 0].plot(x, y)
-    
-    for ax1 in axarr:
-        for ax in ax1:
-            ax.plot(x, y, color='k')
-
-    axarr[0, 0].set_title('split=False, removeRegions=False')
-    vals, indices = detectPeaks(y, order=order, split=False, removeRegions=False)
-    valsx = x[indices]
-    axarr[0, 0].scatter(valsx, vals, color='b', marker='x', s=250)
-    
-
-    axarr[0, 1].set_title('split=False, removeRegions=True')
-    vals, indices = detectPeaks(y, order=order, split=False, removeRegions=True)
-    valsx = x[indices]
-    axarr[0, 1].scatter(valsx, vals, color='b', marker='x', s=250)
-
-    
-    axarr[1, 0].set_title('split=True, removeRegions=False')
-    vals, indices = detectPeaks(y, order=order, split=True, removeRegions=False)
-    valsx_min = x[indices[0]]
-    valsx_max = x[indices[1]]
-    axarr[1, 0].scatter(valsx_min, vals[0], color='r', marker='x', s=250)
-    axarr[1, 0].scatter(valsx_max, vals[1], color='g', marker='x', s=250)
-
-
-    axarr[1, 1].set_title('split=True, removeRegions=True')
-    vals, indices = detectPeaks(y, order=order, split=True, removeRegions=True)
-    valsx_min = x[indices[0]]
-    valsx_max = x[indices[1]]
-    axarr[1, 1].scatter(valsx_min, vals[0], color='r', marker='x', s=250)
-    axarr[1, 1].scatter(valsx_max, vals[1], color='g', marker='x', s=250)
-
-
-    plt.show()
