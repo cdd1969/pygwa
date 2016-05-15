@@ -70,14 +70,15 @@ def devlin2003(X):
 def angle2bearing(angle, origin='N'):
     ''' Convert angle to bearing
         see http://www.mathwords.com/b/bearing.htm
+        http://webhelp.esri.com/arcgisdesktop/9.1/index.cfm?id=1650&pid=1638&topicname=Setting%20direction%20measuring%20systems%20and%20units
     Args:
     -----
         angle (float) [degrees]:
             angle with respect to x-axis (east), counter-clockwise positive (angle may be in range -360. to 360.)
         origin ('N'|'S'):
             origin of bearing (south/north)
-            'N' >>> clockwise from N
-            'S' >>> counter-clockwise from S
+            'N' >>> North Azimuth system (clockwise from N)
+            'S' >>> South Azimuth system (counter-clockwise from S)
     '''
     if angle < -360. or angle > 360.:
         raise ValueError('Invalid angle {0}. Must be in range [-360.:360.]').format(angle)
@@ -149,3 +150,13 @@ if __name__ == '__main__':
     angle = devlin2003(X_devlin2003_example3)[2]
     print angle2bearing(angle, origin='N')[0]
 
+
+    print '-'*20
+    print 'validation angle2bearing (North Azimut system)'
+    print '-'*20
+    for angle, true_bearing in zip(
+            (30., -30., 120., -120., 210., -210., 300., -300. ),
+            (60., 120., 330.,  210., 240., 300.,  150., 30.)):
+        print 'angle={0:3.2f} >>> bearing(N)={1:3.2f} ; \t{2}; Correct value of bearing: {3}'.format(angle, angle2bearing(angle, origin='N')[0], true_bearing== angle2bearing(angle, origin='N')[0], true_bearing)
+    for a in (90. , 100., 110., 120. , 130., 140., 150., 160.):
+        print a, '>>>', angle2bearing(a, origin='N')[0]
