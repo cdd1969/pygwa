@@ -1,8 +1,9 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-import sys
 import numpy as np
 import datetime
+import logging
+logger = logging.getLogger(__name__)
 
 
 def timelag_erskine1991_method(df_gw, cn_gw_v, cn_gw_t,
@@ -108,13 +109,13 @@ def timelag_erskine1991_method(df_gw, cn_gw_v, cn_gw_t,
     timelag = TLAG_LIST[SUMM_LIST.index(min(SUMM_LIST))]
     
     if log:
-        print('-'*100)
+        logger.debug('-'*100)
         for s, t in zip (SUMM_LIST, TLAG_LIST):
-            print( '\t {0:.1f} >>> {1} min'.format(s, t.total_seconds()/60.))
-        print('-'*100)
-        print( '\t minimal SUMM       : {0}'.format(min(SUMM_LIST)))
-        print( '\t corresponding TLAG : {0}'.format(timelag))
-        print( '-'*100)
+            logger.debug( '\t {0:.1f} >>> {1} min'.format(s, t.total_seconds()/60.))
+        logger.debug('-'*100)
+        logger.debug( '\t minimal SUMM       : {0}'.format(min(SUMM_LIST)))
+        logger.debug( '\t corresponding TLAG : {0}'.format(timelag))
+        logger.debug( '-'*100)
 
 
 

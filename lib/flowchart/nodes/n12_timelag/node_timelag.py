@@ -1,7 +1,7 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
 from pyqtgraph import BusyCursor
-
+from numpy import nan
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
 from lib.functions.TimeLag import timelag_erskine1991_method
 from lib.functions.general import isNumpyDatetime
@@ -41,6 +41,12 @@ class timeLagNode(NodeWithCtrlWidget):
         return timeLagNodeCtrlWidget(**kwargs)
 
     def process(self, df_gw, df_w, E):
+        if df_gw is None or df_w is None:
+            raise Exception('Hydrograph data not found in terminals `df_gw` or `df_w`')
+            return {'tlag': None}
+        if E in [None, nan]:
+            raise Exception('Tidal efficiency is invalid: E={0}'.format(E))
+            return {'tlag': None}
         self.CW().param('tlag_grp', 'tlag = ').setValue('?')
 
         colname = [col for col in df_gw.columns if not isNumpyDatetime(df_gw[col].dtype)]
@@ -65,7 +71,7 @@ class timeLagNode(NodeWithCtrlWidget):
             if kwargs['method'] == '1) Erskine 1991':
                 tlag = timelag_erskine1991_method(df_gw, kwargs['gw'], kwargs['gw_dtime'],
                                     df_w, kwargs['river'], kwargs['river_dtime'],
-                                    E, tlag_tuple=(kwargs['t1'], kwargs['t2'], kwargs['t_step']))
+                                    E, tlag_tuple=(kwargs['t1'], kwargs['t2'], kwargs['t_step']), log=True)
             else:
                 raise Exception('Method <%s> not yet implemented' % kwargs['method'])
         
