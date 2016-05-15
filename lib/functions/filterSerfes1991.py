@@ -97,7 +97,7 @@ def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, keep_ori
             these values are appended into new columns
 
     '''
-
+    n = N  # for compatibility with thesis description
     # if convert all columns...
     if usecols is None:
         # select only numeric columns...
@@ -107,13 +107,13 @@ def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, keep_ori
         # select only numeric columns...
         numeric_columns = [col for col in data.columns if (isNumpyNumeric(data[col].dtype) and col in usecols)]
     #if user has not explicitly passed number of measurements in a day, find it out!
-    if N is None:
-        N = get_number_of_measurements_per_day(data, datetime=datetime, log=log)
+    if n is None:
+        n = get_number_of_measurements_per_day(data, datetime=datetime, log=log)
 
     if log:
         print ('All column names:', list(data.columns))
         print ('Numeric colums:', numeric_columns)
-        print ('i will use following number of entries per day: ', N)
+        print ('i will use following number of entries per day: ', n)
 
     if keep_origin:
         output = data
@@ -125,18 +125,18 @@ def filter_wl_71h_serfes1991(data, datetime=None, N=None, usecols=None, keep_ori
         for col in datetime_columns:
             output[col] = data[col]
 
-    nX = int(N/24.*71 - (N-1))  # number of elements in sequence_1
-    nY = nX - (N-1)             # number of elements in sequence_2
-    #print (N, nX, nY)
+    nX = int(n/24.*71 - (n-1))  # number of elements in sequence_1
+    nY = nX - (n-1)             # number of elements in sequence_2
+    #print (n, nX, nY)
     for col_name in numeric_columns:
         if float('.'.join(pd.__version__ .split('.')[0:2])) < 0.18:  # if version is less then 0.18 (OLD API)
-            output[col_name+'_sequence1'] = pd.rolling_mean(data[col_name], window=N, min_periods=N, center=True).values
-            output[col_name+'_sequence2'] = pd.rolling_mean(output[col_name+'_sequence1'], window=N, min_periods=N, center=True).values
+            output[col_name+'_sequence1'] = pd.rolling_mean(data[col_name], window=n, min_periods=n, center=True).values
+            output[col_name+'_sequence2'] = pd.rolling_mean(output[col_name+'_sequence1'], window=n, min_periods=n, center=True).values
             output[col_name+'_mean'] = pd.rolling_mean(output[col_name+'_sequence2'], window=nY, min_periods=nY, center=True).values
         else:
             # new API
-            output[col_name+'_sequence1'] = data[col_name].rolling(window=N, min_periods=N, center=True).mean().values
-            output[col_name+'_sequence2'] = output[col_name+'_sequence1'].rolling(window=N, min_periods=N, center=True).mean().values
+            output[col_name+'_sequence1'] = data[col_name].rolling(window=n, min_periods=n, center=True).mean().values
+            output[col_name+'_sequence2'] = output[col_name+'_sequence1'].rolling(window=n, min_periods=n, center=True).mean().values
             output[col_name+'_mean']      = output[col_name+'_sequence2'].rolling(window=nY, min_periods=nY, center=True).mean().values
         if not verbose: del output[col_name+'_sequence1']
         if not verbose: del output[col_name+'_sequence2']

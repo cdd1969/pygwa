@@ -40,7 +40,7 @@ class pickEqualDatesNode(NodeWithCtrlWidget):
             self.CW().disconnect_valueChanged2upd(self.CW().param('datetime <pickFrom>'))
             self.CW().param('datetime <pickFrom>').setLimits([None])
             self.CW().connect_valueChanged2upd(self.CW().param('datetime <pickFrom>'))
-            return
+            return {'Out': None}
         else:
             self.CW().disconnect_valueChanged2upd(self.CW().param('datetime <pickFrom>'))
             colname = [col for col in df1.columns if isNumpyDatetime(df1[col].dtype)]

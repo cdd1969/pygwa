@@ -21,7 +21,7 @@ class NodeWithCtrlWidget(Node):
         self._parent = parent
         kwargs['terminals'] = kwargs.get('terminals', {'In': {'io': 'in'}, 'Out': {'io': 'out'}})
         super(NodeWithCtrlWidget, self).__init__(name, **kwargs)
-        logger.debug("creating node [{0}] of type [{1}]".format(self.name(), self.nodeName))
+        logger.debug("about to create node [{0}] of type [{1}]".format(self.name(), self.nodeName))
         self._init_at_first()
         self.graphicsItem().setBrush(fn.mkBrush(color))
 
@@ -68,14 +68,32 @@ class NodeWithCtrlWidget(Node):
         if update:
             self.update()
     
+    def setException(self, exc):
+        # default behaviour
+        super(NodeWithCtrlWidget, self).setException(exc)
+        #... additionally log it (if not all inputs are None)
+        ALL_NONE = True
+        for term in self.inputs().values():
+            if term.value() is not None:
+                ALL_NONE = False
+                break
+        if not ALL_NONE:
+            # not all inputs are None >>> there should be some mistake
+            logger.warning('Processing failed in the update() method in node [{0}] of type [{1}].'.format(self.name(), self.nodeName), exc_info=1)
 
+    def close(self):
+        Name = self.name()
+        Type = self.nodeName
+        logger.debug("about to close node [{0}] of type [{1}]".format(self.name(), self.nodeName))
+        super(NodeWithCtrlWidget, self).close()
+        logger.info("node [{0}] of type [{1}] closed".format(Name, Type))
 
 class NodeCtrlWidget(ParameterTree):
     ''' This is an abstract class to accompany Nodeclass `NodeWithCtrlWidget`'''
      
     def __init__(self, parent=None, ui=[], update_on_statechange=True, **kwargs):
         super(NodeCtrlWidget, self).__init__()
-        logger.debug("creacting CtrlWidget of node [{0}]".format(parent.name()))
+        logger.debug("about to create CtrlWidget of node [{0}]".format(parent.name()))
         #print ('INTING NODE_CTRL_WDG {0} with parent {1}'.format(self, parent))
 
         self._parent = parent

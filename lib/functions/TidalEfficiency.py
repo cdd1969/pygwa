@@ -83,7 +83,7 @@ def tidalEfficiency_method2(tr_canal_cycle, tr_well_cycle):
             E_array.append(a_gw/float(a_w))
         E_array = np.array(E_array)
 
-    E = E_array.sum()/len(E_array)
+    E = np.nanmean(E_array)
 
     return E, E_array
 
@@ -186,5 +186,5 @@ def tidalEfficiency_method3(df, river, gw, datetime_col, river_cycle_time_min, r
     if log:
         for i, e in enumerate(E_cyclic):
             print('Cycle #{0}: E={1:.3f}'.format(i, e))
-    E = E_cyclic.sum()/len(E_cyclic)
+    E = np.nanmean(E_cyclic)
     return E, E_cyclic

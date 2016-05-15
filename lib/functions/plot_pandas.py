@@ -8,7 +8,7 @@ import scipy
 import seaborn as sns
 import pandas as pd
 import matplotlib.mlab as mlab
-
+from scipy.stats import norm
 
 
 def r_squared(actual, ideal):
@@ -27,6 +27,7 @@ def r_squared(actual, ideal):
 def plot_pandas_scatter(df, x=[0], y=[1], saveName=None, xlabel=None, ylabel=None, title=None, trendlinemode=None, legendlabels=[None], N_DEVIATIONS=10,
                         xlim=None, ylim=None, ax=None, legend_location=0, draw_axes=False,
                         df_scatter_kwargs={'marker': "o", 'markersize': 6., 'style': '.', 'markeredgecolor': 'black', 'markeredgewidth': 0.2, 'legend': False},
+                        trendline_kwargs={'style': '-', 'color': None, 'lw': 4.},
                         axeslabel_fontsize=10., title_fontsize=20., axesvalues_fontsize=10., annotation_fontsize=10., legend_fontsize=8.):
     """
         df              - pandas.DataFrame timeseries for original hydrographs
@@ -113,7 +114,11 @@ def plot_pandas_scatter(df, x=[0], y=[1], saveName=None, xlabel=None, ylabel=Non
             trendline_equation = 'y=%.3fx+(%.3f)' % (z[0], z[1])
             
             if trendlinemode == 1:
-                ax.plot([minx, maxx], p([minx, maxx]), '-', lw=4., color=c, label='Trendline\n{0}\nr^2={1:.3f}'.format(trendline_equation, r_sq))
+                ax.plot([minx, maxx], p([minx, maxx]),
+                    trendline_kwargs['style'],
+                    lw=trendline_kwargs['lw'],
+                    color=c if trendline_kwargs['color'] is None else trendline_kwargs['color'],
+                    label='Trendline\n{0}\nr^2={1:.3f}'.format(trendline_equation, r_sq))
             
             else:  # if <trendlinemode> is 2 or 3
 
@@ -513,7 +518,8 @@ def plot_statistical_analysis(data, data2=None,
             hist_type=0,
             plot_title='Original signal',
             data_units='',
-            axeslabel_fontsize=15., title_fontsize=20., axesvalues_fontsize=15., annotation_fontsize=15., legend_fontsize=15.):
+            axeslabel_fontsize=15., title_fontsize=20., axesvalues_fontsize=15., annotation_fontsize=15., legend_fontsize=15.,
+            plot_normDist=True):
     
     if hist_type in [0, 'Frequency']:
         y_label = 'Frequency'
@@ -597,6 +603,10 @@ def plot_statistical_analysis(data, data2=None,
 
     elif hist_type in [2, 'Normalized']:
         sns.distplot(data, bins=bins, ax=ax2, kde_kws={"label": "KDE"})
+        
+        #if plot_normDist:  #additionally plot normal distribution
+        #    norm_dist_y = norm.pdf(data, loc=mu, scale=std)
+        #    ax2.plot(data, norm_dist_y, 'r', label='Norm Dist', lw=1.)
 
     ax2.axvline(mu, ymax=1., color='k', linestyle='--', lw=1, label=('Mean: '+r'$\mu$'+' = {0:.2f}').format(mu))
     
