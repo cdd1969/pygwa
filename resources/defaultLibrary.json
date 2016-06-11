@@ -1,5 +1,5 @@
 {   
-    "_info": "Keys starting with underscore `_` are omitted. All other keys are read. The key of the item does not matter, but the value represents the relative path to the node to be registered. The relative path is from the pygwa base directory (directory where file `pygwa.py` is located",
+    "_info": "Keys starting with underscore `_` are omitted. All other keys are read. The key of the item does not matter, but the value represents the relative path to the node that will be registered. The relative path should be from the pygwa base directory (directory where the file `pygwa.py` is located",
 
     "00": "lib/flowchart/nodes/n00_pipe/pipe.node",
     "01": "lib/flowchart/nodes/n01_quickview/quickview.node",
@@ -28,6 +28,7 @@
     "24": "lib/flowchart/nodes/n_24_multiply/multiply.node",
     "25": "lib/flowchart/nodes/n_25_divide/divide.node",
     "26": "lib/flowchart/nodes/n_26_gradient/gradient.node",
-    "27": "lib/flowchart/nodes/n_27_dropna/dropna.node"
+    "27": "lib/flowchart/nodes/n_27_dropna/dropna.node",
+    "28": "lib/flowchart/nodes/n_28_plotcirchist/plotcirchist.node"
 
 }
