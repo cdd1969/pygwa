@@ -82,7 +82,7 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
         modelsAreSet = False
         if self.parent().getPandasModel() is not None:
             try:
-                self.listView.setModel(self.parent().getPandasModel().headerModel())
+                self.tableView_header.setModel(self.parent().getPandasModel().headerModel())
                 modelOneIsSet = True
             except Exception, err:
                 modelOneIsSet = False
@@ -100,7 +100,9 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
         self.updateButtons(modelsAreSet)
 
     def updateButtons(self, modelsAreSet=False):
-        #print( 'updateButtons() is called with modelsAreSet=', modelsAreSet)
+        ''' enable buttons only if models are set '''
+        self.pushButton_deselectAll.setEnabled(modelsAreSet)
+        self.pushButton_selectAll.setEnabled(modelsAreSet)
         self.pushButton_viewTable.setEnabled(modelsAreSet)
         self.pushButton_viewPlot.setEnabled(modelsAreSet)
 
@@ -111,6 +113,26 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
         #    self.twWindow = None
         self.setModels()  # we enable and disable buttons also in this method
         self.tableView.resizeColumnsToContents()
+        self.tableView_header.resizeColumnsToContents()
+
+    @QtCore.pyqtSlot()  #default signal
+    def on_pushButton_selectAll_clicked(self):
+        """ Select all data-rows in a tableView_header"""
+        if True:
+            model = self.parent().getPandasModel().headerModel()
+            # now loop over all items at column (0)
+            for i in xrange(model.rowCount()):
+                model.item(i, 0).setCheckState(Qt.Checked)
+
+    @QtCore.pyqtSlot()  #default signal
+    def on_pushButton_deselectAll_clicked(self):
+        """ Select all data-rows in a tableView_header"""
+        if True:
+            model = self.parent().getPandasModel().headerModel()
+            # now loop over all items at column (0)
+            for i in xrange(model.rowCount()):
+                model.item(i, 0).setCheckState(Qt.Unchecked)
+
 
     @QtCore.pyqtSlot()  #default signal
     def on_pushButton_viewTable_clicked(self):
@@ -123,14 +145,11 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
         self.twWindow.show()
         self.twWindow.activateWindow()
 
-
-
     @QtCore.pyqtSlot()  #default signal
     def on_pushButton_viewPlot_clicked(self):
         """ open nice graphic representation of our data"""
         with BusyCursor():
             try:
-
                 self.matplotlibWindow = plt.figure()
                 ax = plt.subplot(111)
                 columns = self.parent().getPandasModel().selectColumns()
@@ -191,11 +210,29 @@ class PandasModel(QtCore.QAbstractTableModel):
         # append header of the newly set data to our HeaderModel
         self._headerModel.clear()  #flush previous model
         for name in self.getDataHeader():
-            item = QtGui.QStandardItem(asUnicode('{0} ;; dtype <{1}>'.format(name.encode('UTF-8'), self._dataPandas[name].dtype)))
-            item.setCheckable(True)
-            item.setEditable(False)
-            item.setCheckState(Qt.Checked)
-            self._headerModel.appendRow(item)
+            item_name = QtGui.QStandardItem(asUnicode('{0}'.format(name.encode('UTF-8'))))
+            item_name.setCheckable(True)
+            item_name.setEditable(False)
+            item_name.setCheckState(Qt.Checked)
+
+            dt = self._dataPandas[name].dtype
+            item_type = QtGui.QStandardItem(asUnicode('{0}'.format(dt)))
+            print dt
+            if dt == type(object):
+                # here implement in futere auto-highlightning of the OBJECT data-types
+                #pass
+                print 'ok, setting red Forecolor'
+                item_type.setForeground(QtGui.QBrush(Qt.red))
+            item_type.setEditable(False)
+            
+            self._headerModel.appendRow([item_name, item_type])
+
+        self._headerModel.setHorizontalHeaderLabels(['Name', 'Data-type'])
+        
+        #QFont*  font    = new QFont("Helvetica",30,20,true)
+        #headerView->setFont(*font)
+        #table->setHorizontalHeader(headerView)
+
         self._headerModel.endResetModel()
         
         #finally call update method
@@ -275,7 +312,8 @@ class PandasModel(QtCore.QAbstractTableModel):
         # since i have changed the text of the item to `colname+' ;; <dtype>'`
         # i need to extract column name once again
         #print( 're', re.search('(.*?)\s;;\sdtype.*', item.text()).group(1))
-        colNameStr = re.search('(.*?)\s;;\sdtype.*', tw_item.text()).group(1)
+        #colNameStr = re.search('(.*?)\s;;\sdtype.*', tw_item.text()).group(1)
+        colNameStr = tw_item.text()
         if colNameStr not in self._dataPandas.columns:
             colNameStr = int(colNameStr)
             if colNameStr not in self._dataPandas.columns:
