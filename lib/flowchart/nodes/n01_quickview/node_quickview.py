@@ -100,7 +100,7 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
         self.updateButtons(modelsAreSet)
 
     def updateButtons(self, modelsAreSet=False):
-        ''' enable buttons only if models are set '''
+        ''' enable buttons only if the models are set '''
         self.pushButton_deselectAll.setEnabled(modelsAreSet)
         self.pushButton_selectAll.setEnabled(modelsAreSet)
         self.pushButton_viewTable.setEnabled(modelsAreSet)
@@ -113,7 +113,6 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
         #    self.twWindow = None
         self.setModels()  # we enable and disable buttons also in this method
         self.tableView.resizeColumnsToContents()
-        self.tableView_header.resizeColumnsToContents()
 
     @QtCore.pyqtSlot()  #default signal
     def on_pushButton_selectAll_clicked(self):
@@ -166,11 +165,6 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
             except Exception as exp:
                 self._parent.setException(exp)
                 return
-    
-    @QtCore.pyqtSlot(bool)  #default signal
-    def on_radioButton_columnIndex_toggled(self, isChecked):
-        self.spinBox_columnIndex.setEnabled(isChecked)
-        self.lineEdit_combineColumn.setDisabled(isChecked)
 
     def parent(self):
         return self._parent
@@ -183,7 +177,9 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
 
 class PandasModel(QtCore.QAbstractTableModel):
     """
-    Class to populate a table view with a pandas dataframe
+    This class contains two models:
+        - QAbstractTableModel for the data
+        - QStandardItemModel for the headers
     """
     def __init__(self, data, parent=None):
         QtCore.QAbstractTableModel.__init__(self, parent)
@@ -199,7 +195,10 @@ class PandasModel(QtCore.QAbstractTableModel):
             raise TypeError("Invalid type of argument <data> detected. Received: {0}. Must be [pd.DataFrame, pd.Series]".format(type(data)))
 
     def setPandasDataframe(self, data):
-        #print( 'setPandasDataframe() is called')
+        '''
+            Update the QAbstractTableModel (self) and QStandardItemModel (self._headerModel)
+            with the data from a given pandas DataFrame (data)
+        '''
         try:
             del self._dataPandas
             # no need to call garbage collector, since it will be executed via <update()>
@@ -210,6 +209,8 @@ class PandasModel(QtCore.QAbstractTableModel):
         # append header of the newly set data to our HeaderModel
         self._headerModel.clear()  #flush previous model
         for name in self.getDataHeader():
+            # append a table with two columns (Name and Data-Type). Each row represents
+            # a data-column in the input dataframe object
             item_name = QtGui.QStandardItem(asUnicode('{0}'.format(name.encode('UTF-8'))))
             item_name.setCheckable(True)
             item_name.setEditable(False)
@@ -217,22 +218,17 @@ class PandasModel(QtCore.QAbstractTableModel):
 
             dt = self._dataPandas[name].dtype
             item_type = QtGui.QStandardItem(asUnicode('{0}'.format(dt)))
-            print dt
-            if dt == type(object):
-                # here implement in futere auto-highlightning of the OBJECT data-types
-                #pass
-                print 'ok, setting red Forecolor'
-                item_type.setForeground(QtGui.QBrush(Qt.red))
             item_type.setEditable(False)
+            
+            if dt == type(object):
+                # if the data-type of the column is not numeric or datetime, then it's propabply has not been
+                # loaded successfully. Therefore, explicitly change the font color to red, to inform the user.
+                item_type.setForeground(QtGui.QBrush(Qt.red))
             
             self._headerModel.appendRow([item_name, item_type])
 
         self._headerModel.setHorizontalHeaderLabels(['Name', 'Data-type'])
         
-        #QFont*  font    = new QFont("Helvetica",30,20,true)
-        #headerView->setFont(*font)
-        #table->setHorizontalHeader(headerView)
-
         self._headerModel.endResetModel()
         
         #finally call update method
