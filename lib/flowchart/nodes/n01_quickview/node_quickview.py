@@ -376,19 +376,5 @@ class PandasModel(QtCore.QAbstractTableModel):
 
     def destroy(self):
         self._headerModel.clear()
-        #del self._headerModel
-        try:
-            #del self._dataPandas
-            pass
-        except:
-            print( 'self._dataPandas not deleted')
-        try:
-            #del self._data
-            pass
-        except:
-            print( 'self._data not deleted')
-
-        #self.clear()
         self.endResetModel()
-        #del self
         gc.collect()
