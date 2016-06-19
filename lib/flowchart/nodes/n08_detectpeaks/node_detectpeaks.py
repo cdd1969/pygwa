@@ -42,6 +42,7 @@ class detectPeaksTSNode(NodeWithCtrlWidget):
         self._ctrlWidget.param('datetime').setLimits(colname)
 
         kwargs = self._ctrlWidget.prepareInputArguments()
+        kwargs['split'] = True
 
         with BusyCursor():
             peaks = detectPeaks_ts(df, kwargs.pop('column'), plot=self._plotRequired, **kwargs)

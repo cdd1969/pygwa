@@ -10,7 +10,9 @@ from datetime import timedelta
 import matplotlib.pyplot as plt
 from datetime import datetime as dtime
 import logging
-logger = logging.getLogger(__name__)
+from python_log_indenter import IndentedLoggerAdapter
+
+logger = IndentedLoggerAdapter(logging.getLogger(__name__), spaces=4)
 
 
 def remove_region(peak_value_array, peak_index_array, order=1):
@@ -196,7 +198,8 @@ def detectPeaks(array1D, order=5, split=False, removeRegions=True, mode='clip', 
 def detectPeaks_ts(data, col, T=None, datetime=None, hMargin=1., detectPeaksFlag=True, peakIndices_all=None, drop_dummy_rows=True, plot=False, log=False, **kwargs):
     '''
     Detect peaks of the given timeseries, and check the detection by comparing
-    the time-difference between the peaks with period using following condition:
+    the time-difference (dt) between the peaks with period (PERIOD) using the following
+    condition:
         PERIOD/2 - hMargin < dt < PERIOD/2 + hMargin
 
     Args:
@@ -254,9 +257,11 @@ def detectPeaks_ts(data, col, T=None, datetime=None, hMargin=1., detectPeaksFlag
             'name'  - name of the signal
 
     '''
+    logger.debug('Starting `detectPeaks_ts()`').add()
+
     if datetime is None:
         # this is not yet tested
-        date = pd.DataFrame(data.index)[0]  # series for all the timespan
+        date = pd.DataFrame(data.index)[0]  # series for the all timespan
     else:
         if datetime in data.columns and col in  data.columns:
             date = data[datetime]  # we need to apply group method only to timeseries (index=datetime). Thus we will create a fake one
@@ -266,50 +271,149 @@ def detectPeaks_ts(data, col, T=None, datetime=None, hMargin=1., detectPeaksFlag
         raise ValueError('Datetime data is not of type <np.datetime64>. Received type : {0}'.format(date.dtype))
     
 
-    # now prepare peaks...
-    if detectPeaks:
-        kwargs['split'] = True  # we want to force it!
-        #peakIndices_min, peakIndices_max = detectPeaks(data[col].values, **kwargs)[1]
-        #peakIndices_all = detectPeaks(data[col].values, **kwargs)[1][0]
-
-    # peaks have been prepared, select time!
     peaks = pd.DataFrame()
 
     if kwargs['split'] is False:
+        logger.debug('Proceeding with combined peaks (min, max together)')
+        
         peakIndices_all = detectPeaks(data[col].values, **kwargs)[1][0]
-        peaks['N'] = np.arange(len(peakIndices_all))
-        peaks['ind'] = peakIndices_all
-        peaks['time'] = date.iloc[peakIndices_all].values
-        peaks['val'] = data.iloc[peakIndices_all][col].values
-        peaks['time_diff'] = peaks['time'].diff()
 
-    else:
+        peaks['N']          = np.arange(len(peakIndices_all))
+        peaks['ind']        = peakIndices_all
+        peaks['time']       = date.iloc[peakIndices_all].values
+        peaks['val']        = data.iloc[peakIndices_all][col].values
+        peaks['time_diff']  = peaks['time'].diff()
+
+    else:  # kwargs['split'] is True
+        logger.debug('Proceeding with splitted peaks (min, max separately)')
+        # -----------------------------------------------------------------
+        # Find the peaks
+        # -----------------------------------------------------------------
         peakIndices_min, peakIndices_max = detectPeaks(data[col].values, **kwargs)[1]
+        
+        logger.debug('Raw Min ({0} values) and Max ({0} values) peaks detected'.format(len(peakIndices_min), len(peakIndices_max)))
+        if len(peakIndices_min) > 6 and len(peakIndices_max) > 6:
+            logger.add().debug('peakIndices_min = [{0}, {1}, {2}, ... , {3}, {4}, {5}]  ({6} values)'.format(peakIndices_min[0], peakIndices_min[1], peakIndices_min[2], peakIndices_min[-3], peakIndices_min[-2], peakIndices_min[-1], peakIndices_min.size )).sub()
+            logger.add().debug('peakIndices_max = [{0}, {1}, {2}, ... , {3}, {4}, {5}]  ({6} values)'.format(peakIndices_max[0], peakIndices_max[1], peakIndices_max[2], peakIndices_max[-3], peakIndices_max[-2], peakIndices_max[-1], peakIndices_max.size )).sub()
+        # -----------------------------------------------------------------
+        
+        # -----------------------------------------------------------------
+        # Check the distance between the peaks...
+        # -----------------------------------------------------------------
+        logger.push()
+        logger.debug('Checking the distance between the peaks').add()
+        tol = 0.4  # tolerance
+        
+        # 1) Distance between the combined peaks (sum of min and max)
+        peakIndices_all = np.concatenate((peakIndices_min, peakIndices_max))
+        peakIndices_all.sort()
+        
+        ERRORS = dict()
+        for index_array, which in zip( (peakIndices_all, peakIndices_min, peakIndices_max), ('all', 'min', 'max')):
+            logger.add().debug('...distance between the `{0}` peaks'.format(which)).sub()
+            
+            d_indexes      = np.diff(index_array)  #array with differences in index positions between two neighbour peaks
+            d_indexes_mean = d_indexes.mean()
+
+            logger.add().debug('Mean distance between the a pair of peaks is {0} indexes. With a given tolerance {1}, the valid distance between a pair of peaks should fall in range [{2}:{3}]'.format(d_indexes_mean, tol, d_indexes_mean*(1.-tol), d_indexes_mean*(1.+tol))).sub()
+            
+            d_indexes_masked  = np.ma.masked_inside(d_indexes, d_indexes_mean*(1.-tol), d_indexes_mean*(1.+tol) )  # mask correct values that fall inside the valid region
+            n_p_all_errors = d_indexes_masked.count()  #count non-masked elements, e.g. errors
+            
+            if n_p_all_errors > 0:
+                logger.add().debug('{n} pairs of peaks do exceed the allowed index-distance'.format(n=n_p_all_errors)).sub()
+
+                # get the indexes of the "error" pairs
+                d_indexes_errors_indexes = np.ma.masked_array(np.arange(d_indexes_masked.size), d_indexes_masked.mask).compressed()
+
+                # explicitly create the index-array of the "error" pairs
+                logger.add().debug('The indexes of these pairs are (in the combined min/max peaks-array):...').sub()
+                ERROR_PAIRS = list()
+                for i in d_indexes_errors_indexes:
+                    ERROR_PAIRS.append(index_array[i:i+2])  #is the same as [index_array[i], index_array[i+1]]
+                    logger.add().debug(str(ERROR_PAIRS[-1])).sub()
+
+            ERRORS[which] = ERROR_PAIRS
+        logger.pop()
+        # -----------------------------------------------------------------
+
+
         # it can happen, that the first detected index was MAX and not MIN,
         # We want to generalize it to Min-Max, so we prepend dummy value to
         # MIN list, so that the real MAX value has its pair (even though dummy-value)
-        DUMMIES = list()
+        DUMMIES    = list()
         DUMMY_ROWS = list()
+
+        logger.debug('Checking the first and the last peaks').add()
+        # -----------------------------------------------------------------
+        # Check if the first min is smaller than the first max
+        # -----------------------------------------------------------------
         if peakIndices_min[0] > peakIndices_max[0]:
+            logger.debug('peakIndices_min[0] > peakIndices_max[0] detected => inserting dummy-value `0` at the first position of the `peakIndices_min` ')
+
             peakIndices_min = np.insert(peakIndices_min, 0, 0)
             DUMMIES.append('first_min')
             DUMMY_ROWS.append(0)
 
-        # Lets do the same for the last pair
+            if len(peakIndices_min) > 6 and len(peakIndices_max) > 6:
+                logger.add().debug('modified peakIndices_min = [{0}, {1}, {2}, ... , {3}, {4}, {5}]  ({6} values)'.format(peakIndices_min[0], peakIndices_min[1], peakIndices_min[2], peakIndices_min[-3], peakIndices_min[-2], peakIndices_min[-1], peakIndices_min.size )).sub()
+                logger.add().debug('modified peakIndices_max = [{0}, {1}, {2}, ... , {3}, {4}, {5}]  ({6} values)'.format(peakIndices_max[0], peakIndices_max[1], peakIndices_max[2], peakIndices_max[-3], peakIndices_max[-2], peakIndices_max[-1], peakIndices_max.size )).sub()
+        # -----------------------------------------------------------------
+
+        # -----------------------------------------------------------------
+        # # Check if the last min is smaller than the last max
+        # -----------------------------------------------------------------
         if peakIndices_min[-1] > peakIndices_max[-1]:
+            logger.debug('peakIndices_min[-1] > peakIndices_max[-1] detected => inserting dummy-value `0` at the last position of the `peakIndices_max` ')
+
             peakIndices_max = np.append(peakIndices_max, 0)
             DUMMIES.append('last_max')
             DUMMY_ROWS.append(-1)
 
+            if len(peakIndices_min) > 6 and len(peakIndices_max) > 6:
+                logger.add().debug('modified peakIndices_min = [{0}, {1}, {2}, ... , {3}, {4}, {5}]  ({6} values)'.format(peakIndices_min[0], peakIndices_min[1], peakIndices_min[2], peakIndices_min[-3], peakIndices_min[-2], peakIndices_min[-1], peakIndices_min.size )).sub()
+                logger.add().debug('modified peakIndices_max = [{0}, {1}, {2}, ... , {3}, {4}, {5}]  ({6} values)'.format(peakIndices_max[0], peakIndices_max[1], peakIndices_max[2], peakIndices_max[-3], peakIndices_max[-2], peakIndices_max[-1], peakIndices_max.size )).sub()
+        # -----------------------------------------------------------------
+        logger.sub().debug('Finished checking the first and the last peaks')
+
+
+        # -----------------------------------------------------------------
+        # Now test the number of MIN MAX peaks
+        # -----------------------------------------------------------------
         n_min = len(peakIndices_min)
         n_max = len(peakIndices_max)
         
         if n_min != n_max:
-            #kwargs['plot'] = False
-            #detectPeaks(data[col].values, **kwargs)
-            detectPeaks(data[col].values, plot=plot, **kwargs)
+            if plot:
+                # Do the plotting of the detected peaks, additionally show possible failures
+                f = plt.figure()
+                ax = f.add_subplot(111)
+                ax.plot(data[col].values, label='original signal', marker='o', markersize=4, zorder=1)
+                ax.scatter(x=peakIndices_max, y=data[col].values[peakIndices_max], color='g', s=40, label='detected MAX peaks', zorder=2)
+                ax.scatter(x=peakIndices_min, y=data[col].values[peakIndices_min], color='k', s=40, label='detected MIN peaks', zorder=2)
+                for key, err_pairs in ERRORS.iteritems():
+                    if key == 'all':
+                        c = 'red'
+                    elif key == 'min':
+                        c = 'magenta'
+                    elif key == 'max':
+                        c = 'orange'
+                    for error in err_pairs:
+                        plt.plot(error, data[col].values[error], color=c, lw=3, label='wrong distance between {0}-peaks'.format(key), zorder=3)
+                plt.legend()
+                ax.set_xlabel('Value Index (0-indexed)')
+                ax.set_ylabel('Value')
+                f.show()
             raise Exception('Number of min and max peaks is not equal: {0} != {1}'.format(n_min, n_max))
+        # -----------------------------------------------------------------
         
+
+
+        #
+        # -----------------------------------------------------------------
+        # At this step everything is OK. Continue creating DataFrame
+        # -----------------------------------------------------------------
+
         peaks['N'] = np.arange(max(n_min, n_max))
         peaks['ind_min'] = peakIndices_min
         peaks['ind_max'] = peakIndices_max
@@ -355,6 +459,7 @@ def detectPeaks_ts(data, col, T=None, datetime=None, hMargin=1., detectPeaksFlag
     if plot:
         plot_signal_peaks_and_errors(data, date, peaks, col, T, halfT, hMargin, epsilon, kwargs['split'])
 
+    logger.sub().debug('Finished `detectPeaks_ts()`. Returning peaks DataFrame...')
     return peaks
 
 
