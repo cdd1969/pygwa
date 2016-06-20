@@ -1,46 +1,7 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
-import pandas as pd
 import numpy as np
 import inspect
-
-
-def returnPandasDf(obj, raiseException=False):
-    """ Unfortunately the pyqtgraph Nodes cannot transmit pandas.DataFrame
-        objects through its terminals. Therefore in this project these objects
-        are wrapped into Package.Package() class, before pushed to terminal.
-
-        This function is a convinient helper to unwrap them
-
-        Typical usage will include the reimplemintation of Node's `process()`
-        method:
-            def process(self, Input):
-                Input = returnPandasDf(Input)
-                # now `Input` is surely pd.DataFrame or pd.Series
-                #... process `Input`
-
-        Args:
-        ------
-            obj : object of any dtype, but it is expected to recieve pd.DataFrame
-                or package with this dtype
-
-            raiseException (Optional[bool]): if `True` when data is not what it is
-                expected - will raise Error. If `False` (default) - will return
-                `None` instead
-
-        Returns:
-        --------
-            [pd.DataFrame/pd.Series/None]
-    """
-    if isinstance(obj, (pd.DataFrame, pd.Series)):
-        return obj
-    elif isinstance(obj, package.Package):
-        return returnPandasDf(obj.unpack())
-    else:
-        if raiseException:
-            raise TypeError('Unsupported data received. Expected pd.DataFrame, pd.Series or Package, received:', type(obj))
-        else:
-            return None
 
 
 def isNumpyDatetime(dtype):
