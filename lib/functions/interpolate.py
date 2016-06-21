@@ -125,7 +125,7 @@ def applyInterpolationBasedOnRanges(df, columnName, ranges, suffix='_interpolate
     df[columnNameNew] = df[columnName]
 
     for r in ranges:
-        df[columnNameNew][r[0]:r[1]] = df[columnName][r[0]:r[1]].interpolate(**kwargs)
+        df.loc[r[0]:r[1], columnNameNew] = df[columnName][r[0]:r[1]+1].interpolate(**kwargs)
 
 
 
