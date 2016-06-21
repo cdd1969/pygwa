@@ -27,7 +27,7 @@ class interpolateDfNode(NodeWithCtrlWidget):
         df = In
         if df is None:
             self._ctrlWidget.p.clearChildren()
-            return
+            return {'Out': None}
 
         receivedColumns = df.columns
         currentColumns  = [item.name() for item in self._ctrlWidget.p.children()]
