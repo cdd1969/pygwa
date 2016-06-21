@@ -208,8 +208,12 @@ class PandasModel(QtCore.QAbstractTableModel):
         
         # append header of the newly set data to our HeaderModel
         self._headerModel.clear()  #flush previous model
+
+        N_index = len(self._dataPandas.index)
         for name in self.getDataHeader():
-            # append a table with two columns (Name and Data-Type). Each row represents
+            RED_FONT = QtGui.QBrush(Qt.red)
+
+            # append a table with three columns (Name, Data-Type and N_NaNs). Each row represents
             # a data-column in the input dataframe object
             item_name = QtGui.QStandardItem(asUnicode('{0}'.format(name.encode('UTF-8'))))
             item_name.setCheckable(True)
@@ -219,15 +223,20 @@ class PandasModel(QtCore.QAbstractTableModel):
             dt = self._dataPandas[name].dtype
             item_type = QtGui.QStandardItem(asUnicode('{0}'.format(dt)))
             item_type.setEditable(False)
-            
             if dt == type(object):
                 # if the data-type of the column is not numeric or datetime, then it's propabply has not been
                 # loaded successfully. Therefore, explicitly change the font color to red, to inform the user.
-                item_type.setForeground(QtGui.QBrush(Qt.red))
+                item_type.setForeground(RED_FONT)
             
-            self._headerModel.appendRow([item_name, item_type])
+            n_nans = N_index - self._dataPandas[name].count()
+            item_nans = QtGui.QStandardItem(asUnicode('{0}'.format(n_nans)))
+            item_nans.setEditable(False)
+            if n_nans > 0:
+                item_nans.setForeground(RED_FONT)
+            
+            self._headerModel.appendRow([item_name, item_type, item_nans])
 
-        self._headerModel.setHorizontalHeaderLabels(['Name', 'Data-type'])
+        self._headerModel.setHorizontalHeaderLabels(['Name', 'Data-type', 'Number of NaNs'])
         
         self._headerModel.endResetModel()
         
