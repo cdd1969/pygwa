@@ -484,20 +484,22 @@ def plot_detected_peaks_warnings(array, peaks_raw, WARNINGS, date=None):
         
 
 def convert_peaksraw_to_peaks(peaks_raw, col=None):
+    '''
+        create table of the detected peaks, that will be further processed with the node
+        `match peaks`
+    '''
     peaks = pd.DataFrame()
 
     # determine number of tidal cycles
     cycle = []
     CYCLES = []
-    print peaks_raw
-    type_index = peaks_raw.columns.get_loc("Type")
-    id_index   = peaks_raw.columns.get_loc("ID")
+
+    #type_index = peaks_raw.columns.get_loc("Type")
+    #id_index   = peaks_raw.columns.get_loc("ID")
     for row in peaks_raw.index:
-        # +1 , cause now we have also index here
-        print row
         while cycle == [] and peaks_raw.loc[row, 'Type'] != 'MIN':
             # find first MIN peak if the cycle is empty
-            print 'skipping:', row
+            #print 'skipping:', row
             continue
         if peaks_raw.loc[row, 'Type'] == 'MIN' and cycle == []:
             cycle.append(peaks_raw.loc[row, 'ID'])
@@ -511,21 +513,13 @@ def convert_peaksraw_to_peaks(peaks_raw, col=None):
     peaks['N'] = np.arange(len(CYCLES))
     peaks['ind_min']  = peaks_raw[peaks_raw['ID'].isin(mins)]['Index in data-array'].values
     peaks['ind_max']  = peaks_raw[peaks_raw['ID'].isin(maxs)]['Index in data-array'].values
-    peaks['time_min'] = peaks_raw[peaks['ind_min']]['Datetime'].values
-    peaks['time_max'] = peaks_raw[peaks['ind_max']]['Datetime'].values
-    peaks['val_min']  = peaks_raw[peaks['ind_min']]['value'].values
-    peaks['val_max']  = peaks_raw[peaks['ind_max']]['value'].values
-    peaks['time_diff'] = peaks['time_max'] - peaks['time_min']
+    peaks['time_min'] = peaks_raw[peaks_raw['ID'].isin(mins)]['Datetime'].values
+    peaks['time_max'] = peaks_raw[peaks_raw['ID'].isin(maxs)]['Datetime'].values
+    peaks['val_min']  = peaks_raw[peaks_raw['ID'].isin(mins)]['value'].values
+    peaks['val_max']  = peaks_raw[peaks_raw['ID'].isin(maxs)]['value'].values
+    peaks['time_diff']   = peaks['time_max'] - peaks['time_min']
     peaks['tidal_range'] = np.abs(peaks['val_max'] - peaks['val_min'])
-
-
-    # function that will be applied row-wise
-    def checkDT(row):
-        currentIndex = int(row['N'])
-        return halfT-epsilon < peaks.iloc[currentIndex]['time_diff'] < halfT+epsilon
-
-    #peaks['check'] = peaks.apply(checkDT, axis=1)
-    peaks['name']  = col
+    peaks['name']        = col
     return peaks
 
 
@@ -640,7 +634,7 @@ def full_peak_detection_routine(data, col=None, date_col=None, IDs2mask=[], vali
     # ===============================================================
 
 
-    return ({'warnings': warnings, 'valid_range': valid_range}, peaks_raw, peaks)
+    return ({'warnings': warnings, 'valid_range': valid_range, 'raw_nmin': peakIndices_min.size, 'raw_nmax': peakIndices_max.size}, peaks_raw, peaks)
 
 
 
@@ -962,6 +956,8 @@ def detectPeaks_ts(data, col, T=None, datetime=None, hMargin=1., tol=0.4,
 
     logger.sub().debug('Finished `detectPeaks_ts()`. Returning peaks DataFrame...')
     return peaks
+
+
 
 
 def plot_signal_peaks_and_errors(data, date, peaks, col, T, halfT, hMargin, epsilon, split):

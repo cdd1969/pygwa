@@ -10,6 +10,7 @@
     "06": "lib/flowchart/nodes/n06_plottimeseries/plottimeseries.node",
     "07": "lib/flowchart/nodes/n07_interpolate/interpolate.node",
     "08": "lib/flowchart/nodes/n08_detectpeaks/detectpeaks.node",
+    "08_": "lib/flowchart/nodes/n08_detectpeaks_v2/detectpeaks_v2.node",
     "09": "lib/flowchart/nodes/n09_selectdates/selectdates.node",
     "10": "lib/flowchart/nodes/n10_matchpeaks/matchpeaks.node",
     "11": "lib/flowchart/nodes/n11_tidalefficiency/tidalefficiency.node",
