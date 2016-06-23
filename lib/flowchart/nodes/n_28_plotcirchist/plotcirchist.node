@@ -1,0 +1,6 @@
+{
+    "filename":  "node_plotcirchist.py",
+    "classname": "plotCircularHistNode",
+    "libpath": ["3.Display"],
+    "override": true
+}

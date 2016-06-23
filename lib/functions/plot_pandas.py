@@ -1,14 +1,10 @@
 ''' MODULE CONTAINING PLOTTING FUNCTIONS...
 '''
-
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.lines as mlines
-import scipy
 import seaborn as sns
 import pandas as pd
-import matplotlib.mlab as mlab
-from scipy.stats import norm
+import math
 
 
 def r_squared(actual, ideal):
@@ -17,8 +13,8 @@ def r_squared(actual, ideal):
         ideal  - 1D-array of y-values of trendline (ideal) points
     '''
     actual_mean = np.mean(actual)
-    ideal_dev = np.sum([(val - actual_mean)**2 for val in ideal])
-    actual_dev = np.sum([(val - actual_mean)**2 for val in actual])
+    ideal_dev   = np.sum([(val - actual_mean)**2 for val in ideal])
+    actual_dev  = np.sum([(val - actual_mean)**2 for val in actual])
 
     return ideal_dev / actual_dev
 
@@ -513,13 +509,44 @@ def calculate_mean_std(signal):
 
 
 
-def plot_statistical_analysis(data, data2=None,
+def plot_statistical_analysis(data,
             bins=10,
             hist_type=0,
             plot_title='Original signal',
             data_units='',
             axeslabel_fontsize=15., title_fontsize=20., axesvalues_fontsize=15., annotation_fontsize=15., legend_fontsize=15.,
             plot_normDist=True):
+    '''
+        Plot a distribution analysis of an array. Function produces a figure with 3 subplots:
+            1) The line graph of the original array
+            2) Histogram of the array
+            3) Cummulative histogram of the array
+    
+    Args:
+    -----
+        data (np.ndarray, pd.DataFrame, pd.Series):
+            Original signal, data to be investigated. If of type 'DataFrame'
+            will use the first column
+
+        bins (int):
+            number of bins for the histogram
+
+        hist_type (int or str):
+            switch to select the histogram type:
+            0, 'Frequency'          - frequency hist (y-values are the number of samples in a bin)
+            1, 'Relative Frequency' - relative frequency hist (y-values are the % of samples in a bin)
+            2, 'Normalized'         - normalized hist (y-values are the density (area of the bars equals to 1))
+
+        plot_title (str):
+            title of the plot
+
+        data_units (str):
+            units of the signal (will be displayed on the plots)
+
+        plot_normDist (bool):
+            flag to plot the normal distribution with a given mean and std. Mean and std are determened
+            from the input data-set
+    '''
     
     if hist_type in [0, 'Frequency']:
         y_label = 'Frequency'
@@ -651,8 +678,159 @@ def plot_statistical_analysis(data, data2=None,
 
 
 
+
+
+
+
+
+
+
+def plot_direction_rose(df, COLNAME=None, N=18, RELATIVE_HIST=True, PLOT_LINE_SUBPLOT=False,
+    R_FONTSIZE='x-small', THETA_DIRECTION=-1, THETA_ZERO_LOCATION='N',
+    THETA_GRIDS_VALUES=[0, 45, 90, 135, 180, 225, 270, 315, 360],
+    THETA_GRIDS_LABELS=['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
+    R_LABEL_POS=90, BOTTOM=0):
+    '''
+        Plot a circular histogram of the direction data (data in range 0 to 360 degrees).
+
+        Args:
+        -----
+
+        df (pd.DataFrame):
+            pandas dataframe with data
+
+        COLNAME (Optional[None or str]):
+            name of the data-column in `df`. If `None`, will use the
+            first column of the dataframe.
+
+        N (Optional[int]):
+            number of bins. If N=18, then one bin is 20 degrees
+
+        RELATIVE_HIST (Optional[bool]):
+            flag to print relative histogram values. If `False` will
+            plot real number of occurences in histogram-bins
+
+        PLOT_LINE_SUBPLOT (Optional[bool]):
+            flag to plot original data-signal additionally
+
+        R_FONTSIZE (Optional [str]):
+            font size of the radial ticks
+
+        THETA_DIRECTION (Optional [1 or -1]):
+            direction of the positive theta. If `1` -- counterclockwise.
+            If `-1` -- clockwise
+
+        THETA_ZERO_LOCATION (Optional [str]):
+            Sets the location of theta's zero.
+            May be one of 'N', 'NW', 'W', 'SW', 'S', 'SE', 'E', or 'NE'.
+
+        THETA_GRIDS_VALUES (Optional[list[float/int]]):
+            value to draw angular grid
+
+        THETA_GRIDS_LABELS (Optional[list[float/int/str] or None]):
+            corresponding labels to the values `THETA_GRIDS_VALUES`. Either
+            list of numbers/strings or `None`. If `None` -- will use values
+            directly from THETA_GRIDS_VALUES.
+
+        R_LABEL_POS (Optional[int in range [0:360]]):
+            rotation angle of the radial axis values
+
+        BOTTOM (OPTIONAL[int]):
+            - only if RELATIVE_HIST=True.
+            number of units (current units of circular histogram), to skip, before
+            drawing the histogram, e.g. if BOTTOM=0 -- draw from the circle center;
+            if BOTTOM=5 -- skip 5 units and begin drawing from there.
+    '''
+
+    data = df[COLNAME].values  # extract raw numpy array
+
+
+
+    bins = np.linspace(0.0, 2 * np.pi, N+1, endpoint=True)/2./np.pi*360.  # bins borders in degrees, including the 360 degree border.
+
+    if RELATIVE_HIST:
+        hist, bin_edges = np.histogram(data, bins=bins, weights=np.zeros_like(data) + 1. / float(data.size))
+        hist *= 100
+    else:
+        hist, bin_edges = np.histogram(data, bins=bins)
+
+    x = bin_edges[:-1]*2.*np.pi/360.  # x-array -- bins borders in radians, without the last, 360 degrees, border
+
+
+    fig = plt.figure()
+    if PLOT_LINE_SUBPLOT:
+        subplot_pos = 211
+    else:
+        subplot_pos = 111
+    ax = fig.add_subplot(subplot_pos, projection='polar')
+
+
+    width = (2*np.pi) / float(N)  # width of the bin in degrees
+    bars = ax.bar(x , hist, width=width, bottom=BOTTOM)
+
+    # convert usual angle plot to the bearing plot...
+    ax.set_theta_direction(THETA_DIRECTION) 
+    ax.set_theta_zero_location(THETA_ZERO_LOCATION)
+    ax.set_thetagrids(THETA_GRIDS_VALUES, labels=THETA_GRIDS_LABELS, frac=1.2, fmt=None)
+    ax.set_rlabel_position(R_LABEL_POS)
+
+    if RELATIVE_HIST:
+        # determine the radial ticks
+        v_max = hist.max()
+        if v_max >= 30.:
+            # one tick every ten %
+            max_val_roundeup = int(math.ceil(v_max / 10.0)) * 10
+            r_ticks = np.arange(0, max_val_roundeup+10, 10)
+        elif 30 > v_max >= 10:
+            # one tick every five %
+            max_val_roundeup = int(math.ceil(v_max / 5.0)) * 5
+            r_ticks = np.arange(0, max_val_roundeup+5, 5)
+        elif 10 > v_max:
+            # one tick every single %
+            max_val_roundeup = int(math.ceil(v_max / 5.0)) * 5
+            r_ticks = np.arange(0, max_val_roundeup+1, 1)
+        
+        # define labels for ticks
+        if BOTTOM > 0:
+            r_ticks = r_ticks+BOTTOM  # we get rid of the first (r_ticks[0]=0) item, since values on the radial axis are always >=0
+            r_labels = ['{0}%'.format(val-BOTTOM) for val in r_ticks ]
+        elif BOTTOM == 0:
+            r_ticks = r_ticks[1:]  # we get rid of the first (r_ticks[0]=0) item, since values on the radial axis are always >=0
+            r_labels = ['{0}%'.format(val) for val in r_ticks ]
+        
+        # now apply the defined ticks and labels
+        ax.set_rgrids(r_ticks, labels=r_labels, angle=R_LABEL_POS, size=R_FONTSIZE)
+
+    # Use custom colors and opacity
+    for r, bar in zip(hist, bars):
+        color = 1./hist.max()*r
+        bar.set_facecolor(plt.cm.Blues(color))
+        bar.set_alpha(0.8)
+
+    # ------------------------
+    # Second subplot
+    # ------------------------
+    if PLOT_LINE_SUBPLOT:
+        ax2 = fig.add_subplot(212)
+        df[COLNAME].plot(ax=ax2, label='Data')
+        ax2.set_ylabel('Bearing N [degrees]')
+        ax2.set_xlabel('Data Points')
+        plt.legend()
+    # ----------------------------------------------
+    # ----------------------------------------------
+    # ----------------------------------------------
+    fig.show()
+
 if __name__ == '__main__':
+    # Example 1
     plot_statistical_analysis(np.random.uniform(-1, 1, size=5000),
             bins=100,
             data_units='',
             hist_type=1)
+    
+    # Example 2
+    df = pd.DataFrame(data=240. + 50 * (np.random.randn(1000)-0.5), columns=['bearing'])  # sample data
+    plot_direction_rose(df, 'bearing', RELATIVE_HIST=True, BOTTOM=5)
+    plt.show()
+
+    # Example 3

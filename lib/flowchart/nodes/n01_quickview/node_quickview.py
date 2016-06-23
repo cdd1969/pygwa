@@ -82,7 +82,7 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
         modelsAreSet = False
         if self.parent().getPandasModel() is not None:
             try:
-                self.listView.setModel(self.parent().getPandasModel().headerModel())
+                self.tableView_header.setModel(self.parent().getPandasModel().headerModel())
                 modelOneIsSet = True
             except Exception, err:
                 modelOneIsSet = False
@@ -100,7 +100,9 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
         self.updateButtons(modelsAreSet)
 
     def updateButtons(self, modelsAreSet=False):
-        #print( 'updateButtons() is called with modelsAreSet=', modelsAreSet)
+        ''' enable buttons only if the models are set '''
+        self.pushButton_deselectAll.setEnabled(modelsAreSet)
+        self.pushButton_selectAll.setEnabled(modelsAreSet)
         self.pushButton_viewTable.setEnabled(modelsAreSet)
         self.pushButton_viewPlot.setEnabled(modelsAreSet)
 
@@ -113,6 +115,25 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
         self.tableView.resizeColumnsToContents()
 
     @QtCore.pyqtSlot()  #default signal
+    def on_pushButton_selectAll_clicked(self):
+        """ Select all data-rows in a tableView_header"""
+        if True:
+            model = self.parent().getPandasModel().headerModel()
+            # now loop over all items at column (0)
+            for i in xrange(model.rowCount()):
+                model.item(i, 0).setCheckState(Qt.Checked)
+
+    @QtCore.pyqtSlot()  #default signal
+    def on_pushButton_deselectAll_clicked(self):
+        """ Select all data-rows in a tableView_header"""
+        if True:
+            model = self.parent().getPandasModel().headerModel()
+            # now loop over all items at column (0)
+            for i in xrange(model.rowCount()):
+                model.item(i, 0).setCheckState(Qt.Unchecked)
+
+
+    @QtCore.pyqtSlot()  #default signal
     def on_pushButton_viewTable_clicked(self):
         """ open our data in a tableView"""
         if self.twWindow is None:
@@ -123,14 +144,11 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
         self.twWindow.show()
         self.twWindow.activateWindow()
 
-
-
     @QtCore.pyqtSlot()  #default signal
     def on_pushButton_viewPlot_clicked(self):
         """ open nice graphic representation of our data"""
         with BusyCursor():
             try:
-
                 self.matplotlibWindow = plt.figure()
                 ax = plt.subplot(111)
                 columns = self.parent().getPandasModel().selectColumns()
@@ -147,11 +165,6 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
             except Exception as exp:
                 self._parent.setException(exp)
                 return
-    
-    @QtCore.pyqtSlot(bool)  #default signal
-    def on_radioButton_columnIndex_toggled(self, isChecked):
-        self.spinBox_columnIndex.setEnabled(isChecked)
-        self.lineEdit_combineColumn.setDisabled(isChecked)
 
     def parent(self):
         return self._parent
@@ -164,7 +177,9 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
 
 class PandasModel(QtCore.QAbstractTableModel):
     """
-    Class to populate a table view with a pandas dataframe
+    This class contains two models:
+        - QAbstractTableModel for the data
+        - QStandardItemModel for the headers
     """
     def __init__(self, data, parent=None):
         QtCore.QAbstractTableModel.__init__(self, parent)
@@ -180,7 +195,10 @@ class PandasModel(QtCore.QAbstractTableModel):
             raise TypeError("Invalid type of argument <data> detected. Received: {0}. Must be [pd.DataFrame, pd.Series]".format(type(data)))
 
     def setPandasDataframe(self, data):
-        #print( 'setPandasDataframe() is called')
+        '''
+            Update the QAbstractTableModel (self) and QStandardItemModel (self._headerModel)
+            with the data from a given pandas DataFrame (data)
+        '''
         try:
             del self._dataPandas
             # no need to call garbage collector, since it will be executed via <update()>
@@ -190,12 +208,36 @@ class PandasModel(QtCore.QAbstractTableModel):
         
         # append header of the newly set data to our HeaderModel
         self._headerModel.clear()  #flush previous model
+
+        N_index = len(self._dataPandas.index)
         for name in self.getDataHeader():
-            item = QtGui.QStandardItem(asUnicode('{0} ;; dtype <{1}>'.format(name.encode('UTF-8'), self._dataPandas[name].dtype)))
-            item.setCheckable(True)
-            item.setEditable(False)
-            item.setCheckState(Qt.Checked)
-            self._headerModel.appendRow(item)
+            RED_FONT = QtGui.QBrush(Qt.red)
+
+            # append a table with three columns (Name, Data-Type and N_NaNs). Each row represents
+            # a data-column in the input dataframe object
+            item_name = QtGui.QStandardItem(asUnicode('{0}'.format(name.encode('UTF-8'))))
+            item_name.setCheckable(True)
+            item_name.setEditable(False)
+            item_name.setCheckState(Qt.Checked)
+
+            dt = self._dataPandas[name].dtype
+            item_type = QtGui.QStandardItem(asUnicode('{0}'.format(dt)))
+            item_type.setEditable(False)
+            if dt == type(object):
+                # if the data-type of the column is not numeric or datetime, then it's propabply has not been
+                # loaded successfully. Therefore, explicitly change the font color to red, to inform the user.
+                item_type.setForeground(RED_FONT)
+            
+            n_nans = N_index - self._dataPandas[name].count()
+            item_nans = QtGui.QStandardItem(asUnicode('{0}'.format(n_nans)))
+            item_nans.setEditable(False)
+            if n_nans > 0:
+                item_nans.setForeground(RED_FONT)
+            
+            self._headerModel.appendRow([item_name, item_type, item_nans])
+
+        self._headerModel.setHorizontalHeaderLabels(['Name', 'Data-type', 'Number of NaNs'])
+        
         self._headerModel.endResetModel()
         
         #finally call update method
@@ -275,7 +317,8 @@ class PandasModel(QtCore.QAbstractTableModel):
         # since i have changed the text of the item to `colname+' ;; <dtype>'`
         # i need to extract column name once again
         #print( 're', re.search('(.*?)\s;;\sdtype.*', item.text()).group(1))
-        colNameStr = re.search('(.*?)\s;;\sdtype.*', tw_item.text()).group(1)
+        #colNameStr = re.search('(.*?)\s;;\sdtype.*', tw_item.text()).group(1)
+        colNameStr = tw_item.text()
         if colNameStr not in self._dataPandas.columns:
             colNameStr = int(colNameStr)
             if colNameStr not in self._dataPandas.columns:
@@ -342,19 +385,5 @@ class PandasModel(QtCore.QAbstractTableModel):
 
     def destroy(self):
         self._headerModel.clear()
-        #del self._headerModel
-        try:
-            #del self._dataPandas
-            pass
-        except:
-            print( 'self._dataPandas not deleted')
-        try:
-            #del self._data
-            pass
-        except:
-            print( 'self._data not deleted')
-
-        #self.clear()
         self.endResetModel()
-        #del self
         gc.collect()

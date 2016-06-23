@@ -2,6 +2,8 @@ from pyqtgraph.Qt import QtGui, QtCore
 
 
 class TreeWidget(QtGui.QTreeWidget):
+    ''' Class describes a TreeWidget for selecting nodes in the GUI-library
+    '''
 
     def __init__(self, parent=None):
         self._parent = parent

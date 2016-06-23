@@ -27,10 +27,10 @@ class interpolateDfNode(NodeWithCtrlWidget):
         df = In
         if df is None:
             self._ctrlWidget.p.clearChildren()
-            return
+            return {'Out': None}
 
         receivedColumns = df.columns
-        currentColumns = [item.name() for item in self._ctrlWidget.p.children()]
+        currentColumns  = [item.name() for item in self._ctrlWidget.p.children()]
         
         # First take care of ParameterTree Widget.Remove missing and add new ParameterGroups
         for colName in receivedColumns:
@@ -49,7 +49,7 @@ class interpolateDfNode(NodeWithCtrlWidget):
             #print( 'UPDATING PARTLY COLUMNS')
             if self.outputs()['Out'].value() is not None:
                 #print( 'UPDATING FROM OUTPUT')
-                df = self.outputs()['Out'].value().unpack()
+                df = self.outputs()['Out'].value()
         
         nN = len(df.index)
         with BusyCursor():
@@ -57,7 +57,7 @@ class interpolateDfNode(NodeWithCtrlWidget):
             # evaluation we will do column by column
             for colName in self._columnsToUpdate:
                 validN = df_out[colName].count()
-                nanN = (nN-validN)
+                nanN   = nN - validN
                 self._ctrlWidget.param(colName).nEntries.setValue(nN)
                 self._ctrlWidget.param(colName).nNansBefore.setValue(nanN)
                 
@@ -117,7 +117,7 @@ class interpolateDfNode(NodeWithCtrlWidget):
         try:
             cn  = sender.parent().name()
             cni = cn+'_interpolated'
-            df = self.outputs()['Out'].value().unpack()
+            df = self.outputs()['Out'].value()
 
             #plot
             fig, axes = plt.subplots(2)

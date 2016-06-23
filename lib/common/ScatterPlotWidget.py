@@ -3,8 +3,7 @@ import pyqtgraph as pg
 from pyqtgraph import functions as fn
 from pyqtgraph import getConfigOption
 
-from ..functions.general import returnPandasDf, isNumpyDatetime
-
+from ..functions.general import isNumpyDatetime
 
 
 class ScatterPlotWidget(pg.ScatterPlotWidget):
@@ -73,7 +72,7 @@ class ScatterPlotWidget(pg.ScatterPlotWidget):
         """ Extendind defult method to accept pandas.DataFrame
             and exit on unpropriate dtype
         """
-        df = returnPandasDf(data, raiseException=False)
+        df = data
         if df is not None:
             pg.ScatterPlotWidget.setData(self, df.to_records())
             return
