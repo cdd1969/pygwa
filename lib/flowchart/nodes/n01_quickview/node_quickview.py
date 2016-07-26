@@ -8,15 +8,19 @@ from pyqtgraph import BusyCursor
 from pyqtgraph import functions as fn
 from pyqtgraph.python2_3 import asUnicode
 
-import re
 import gc
 import traceback
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import logging
+logger = logging.getLogger(__name__)
+
 from lib.common.TableView import TableView
 from lib.functions.general import isNumpyDatetime, isNumpyNumeric
+
+RED_FONT = QtGui.QBrush(Qt.red)
 
 
 class QuickViewNode(Node):
@@ -78,7 +82,11 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
         self.update()
 
     def setModels(self):
-        #print( "setModels()")
+        """ Set already created models to node's widgets:
+                (1) - set header model to `self.tableView_header` (MENU)
+                (2) - set data table model to `self.tableView` (DATA)
+        """
+        #logger.debug( "setModels()")
         modelsAreSet = False
         if self.parent().getPandasModel() is not None:
             try:
@@ -87,14 +95,14 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
             except Exception, err:
                 modelOneIsSet = False
                 traceback.print_exc()
-                print "QuickViewCtrlWidget: Unnable to set listView model"
+                logger.info("QuickViewCtrlWidget: Unnable to set listView model")
             try:
                 self.tableView.setModel(self.parent().getPandasModel())
                 modelTwoIsSet = True
             except Exception, err:
                 modelTwoIsSet = False
                 traceback.print_exc()
-                print( "QuickViewCtrlWidget: Unnable to set tableView model")
+                logger.info("QuickViewCtrlWidget: Unnable to set tableView model")
             if modelOneIsSet and modelTwoIsSet:
                 modelsAreSet = True
         self.updateButtons(modelsAreSet)
@@ -178,67 +186,102 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
 class PandasModel(QtCore.QAbstractTableModel):
     """
     This class contains two models:
-        - QAbstractTableModel for the data
-        - QStandardItemModel for the headers
+        - QAbstractTableModel for the data (DATA-TABLE)
+        - QStandardItemModel for the headers (MENU)
     """
-    def __init__(self, data, parent=None):
+    def __init__(self, data, parent=None, enable_index=False):
+        '''
+        Args:
+        -----
+            data (pd.DataFrame|pd.Series):
+                pandas dataframe or series with data of interest
+        '''
+        self.ENABLE_INDEX = enable_index  # enable or disable showing the index of the pd.Series or pd.DataFrame in `data`
         QtCore.QAbstractTableModel.__init__(self, parent)
         self._headerModel = QtGui.QStandardItemModel(parent=self)  # this model will be used with QListView to display Dataframe header (and check them)
         self._headerModel.itemChanged.connect(self.on_tv_itemChanged)
         self._parent = parent
+        
 
+        self.setPandasDataframe(data)
 
-        if isinstance(data, (pd.DataFrame, pd.Series)):
-            # set explicitly passed pandas dataframe
-            self.setPandasDataframe(data)
-        else:
-            raise TypeError("Invalid type of argument <data> detected. Received: {0}. Must be [pd.DataFrame, pd.Series]".format(type(data)))
-
-    def setPandasDataframe(self, data):
+    def setPandasDataframe(self, df):
         '''
             Update the QAbstractTableModel (self) and QStandardItemModel (self._headerModel)
-            with the data from a given pandas DataFrame (data)
+            with the data from a given pandas DataFrame (df)
+
+        Args:
+        -----
+            df (pd.DataFrame, pd.Series):
+                data of interest
         '''
+        if not isinstance(df, (pd.DataFrame, pd.Series)):
+            msg = "Invalid type of argument <df> detected. Received: {0}. Must be [pd.DataFrame, pd.Series]".format(type(df))
+            logger.error(msg)
+            raise TypeError(msg)
+
         try:
-            del self._dataPandas
+            del self._df
             # no need to call garbage collector, since it will be executed via <update()>
         except:
             pass
-        self._dataPandas = data
+        self._df = df
         
-        # append header of the newly set data to our HeaderModel
+        # ------------------------------------------------------
+        # append header of the new dataframe to our HeaderModel
+        # ------------------------------------------------------
         self._headerModel.clear()  #flush previous model
 
-        N_index = len(self._dataPandas.index)
+        N_index = len(self._df.index)
+        
         for name in self.getDataHeader():
-            RED_FONT = QtGui.QBrush(Qt.red)
-
             # append a table with three columns (Name, Data-Type and N_NaNs). Each row represents
             # a data-column in the input dataframe object
-            item_name = QtGui.QStandardItem(asUnicode('{0}'.format(name.encode('UTF-8'))))
-            item_name.setCheckable(True)
-            item_name.setEditable(False)
-            item_name.setCheckState(Qt.Checked)
 
-            dt = self._dataPandas[name].dtype
-            item_type = QtGui.QStandardItem(asUnicode('{0}'.format(dt)))
-            item_type.setEditable(False)
-            if dt == type(object):
-                # if the data-type of the column is not numeric or datetime, then it's propabply has not been
-                # loaded successfully. Therefore, explicitly change the font color to red, to inform the user.
-                item_type.setForeground(RED_FONT)
-            
-            n_nans = N_index - self._dataPandas[name].count()
-            item_nans = QtGui.QStandardItem(asUnicode('{0}'.format(n_nans)))
-            item_nans.setEditable(False)
-            if n_nans > 0:
-                item_nans.setForeground(RED_FONT)
-            
-            self._headerModel.appendRow([item_name, item_type, item_nans])
+            # Case 1 Treat separately `_INDEX_` case, meaning the index of the pd.DataFrame or pd.Series
+            if name == '_INDEX_':
+                item_name = QtGui.QStandardItem(asUnicode('{0}'.format(name.encode('UTF-8'))))
+                item_name.setCheckable(True)
+                item_name.setEditable(False)
+                item_name.setCheckState(Qt.Checked)
+                item_name.setEnabled(False)
+
+                dt = self._df.index.dtype
+                item_type = QtGui.QStandardItem(asUnicode('{0}'.format(dt)))
+                item_type.setEditable(False)
+                
+                item_nans = QtGui.QStandardItem(asUnicode('{0}'.format(0)))
+                item_nans.setEditable(False)
+                
+                self._headerModel.appendRow([item_name, item_type, item_nans])
+
+            # Case 2 Treat columns...
+            else:
+                item_name = QtGui.QStandardItem(asUnicode('{0}'.format(name.encode('UTF-8'))))
+                item_name.setCheckable(True)
+                item_name.setEditable(False)
+                item_name.setCheckState(Qt.Checked)
+
+                dt = self._df[name].dtype if isinstance(df, pd.DataFrame) else self._df.dtype
+                item_type = QtGui.QStandardItem(asUnicode('{0}'.format(dt)))
+                item_type.setEditable(False)
+                if dt == type(object):
+                    # if the data-type of the column is not numeric or datetime, then it's propabply has not been
+                    # loaded successfully. Therefore, explicitly change the font color to red, to inform the user.
+                    item_type.setForeground(RED_FONT)
+                
+                n_nans = N_index - (self._df[name].count() if isinstance(df, pd.DataFrame) else self._df.count())
+                item_nans = QtGui.QStandardItem(asUnicode('{0}'.format(n_nans)))
+                item_nans.setEditable(False)
+                if n_nans > 0:
+                    item_nans.setForeground(RED_FONT)
+                
+                self._headerModel.appendRow([item_name, item_type, item_nans])
 
         self._headerModel.setHorizontalHeaderLabels(['Name', 'Data-type', 'Number of NaNs'])
         
         self._headerModel.endResetModel()
+        # ------------------------------------------------------
         
         #finally call update method
         self.update()
@@ -270,18 +313,33 @@ class PandasModel(QtCore.QAbstractTableModel):
 
 
     def getData(self):
-        return self._dataPandas
+        return self._df
 
     def getSelectedData(self):
         pass
 
     def getDataHeader(self):
-        return self._dataPandas.columns.values.tolist()
+        '''
+            return the list of the column names from the dataframe
+            stored in self._df. Optionally include the name `_INDEX_`
+        '''
+        if isinstance(self._df, (pd.Series)):
+            columns = ['SERIES']
+        elif isinstance(self._df, (pd.DataFrame)):
+            columns = self._df.columns.values.tolist()
+        else:
+            raise NotImplementedError('Received invalid dtype: {0}'.format(type(self._df)))
+
+        if self.ENABLE_INDEX:
+            return ['_INDEX_'] + columns
+        else:
+            return columns
 
     def headerModel(self):
         return self._headerModel
 
     def update(self):
+        print 'update'
         try:
             del self._data
             gc.collect()
@@ -289,6 +347,9 @@ class PandasModel(QtCore.QAbstractTableModel):
             pass
         self._data = self.createNumpyData()
         self.r, self.c = self._data.shape
+        #if self.ENABLE_INDEX:
+        #    self.c += 1
+        #print 'rows, cols', self.r, self.c
         self.endResetModel()
         self._parent.ctrlWidget().update()
 
@@ -303,47 +364,70 @@ class PandasModel(QtCore.QAbstractTableModel):
         for i in xrange(self._headerModel.rowCount()):
             item = self._headerModel.item(i)
             if item.checkState() == Qt.Checked:
-                #columns.append(item.text())
-                # since i have changed the text of the item to `colname+' ;; <dtype>'`
-                # i need to extract column name once again
-                #print( 're', re.search('(.*?)\s;;\sdtype.*', item.text()).group(1))
-                columns.append(self.getItemName(item))
-        
-        #print( "selectColumns() returning", columns)
+                column_name = self.getItemName(item)
+                if column_name == '_INDEX_' and not self.ENABLE_INDEX:
+                    continue
+                columns.append(column_name)
         return columns
 
     def getItemName(self, tw_item):
-        #columns.append(item.text())
-        # since i have changed the text of the item to `colname+' ;; <dtype>'`
-        # i need to extract column name once again
-        #print( 're', re.search('(.*?)\s;;\sdtype.*', item.text()).group(1))
-        #colNameStr = re.search('(.*?)\s;;\sdtype.*', tw_item.text()).group(1)
+        ''' Return the name of the columns in pandas dataframe `self._df`
+            based on the selected item in `self.headerModel` (MENU). The
+            selected item is `tw_item`. Optionally return '_INDEX_' string
+        '''
         colNameStr = tw_item.text()
-        if colNameStr not in self._dataPandas.columns:
-            colNameStr = int(colNameStr)
-            if colNameStr not in self._dataPandas.columns:
+
+        if isinstance(self._df, pd.Series):
+            if colNameStr == 'SERIES' or (colNameStr == '_INDEX_' and self.ENABLE_INDEX):
+                return colNameStr
+            else:
                 raise ValueError('Column name `{0}` not found in DataFtame.columns'.format(colNameStr))
-        return colNameStr
+                
+        elif isinstance(self._df, pd.DataFrame):
+            if colNameStr not in self._df.columns:
+                if not ( colNameStr == '_INDEX_' and self.ENABLE_INDEX):
+                    raise ValueError('Column name `{0}` not found in DataFtame.columns'.format(colNameStr))
+            return colNameStr
+        else:
+            raise NotImplementedError('Received invalid dtype: {0}'.format(type(self._df)))
+
+
 
 
     def createNumpyData(self):
+        ''' Return a Numpa 2D array with data copied from `self._df` pandas
+            dataframe. Optionally also copy `self._df.index` values to the numpy
+            array into the first position
+        '''
         # we will use Numpy cause of its blazing speed
         # in contrast, the direct usage of pandas dataframe <df[i][j]> in method <data()> is extremely slow
+
         selectedColumns = self.selectColumns()
-        if selectedColumns is None:  #return all columns
-            return np.array(self._dataPandas)
+        if self.ENABLE_INDEX:
+            selectedColumns.remove('_INDEX_')
+
+        # return only desired columns
+        # note <selectedColumns> should be a list of strings (i.e. ['datetime', 'col1', 'col2'])
+        if isinstance(self._df, pd.Series):
+            data = self._df.values[:, np.newaxis]
+        elif isinstance(self._df, pd.DataFrame):
+            data = self._df[[col for col in selectedColumns]].values
         else:
-            # return only desired columns
-            # note <selectedColumns> should be a list of strings (i.e. ['datetime', 'col1', 'col2'])
-            try:
-                data = self._dataPandas[[str(col) for col in selectedColumns]]
-            except:
-                data = self._dataPandas[[int(col) for col in selectedColumns]]
-            return np.array(data)
+            raise NotImplementedError('Received invalid dtype: {0}'.format(type(self._df)))
+
+        if self.ENABLE_INDEX:
+            index = self._df.index.values
+            # append `index` as the first column to the 2D array `data`
+            print 'TYPE:', index[:, np.newaxis].astype(object, copy=False).dtype, data.astype(object, copy=False).dtype
+            return np.hstack((index[:, np.newaxis].astype(object, copy=False), data.astype(object, copy=False)))
+        else:
+            return data
 
     @QtCore.pyqtSlot(object)
     def on_tv_itemChanged(self, item):
-        #print( '>>>', self.getItemName(item))
+        """ Does something when the item in Table-View (MENU) model is changed
+            item -- item of the MENU table
+        """
         if item.checkState() == Qt.Checked:
             for i in xrange(self._headerModel.rowCount()):
                 if item is self._headerModel.item(i):
@@ -375,7 +459,7 @@ class PandasModel(QtCore.QAbstractTableModel):
     def headerData(self, section, orientation, role=Qt.DisplayRole):
         if role == Qt.DisplayRole:
             if orientation == Qt.Horizontal:
-                return self._dataPandas.columns[section]
+                return self.getDataHeader()[section]
             elif orientation == Qt.Vertical:
                 return section
         return QtCore.QVariant()
