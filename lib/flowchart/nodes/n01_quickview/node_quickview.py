@@ -123,14 +123,23 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
                 traceback.print_exc()
                 logger.info("QuickViewCtrlWidget: Unnable to set QtableView model (Data-Table-View")
 
-        self.updateButtons(modelsAreSet)
+        self.updateUI(modelsAreSet)
 
-    def updateButtons(self, modelsAreSet=False):
+    def updateUI(self, modelsAreSet=False):
         ''' enable buttons only if the models are set '''
+
         self.pushButton_deselectAll.setEnabled(modelsAreSet)
         self.pushButton_selectAll.setEnabled(modelsAreSet)
         self.pushButton_viewTable.setEnabled(modelsAreSet)
         self.pushButton_viewPlot.setEnabled(modelsAreSet)
+        self.checkBox_separateSubplots.setEnabled(modelsAreSet)
+
+
+        df = self.parent().getPandasDataModel().df
+        table_size_str = ' {0} x {1}'.format(len(df.columns), len(df.index))
+        memory_usg_str = ' {0:.0f} '.format(float(sum(df.memory_usage(index=True)))/1024.)
+        self.label_tableSize.setText(table_size_str)
+        self.label_memoryUsage.setText(memory_usg_str)
 
     def update(self):
         #try:
@@ -177,19 +186,34 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
         """ open nice graphic representation of our data"""
         with BusyCursor():
             try:
-                self.matplotlibWindow = plt.figure()
-                ax = plt.subplot(111)
-                columns = self.parent().getPandasHeaderModel().selectedColumns()
-                df = self.parent().getPandasDataModel().df[columns]  #slice of the input dataframe with selected columns
-
-                datetime_cols = [col for col in df.columns if isNumpyDatetime(df[col].dtype)]
-                numeric_cols  = [col for col in df.columns if isNumpyNumeric (df[col].dtype)]
-
+                df = self.parent().getPandasDataModel().df
+                
+                columns = self.parent().getPandasHeaderModel().selectedColumns()  #consider only the selected columns
+                datetime_cols = [col for col in columns if isNumpyDatetime(df[col].dtype)]
+                numeric_cols  = [col for col in columns if isNumpyNumeric (df[col].dtype)]
                 datetime_col = datetime_cols[0] if len(datetime_cols) > 0 else None   #plot with x=datetime if possible
+                
+                if self.checkBox_separateSubplots.isChecked() and len(numeric_cols) > 1:
+                    '''
+                        Do the plotting of each selected numerical column on an individual subplot
+                    '''
+                    f, axes = plt.subplots(len(numeric_cols), sharex=True)
+                    for ax, numeric_col in zip(axes, numeric_cols):
+                        df.plot(x=datetime_col, y=numeric_col, ax=ax)
+                        legend = ax.legend(shadow=True)
+                    # Fine-tune figure; make subplots close to each other and hide x ticks for all but bottom plot.
+                    #f.subplots_adjust(hspace=0)
+                    plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
+                else:
+                    '''
+                        Plot all selected numerical columns together on a single subplot
+                    '''
+                    f, ax = plt.subplots(1)
+                    for numeric_col in numeric_cols:
+                        df.plot(x=datetime_col, y=numeric_col, ax=ax)
+                    legend = ax.legend(shadow=True)
 
-                for numeric_col in numeric_cols:
-                    df.plot(x=datetime_col, y=numeric_col, ax=ax)
-                self.matplotlibWindow.show()
+                f.show()
             except Exception as exp:
                 self._parent.setException(exp)
                 return
