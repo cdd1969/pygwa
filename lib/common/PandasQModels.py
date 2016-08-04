@@ -84,7 +84,7 @@ class PandasDataModel(QtCore.QAbstractTableModel):
             if orientation == Qt.Horizontal:
                 return self.df.columns[section]
             elif orientation == Qt.Vertical:
-                return asUnicode(self.df.index.tolist()[section])
+                return asUnicode('{0} | {1}'.format(section, self.df.index.tolist()[section]))
         return QtCore.QVariant()
 
     def clear(self):
