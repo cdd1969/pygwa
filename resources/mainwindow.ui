@@ -107,6 +107,7 @@
     </property>
     <addaction name="actionCopy_Selected_Node"/>
     <addaction name="actionPaste_Node"/>
+    <addaction name="actionDelete_Node"/>
    </widget>
    <widget class="QMenu" name="menuLib">
     <property name="title">
@@ -123,6 +124,9 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
@@ -141,6 +145,7 @@
    <addaction name="actionSave_As_fc"/>
    <addaction name="actionCopy_Selected_Node"/>
    <addaction name="actionPaste_Node"/>
+   <addaction name="actionDelete_Node"/>
   </widget>
   <widget class="QDockWidget" name="dockWidget">
    <property name="sizePolicy">
@@ -471,6 +476,20 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+V</string>
+   </property>
+  </action>
+  <action name="actionDelete_Node">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="edit-delete"/>
+   </property>
+   <property name="text">
+    <string>Delete Node</string>
+   </property>
+   <property name="toolTip">
+    <string>Delete selected Node or Connection</string>
    </property>
   </action>
  </widget>

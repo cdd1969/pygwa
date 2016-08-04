@@ -1,5 +1,6 @@
 #!/usr/bin python
 # -*- coding: utf-8 -*-
+from pyqtgraph.Qt import QtGui
 from lib.functions import plot_pandas
 from lib.functions.general import isNumpyNumeric
 from lib.flowchart.nodes.generalNode import NodeWithCtrlWidget, NodeCtrlWidget
@@ -52,6 +53,11 @@ class plotHistNode(NodeWithCtrlWidget):
             
             if self._ctrlWidget.plotAllowed():
                 kwargs = self.ctrlWidget().prepareInputArguments()
+                if df[kwargs['Signal']].count() != len(df.index):
+                    QtGui.QMessageBox.warning(None, 'Cannot Make Histogram',
+                        "The signal `{0}` contains NaN values. Can not create histogram while NaNs are presents. Remove them first".format(kwargs['Signal']),
+                        QtGui.QMessageBox.Ok)
+                    return
                 plot_pandas.plot_statistical_analysis(df[kwargs['Signal']],
                     plot_title='Original Signal: {0}'.format(kwargs['Signal']),
                     bins=kwargs['Bins'],
