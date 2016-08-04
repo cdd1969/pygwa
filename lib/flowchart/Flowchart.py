@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from pyqtgraph.flowchart.Flowchart import Flowchart
+from pyqtgraph.flowchart.Terminal import ConnectionItem
 from pyqtgraph.flowchart.Node import Node
 from pyqtgraph.Qt import QtGui
 from pyqtgraph import configfile as configfile
@@ -126,14 +127,31 @@ class customFlowchart(Flowchart):
         return self._nodeCopyPasteBuffer
 
     def nodeIsSelected(self):
+        '''
+            return True if currently a Node is selected
+        '''
+        it = self.getSelectedItem()
+        if it[1] == 'node':
+            return True
+        else:
+            return False
+    
+    def getSelectedItem(self):
+        '''
+            Return a tuple of two objects:
+                (first selected item, description=str)
+        '''
         items = self.scene.selectedItems()
         if len(items) == 0:
-            return False
-        item = items[0]
-        if not hasattr(item, 'node') or not isinstance(item.node, Node):
-            return False
-        return True
-
+            return (None, None)  # nothing is selected
+        else:
+            item = items[0]
+            if hasattr(item, 'node') and isinstance(item.node, Node):
+                return (item, 'node')  # returning Node
+            elif isinstance(item, ConnectionItem):
+                return (item, 'connection')  # returning ConnectionItem
+            else:
+                return (item, 'unknown')  # returning HZ chto
 
     def hoverOver(self, items):
         ''' overriding default method of 
