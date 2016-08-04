@@ -491,15 +491,20 @@ def convert_peaksraw_to_peaks(peaks_raw, col=None):
     peaks = pd.DataFrame()
 
     # determine number of tidal cycles
-    cycle = []
-    CYCLES = []
+    cycle = []   # current cycle (a pair of MIN MAX peaks)
+    CYCLES = []  # list with all cycles
 
     #type_index = peaks_raw.columns.get_loc("Type")
     #id_index   = peaks_raw.columns.get_loc("ID")
+
+    if 'MIN' not in peaks_raw['Type'].values:
+        logger.info('There is no MIN peak detected in RAW_PEAKS. Returning None...')
+        return None
+
     for row in peaks_raw.index:
-        while cycle == [] and peaks_raw.loc[row, 'Type'] != 'MIN':
+        if cycle == [] and peaks_raw.loc[row, 'Type'] != 'MIN':
             # find first MIN peak if the cycle is empty
-            #print 'skipping:', row
+            logger.debug('skipping row: {0}'.format(row))
             continue
         if peaks_raw.loc[row, 'Type'] == 'MIN' and cycle == []:
             cycle.append(peaks_raw.loc[row, 'ID'])
@@ -508,18 +513,21 @@ def convert_peaksraw_to_peaks(peaks_raw, col=None):
             CYCLES.append(cycle)
             cycle = []
 
-    mins = [c[0] for c in CYCLES]
-    maxs = [c[1] for c in CYCLES]
-    peaks['N'] = np.arange(len(CYCLES))
-    peaks['ind_min']  = peaks_raw[peaks_raw['ID'].isin(mins)]['Index in data-array'].values
-    peaks['ind_max']  = peaks_raw[peaks_raw['ID'].isin(maxs)]['Index in data-array'].values
-    peaks['time_min'] = peaks_raw[peaks_raw['ID'].isin(mins)]['Datetime'].values
-    peaks['time_max'] = peaks_raw[peaks_raw['ID'].isin(maxs)]['Datetime'].values
-    peaks['val_min']  = peaks_raw[peaks_raw['ID'].isin(mins)]['value'].values
-    peaks['val_max']  = peaks_raw[peaks_raw['ID'].isin(maxs)]['value'].values
-    peaks['time_diff']   = peaks['time_max'] - peaks['time_min']
-    peaks['tidal_range'] = np.abs(peaks['val_max'] - peaks['val_min'])
-    peaks['name']        = col
+    if CYCLES:
+        mins = [c[0] for c in CYCLES]
+        maxs = [c[1] for c in CYCLES]
+        peaks['N'] = np.arange(len(CYCLES))
+        peaks['ind_min']  = peaks_raw[peaks_raw['ID'].isin(mins)]['Index in data-array'].values
+        peaks['ind_max']  = peaks_raw[peaks_raw['ID'].isin(maxs)]['Index in data-array'].values
+        peaks['time_min'] = peaks_raw[peaks_raw['ID'].isin(mins)]['Datetime'].values
+        peaks['time_max'] = peaks_raw[peaks_raw['ID'].isin(maxs)]['Datetime'].values
+        peaks['val_min']  = peaks_raw[peaks_raw['ID'].isin(mins)]['value'].values
+        peaks['val_max']  = peaks_raw[peaks_raw['ID'].isin(maxs)]['value'].values
+        peaks['time_diff']   = peaks['time_max'] - peaks['time_min']
+        peaks['tidal_range'] = np.abs(peaks['val_max'] - peaks['val_min'])
+        peaks['name']        = col
+    else:
+        peaks = None
     return peaks
 
 
@@ -1198,8 +1206,8 @@ def match_peaks(peaks_w, peaks_gw, match_colName='time_min', **kwargs):
     match_col_index = peaks_w.columns.get_loc(match_colName)
 
     peaks_matched = peaks_w.copy(deep=True)
-    del peaks_matched['check']
-    del peaks_matched['time_diff']
+    if 'check' in peaks_matched.columns: del peaks_matched['check']
+    if 'time_diff' in peaks_matched.columns: del peaks_matched['time_diff']
     peaks_matched['md_N']        = np.nan
     peaks_matched['md_ind_min']  = np.nan
     peaks_matched['md_ind_max']  = np.nan
