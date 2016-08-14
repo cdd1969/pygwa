@@ -4,6 +4,7 @@ import os, sys
 import traceback
 import getpass
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
+from PyQt5.QtCore import Qt
 from pyqtgraph.flowchart import Node
 
 from functions.dictionary2qtreewidgetitem import fill_widget
@@ -21,9 +22,10 @@ logger = logging.getLogger(__name__)
 
 class MainWindow(QtWidgets.QMainWindow):
 
-    def __init__(self):
+    def __init__(self, app=None):
         super(MainWindow, self).__init__()
         self._unittestmode = False  #set this to True if running a unittest
+        self._application = app
         uic.loadUi(projectPath('resources/mainwindow.ui'), self)
         self.uiData = uiData(self)
         self.connectActions()
@@ -115,6 +117,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.actionCopy_Selected_Node.triggered.connect(self.on_actionCopy_Selected_Node)
         self.actionPaste_Node.triggered.connect(self.on_actionPaste_Node)
+        self.actionDelete_Node.triggered.connect(self.on_actionDelete_Node)
 
         self.actionAbout.triggered.connect(self.on_actionAbout)
         self.actionDocumentation.triggered.connect(self.on_actionDocumentation)
@@ -237,6 +240,18 @@ class MainWindow(QtWidgets.QMainWindow):
             startDir = None
         self.fc.saveFile(fileName=fileName, startDir=startDir)
         return True
+
+    @QtCore.pyqtSlot()
+    def on_actionDelete_Node(self):
+        ''' simulate Delete Key Press event'''
+        it = self.fc.getSelectedItem()
+
+
+        if it[1] == 'connection':
+            it[0].source.disconnect(it[0].target)
+        elif it[1] == 'node':
+            it[0].node.close()
+
     
     def on_sigFileSaved(self):
         '''
@@ -322,8 +337,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for n, v in version_info().iteritems():
             versions_str += '<br>{0} == {1}'.format(n, v)
         QtWidgets.QMessageBox.about(self, "About...", "{0}<br><br>Version: {1}<br>Author: {2}<br>Contact: {3}<br><hr>Configuration<br>{4}".format(
-            PROJECTMETA.about, PROJECTMETA.__version__, PROJECTMETA.__author__, PROJECTMETA.__contact__, versions_str)
-            )
+            PROJECTMETA.about, PROJECTMETA.__version__, PROJECTMETA.__author__, PROJECTMETA.__contact__, versions_str) )
 
     @QtCore.pyqtSlot()
     def on_actionDocumentation(self):
@@ -336,11 +350,11 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def selectionChanged(self):
         self.actionCopy_Selected_Node.setEnabled(self.fc.nodeIsSelected())  # enable action only when node is selected
-        items = self.fc.scene.selectedItems()
-        if len(items) != 0:
-            item = items[0]
-            if hasattr(item, 'node') and isinstance(item.node, Node):
-                self.on_selectedNodeChanged(item.node)
+        self.actionDelete_Node.setEnabled(self.fc.nodeIsSelected() or self.fc.getSelectedItem()[1] == 'connection')  # enable action only when node is selected
+        
+        item = self.fc.getSelectedItem()  #return tuple [item, 'description']
+        if item[1] == 'node':
+            self.on_selectedNodeChanged(item[0].node)
                 
     @QtCore.pyqtSlot()
     def on_sigChartLoaded(self):
@@ -496,7 +510,7 @@ from lib.flowchart.NodeLibrary import customNodeLibrary
 
 class uiData(QtCore.QObject):
     """ class to collect all our user-interface settings,
-        and to seperate these params from MainWindow class"""
+        and to separate these params from MainWindow class"""
     
     sigCurrentFilenameChanged = QtCore.Signal(unicode, unicode)
 
@@ -770,7 +784,7 @@ def main():
 
     # load logging configuration
     pygwa_logger.setup_logging()
-    logger.info('Starting the application')
+    logger.info('\n|\n|\n|\n|\n|\n...Starting the application...\n')
 
 
     app = QtWidgets.QApplication(sys.argv)
@@ -780,11 +794,7 @@ def main():
     app.setOrganizationName("pygwa")
     app.setApplicationName("pygwa")
 
-    ex = MainWindow()
+    ex = MainWindow(app=app)
     ex.show()
 
     sys.exit(app.exec_())
-
-
-if __name__ == '__main__':
-    main()

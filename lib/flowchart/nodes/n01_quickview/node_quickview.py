@@ -6,16 +6,16 @@ from PyQt5.QtCore import Qt
 from pyqtgraph.flowchart.Node import Node
 from pyqtgraph import BusyCursor
 from pyqtgraph import functions as fn
-from pyqtgraph.python2_3 import asUnicode
 
-import re
-import gc
 import traceback
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import logging
+logger = logging.getLogger(__name__)
+
 from lib.common.TableView import TableView
+from lib.common.PandasQModels import PandasDataModel, PandasHeaderModel
 from lib.functions.general import isNumpyDatetime, isNumpyNumeric
 
 
@@ -26,23 +26,39 @@ class QuickViewNode(Node):
     def __init__(self, name, parent=None):
         super(QuickViewNode, self).__init__(name, terminals={'In': {'io': 'in'}})
         self.graphicsItem().setBrush(fn.mkBrush(150, 150, 250, 200))
-        self._pandasModel = None
+        self._pandasDataModel   = PandasDataModel(parent=self)
+        self._pandasHeaderModel = PandasHeaderModel(parent=self)
         self._ctrlWidget = QuickViewCtrlWidget(self)
+
+        # connect show/hide signals
+        self._pandasHeaderModel.row_hidden.connect(self._ctrlWidget.tableView.horizontalHeader().hideSection)  #argumnent [int]
+        self._pandasHeaderModel.row_showed.connect(self._ctrlWidget.tableView.horizontalHeader().showSection)  #argumnent [int]
+        self._pandasDataModel.modelReset.connect(self._ctrlWidget.update)  #no argument
+
+
         self._id = None
         
     def process(self, In):
-        df = In
-        if id(df) != self._id and self._pandasModel is not None:
-            self._id = None
-            self._pandasModel.destroy()
-            self._pandasModel = None
-        if df is not None:
-            self._pandasModel = PandasModel(df, parent=self)
-            self._id = id(df)
+        '''
+            Take the dataframe from the terminal `In` and process it
+        '''
+
+        if id(In) != self._id and self._pandasDataModel is not None:
+            self.clearModels()
+        if In is not None:
+            if isinstance(In, pd.Series):
+                In = In.to_frame(name='SERIES')
+
+            self._pandasDataModel.setPandasDataframe(In)
+            self._pandasHeaderModel.setPandasDataframe(In)
+            self._id = id(In)
         self.ctrlWidget().update()
 
-    def getPandasModel(self):
-        return self._pandasModel
+    def getPandasDataModel(self):
+        return self._pandasDataModel
+    
+    def getPandasHeaderModel(self):
+        return self._pandasHeaderModel
         
     def ctrlWidget(self):
         return self._ctrlWidget
@@ -60,6 +76,11 @@ class QuickViewNode(Node):
         # additionally restore state of the control widget
         #self.ctrlWidget().restoreState(state['crtlWidget'])
 
+    def clearModels(self):
+        self._id = None
+        self._pandasDataModel.clear()
+        self._pandasHeaderModel.destroy()
+
 
 
 class QuickViewCtrlWidget(QtWidgets.QWidget):
@@ -72,39 +93,53 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
 
 
     def initUI(self):
-        #self.tableView = QtWidgets.QTableView()
+        #self.tableView_header = QtWidgets.QTableView()  # already set in the *.ui file
         self.tableView = TableView(parent=self)
-        self.twWindow = None
+        self.twWindow  = None
         self.update()
 
     def setModels(self):
-        #print( "setModels()")
-        modelsAreSet = False
-        if self.parent().getPandasModel() is not None:
+        """ Set already created models to node's widgets:
+                (1) - set header model to `self.tableView_header` (MENU)
+                (2) - set data table model to `self.tableView` (DATA)
+        """
+        #logger.debug( "setModels()")
+        modelsAreSet = True
+        if self.parent().getPandasDataModel() is not None:
             try:
-                self.tableView_header.setModel(self.parent().getPandasModel().headerModel())
-                modelOneIsSet = True
+                self.tableView_header.setModel(self.parent().getPandasHeaderModel())
+                if self.parent().getPandasHeaderModel().df.empty:
+                    modelsAreSet &= False
             except Exception, err:
-                modelOneIsSet = False
+                modelsAreSet &= False
                 traceback.print_exc()
-                print "QuickViewCtrlWidget: Unnable to set listView model"
+                logger.info("QuickViewCtrlWidget: Unnable to set QlistView model (Selection-Menu)")
             try:
-                self.tableView.setModel(self.parent().getPandasModel())
-                modelTwoIsSet = True
+                self.tableView.setModel(self.parent().getPandasDataModel())
+                if self.parent().getPandasDataModel().df.empty:
+                    modelsAreSet &= False
             except Exception, err:
-                modelTwoIsSet = False
+                modelsAreSet &= False
                 traceback.print_exc()
-                print( "QuickViewCtrlWidget: Unnable to set tableView model")
-            if modelOneIsSet and modelTwoIsSet:
-                modelsAreSet = True
-        self.updateButtons(modelsAreSet)
+                logger.info("QuickViewCtrlWidget: Unnable to set QtableView model (Data-Table-View")
 
-    def updateButtons(self, modelsAreSet=False):
+        self.updateUI(modelsAreSet)
+
+    def updateUI(self, modelsAreSet=False):
         ''' enable buttons only if the models are set '''
+
         self.pushButton_deselectAll.setEnabled(modelsAreSet)
         self.pushButton_selectAll.setEnabled(modelsAreSet)
         self.pushButton_viewTable.setEnabled(modelsAreSet)
         self.pushButton_viewPlot.setEnabled(modelsAreSet)
+        self.checkBox_separateSubplots.setEnabled(modelsAreSet)
+
+
+        df = self.parent().getPandasDataModel().df
+        table_size_str = ' {0} x {1}'.format(len(df.columns), len(df.index))
+        memory_usg_str = ' {0:.0f} '.format(float(sum(df.memory_usage(index=True)))/1024.)
+        self.label_tableSize.setText(table_size_str)
+        self.label_memoryUsage.setText(memory_usg_str)
 
     def update(self):
         #try:
@@ -112,13 +147,15 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
         #except:
         #    self.twWindow = None
         self.setModels()  # we enable and disable buttons also in this method
+        self.tableView.horizontalHeader().reset()
         self.tableView.resizeColumnsToContents()
+        self.tableView_header.resizeColumnsToContents()
 
     @QtCore.pyqtSlot()  #default signal
     def on_pushButton_selectAll_clicked(self):
         """ Select all data-rows in a tableView_header"""
         if True:
-            model = self.parent().getPandasModel().headerModel()
+            model = self.parent().getPandasHeaderModel()
             # now loop over all items at column (0)
             for i in xrange(model.rowCount()):
                 model.item(i, 0).setCheckState(Qt.Checked)
@@ -127,7 +164,7 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
     def on_pushButton_deselectAll_clicked(self):
         """ Select all data-rows in a tableView_header"""
         if True:
-            model = self.parent().getPandasModel().headerModel()
+            model = self.parent().getPandasHeaderModel()
             # now loop over all items at column (0)
             for i in xrange(model.rowCount()):
                 model.item(i, 0).setCheckState(Qt.Unchecked)
@@ -149,241 +186,37 @@ class QuickViewCtrlWidget(QtWidgets.QWidget):
         """ open nice graphic representation of our data"""
         with BusyCursor():
             try:
-                self.matplotlibWindow = plt.figure()
-                ax = plt.subplot(111)
-                columns = self.parent().getPandasModel().selectColumns()
-                df = self.parent().getPandasModel().getData()[columns]  #slice of the input dataframe with selected columns
-
-                datetime_cols = [col for col in df.columns if isNumpyDatetime(df[col].dtype)]
-                numeric_cols  = [col for col in df.columns if isNumpyNumeric (df[col].dtype)]
-
+                df = self.parent().getPandasDataModel().df
+                
+                columns = self.parent().getPandasHeaderModel().selectedColumns()  #consider only the selected columns
+                datetime_cols = [col for col in columns if isNumpyDatetime(df[col].dtype)]
+                numeric_cols  = [col for col in columns if isNumpyNumeric (df[col].dtype)]
                 datetime_col = datetime_cols[0] if len(datetime_cols) > 0 else None   #plot with x=datetime if possible
+                
+                if self.checkBox_separateSubplots.isChecked() and len(numeric_cols) > 1:
+                    '''
+                        Do the plotting of each selected numerical column on an individual subplot
+                    '''
+                    f, axes = plt.subplots(len(numeric_cols), sharex=True)
+                    for ax, numeric_col in zip(axes, numeric_cols):
+                        df.plot(x=datetime_col, y=numeric_col, ax=ax)
+                        legend = ax.legend(shadow=True)
+                    # Fine-tune figure; make subplots close to each other and hide x ticks for all but bottom plot.
+                    #f.subplots_adjust(hspace=0)
+                    plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
+                else:
+                    '''
+                        Plot all selected numerical columns together on a single subplot
+                    '''
+                    f, ax = plt.subplots(1)
+                    for numeric_col in numeric_cols:
+                        df.plot(x=datetime_col, y=numeric_col, ax=ax)
+                    legend = ax.legend(shadow=True)
 
-                for numeric_col in numeric_cols:
-                    df.plot(x=datetime_col, y=numeric_col, ax=ax)
-                self.matplotlibWindow.show()
+                f.show()
             except Exception as exp:
                 self._parent.setException(exp)
                 return
 
     def parent(self):
         return self._parent
-
-
-
-
-
-
-
-class PandasModel(QtCore.QAbstractTableModel):
-    """
-    This class contains two models:
-        - QAbstractTableModel for the data
-        - QStandardItemModel for the headers
-    """
-    def __init__(self, data, parent=None):
-        QtCore.QAbstractTableModel.__init__(self, parent)
-        self._headerModel = QtGui.QStandardItemModel(parent=self)  # this model will be used with QListView to display Dataframe header (and check them)
-        self._headerModel.itemChanged.connect(self.on_tv_itemChanged)
-        self._parent = parent
-
-
-        if isinstance(data, (pd.DataFrame, pd.Series)):
-            # set explicitly passed pandas dataframe
-            self.setPandasDataframe(data)
-        else:
-            raise TypeError("Invalid type of argument <data> detected. Received: {0}. Must be [pd.DataFrame, pd.Series]".format(type(data)))
-
-    def setPandasDataframe(self, data):
-        '''
-            Update the QAbstractTableModel (self) and QStandardItemModel (self._headerModel)
-            with the data from a given pandas DataFrame (data)
-        '''
-        try:
-            del self._dataPandas
-            # no need to call garbage collector, since it will be executed via <update()>
-        except:
-            pass
-        self._dataPandas = data
-        
-        # append header of the newly set data to our HeaderModel
-        self._headerModel.clear()  #flush previous model
-
-        N_index = len(self._dataPandas.index)
-        for name in self.getDataHeader():
-            RED_FONT = QtGui.QBrush(Qt.red)
-
-            # append a table with three columns (Name, Data-Type and N_NaNs). Each row represents
-            # a data-column in the input dataframe object
-            item_name = QtGui.QStandardItem(asUnicode('{0}'.format(name.encode('UTF-8'))))
-            item_name.setCheckable(True)
-            item_name.setEditable(False)
-            item_name.setCheckState(Qt.Checked)
-
-            dt = self._dataPandas[name].dtype
-            item_type = QtGui.QStandardItem(asUnicode('{0}'.format(dt)))
-            item_type.setEditable(False)
-            if dt == type(object):
-                # if the data-type of the column is not numeric or datetime, then it's propabply has not been
-                # loaded successfully. Therefore, explicitly change the font color to red, to inform the user.
-                item_type.setForeground(RED_FONT)
-            
-            n_nans = N_index - self._dataPandas[name].count()
-            item_nans = QtGui.QStandardItem(asUnicode('{0}'.format(n_nans)))
-            item_nans.setEditable(False)
-            if n_nans > 0:
-                item_nans.setForeground(RED_FONT)
-            
-            self._headerModel.appendRow([item_name, item_type, item_nans])
-
-        self._headerModel.setHorizontalHeaderLabels(['Name', 'Data-type', 'Number of NaNs'])
-        
-        self._headerModel.endResetModel()
-        
-        #finally call update method
-        self.update()
-
-        # make sure previously hidden rows will appear
-        for i in xrange(self._headerModel.rowCount()):
-            self._parent.ctrlWidget().tableView.horizontalHeader().showSection(i)
-
-        # since we reimplement function @setPandasDataframe() we need to re-emit the dataChanged signal
-        #topLeft = self.createIndex(0, 0)
-        #bottomRight = self.createIndex(data.shape[0], data.shape[1])
-        #self.dataChanged.emit(topLeft, bottomRight, ())
-
-    def setData(self, index, value=QtCore.QVariant(), role=Qt.EditRole):
-        """ make user able to edit cells, limited to float"""
-        if role == Qt.EditRole:
-            oldVal = self._data[index.row(), index.column()]
-            try:
-                newVal = float(value)
-                self._data[index.row(), index.column()] = newVal
-            except:
-                self._data[index.row(), index.column()] = oldVal
-        return True
-    
-    def flags(self, index=QtCore.QModelIndex()):
-        """define flags for all items of current model"""
-        #return (Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled)
-        return (Qt.ItemIsSelectable | Qt.ItemIsEnabled)
-
-
-    def getData(self):
-        return self._dataPandas
-
-    def getSelectedData(self):
-        pass
-
-    def getDataHeader(self):
-        return self._dataPandas.columns.values.tolist()
-
-    def headerModel(self):
-        return self._headerModel
-
-    def update(self):
-        try:
-            del self._data
-            gc.collect()
-        except:  # no instance <self._data> yet
-            pass
-        self._data = self.createNumpyData()
-        self.r, self.c = self._data.shape
-        self.endResetModel()
-        self._parent.ctrlWidget().update()
-
-
-    def selectColumns(self):
-        ''' This method can be used to pass specific column names in method @createNumpyData
-            "Selected column" is the column, which name IS CHECKED
-
-            <columns> is a list of strings (i.e. ['datetime', 'col1', 'col2']) or None
-        '''
-        columns = list()
-        for i in xrange(self._headerModel.rowCount()):
-            item = self._headerModel.item(i)
-            if item.checkState() == Qt.Checked:
-                #columns.append(item.text())
-                # since i have changed the text of the item to `colname+' ;; <dtype>'`
-                # i need to extract column name once again
-                #print( 're', re.search('(.*?)\s;;\sdtype.*', item.text()).group(1))
-                columns.append(self.getItemName(item))
-        
-        #print( "selectColumns() returning", columns)
-        return columns
-
-    def getItemName(self, tw_item):
-        #columns.append(item.text())
-        # since i have changed the text of the item to `colname+' ;; <dtype>'`
-        # i need to extract column name once again
-        #print( 're', re.search('(.*?)\s;;\sdtype.*', item.text()).group(1))
-        #colNameStr = re.search('(.*?)\s;;\sdtype.*', tw_item.text()).group(1)
-        colNameStr = tw_item.text()
-        if colNameStr not in self._dataPandas.columns:
-            colNameStr = int(colNameStr)
-            if colNameStr not in self._dataPandas.columns:
-                raise ValueError('Column name `{0}` not found in DataFtame.columns'.format(colNameStr))
-        return colNameStr
-
-
-    def createNumpyData(self):
-        # we will use Numpy cause of its blazing speed
-        # in contrast, the direct usage of pandas dataframe <df[i][j]> in method <data()> is extremely slow
-        selectedColumns = self.selectColumns()
-        if selectedColumns is None:  #return all columns
-            return np.array(self._dataPandas)
-        else:
-            # return only desired columns
-            # note <selectedColumns> should be a list of strings (i.e. ['datetime', 'col1', 'col2'])
-            try:
-                data = self._dataPandas[[str(col) for col in selectedColumns]]
-            except:
-                data = self._dataPandas[[int(col) for col in selectedColumns]]
-            return np.array(data)
-
-    @QtCore.pyqtSlot(object)
-    def on_tv_itemChanged(self, item):
-        #print( '>>>', self.getItemName(item))
-        if item.checkState() == Qt.Checked:
-            for i in xrange(self._headerModel.rowCount()):
-                if item is self._headerModel.item(i):
-                    #print( '>>> index found', i)
-                    self._parent.ctrlWidget().tableView.horizontalHeader().showSection(i)
-                    break
-        else:
-            for i in xrange(self._headerModel.rowCount()):
-                if item is self._headerModel.item(i):
-                    #print( '>>> index found', i)
-                    self._parent.ctrlWidget().tableView.horizontalHeader().hideSection(i)
-                    break
-                
-        
-
-
-    def rowCount(self, parent=None):
-        return self.r
-
-    def columnCount(self, parent=None):
-        return self.c
-
-    def data(self, index, role=Qt.DisplayRole):
-        if index.isValid():
-            if role == Qt.DisplayRole:
-                return asUnicode(self._data[index.row(), index.column()])
-        return QtCore.QVariant()
-
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole:
-            if orientation == Qt.Horizontal:
-                return self._dataPandas.columns[section]
-            elif orientation == Qt.Vertical:
-                return section
-        return QtCore.QVariant()
-
-    def clearAll(self):
-        self.clear()
-
-    def destroy(self):
-        self._headerModel.clear()
-        self.endResetModel()
-        gc.collect()
