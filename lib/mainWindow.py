@@ -337,8 +337,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for n, v in version_info().iteritems():
             versions_str += '<br>{0} == {1}'.format(n, v)
         QtWidgets.QMessageBox.about(self, "About...", "{0}<br><br>Version: {1}<br>Author: {2}<br>Contact: {3}<br><hr>Configuration<br>{4}".format(
-            PROJECTMETA.about, PROJECTMETA.__version__, PROJECTMETA.__author__, PROJECTMETA.__contact__, versions_str)
-            )
+            PROJECTMETA.about, PROJECTMETA.__version__, PROJECTMETA.__author__, PROJECTMETA.__contact__, versions_str) )
 
     @QtCore.pyqtSlot()
     def on_actionDocumentation(self):
@@ -511,7 +510,7 @@ from lib.flowchart.NodeLibrary import customNodeLibrary
 
 class uiData(QtCore.QObject):
     """ class to collect all our user-interface settings,
-        and to seperate these params from MainWindow class"""
+        and to separate these params from MainWindow class"""
     
     sigCurrentFilenameChanged = QtCore.Signal(unicode, unicode)
 
@@ -799,7 +798,3 @@ def main():
     ex.show()
 
     sys.exit(app.exec_())
-
-
-if __name__ == '__main__':
-    main()
