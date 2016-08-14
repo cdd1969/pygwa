@@ -1,4 +1,4 @@
-__version__ = '0.5'
+__version__ = '0.6'
 __author__  = 'Nikolai Chernikov'
 __contact__ = 'nikolai.chernikov.ru@gmail.ru'
 
