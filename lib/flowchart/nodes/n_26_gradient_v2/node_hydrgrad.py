@@ -298,13 +298,11 @@ class hydraulicGradientNodeCtrlWidget(QtWidgets.QWidget):
 
         self.groupBox_singleTS.setEnabled(False)
         self.groupBox_allTS.setEnabled(False)
-        self.checkBox_redCoords.setEnabled(False)
         
         self.comboBox_Datetime.setEnabled(False)
         self.label_3.setEnabled(False)
 
         if isinstance(self.parent().inputValues()['coord'], pd.DataFrame):
-            self.checkBox_redCoords.setEnabled(True)
             if isinstance(self.parent().inputValues()['data'], pd.DataFrame) and self.comboBox_Datetime.currentText():
                 self.groupBox_singleTS.setEnabled(True)
                 self.groupBox_allTS.setEnabled(True)
@@ -453,7 +451,6 @@ class hydraulicGradientNodeCtrlWidget(QtWidgets.QWidget):
 
         for i in xrange(self.tableWidget_menu.rowCount()):
             self.tableWidget_menu.cellWidget(i, 3).clear()  #clear Head Combobox
-            #self.tableWidget_menu.cellWidget(i, 4).clear()  # clear Datetime Combobox
 
     def _addItems_to_comboboxes(self, itemListHead, itemListDatetime):
         '''

@@ -69,7 +69,7 @@
        <string>Well</string>
       </property>
       <property name="toolTip">
-       <string>Name of the well in the `coordinate` table</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Name of the well that is automatically read from the table in terminal `coord` of a current Node&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="font">
        <font>
@@ -111,7 +111,7 @@
        <string>Head [m]</string>
       </property>
       <property name="toolTip">
-       <string>Groundwater head in meters in the well (select the column in table `data`)</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Groundwater head in meters in the well (select the column from the table in terminal `data`)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="font">
        <font>
@@ -139,16 +139,6 @@
       </widget>
      </item>
     </layout>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="checkBox_redCoords">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use &amp;quot;reduced&amp;quot; well coodinates (minimal value is subtracted from both x- and y-coords). See effect in the table above&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="text">
-      <string>Reduced Coords</string>
-     </property>
-    </widget>
    </item>
    <item>
     <widget class="Line" name="line">
