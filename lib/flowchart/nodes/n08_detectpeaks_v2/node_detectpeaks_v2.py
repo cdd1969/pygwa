@@ -22,7 +22,7 @@ class detectPeaksTSNode_v2(NodeWithCtrlWidget):
             {'name': 'mode', 'type': 'list', 'values': ['clip', 'wrap'], 'value': 'clip', 'default': 'clip', 'tip': 'How the edges of the vector are treated. ‘wrap’ (wrap around)\nor ‘clip’ (treat overflow as the same as the last (or first) element)'},
             {'name': 'removeRegions', 'type': 'bool', 'value': True, 'readonly': True, 'default': True, 'visible': False, 'tip': "remove possible multiple peaks that go one-by-one"}
         ]},
-        {'title': 'Ignore peaks', 'name': 'ignore', 'type': 'bool', 'value': True, 'default': True, 'tip': 'Checkbox to ignore peaks that are mentioned in parameter `Peak IDs', 'children': [
+        {'title': 'Ignore peaks', 'name': 'ignore', 'type': 'bool', 'value': False, 'default': False, 'tip': 'Checkbox to ignore peaks that are mentioned in parameter `Peak IDs', 'children': [
             {'title': 'Peak IDs', 'name': 'peaks2ignore', 'type': 'str', 'value': '', 'default': '', 'tip': 'IDs of the peaks that will be ignored. IDs can be found in table in terminal `raw`. \nInteger or a comma-separated integer list.\n Example:\n12\n0, 12, 1153'},
         ]},
         
@@ -43,10 +43,12 @@ class detectPeaksTSNode_v2(NodeWithCtrlWidget):
                 {'title': 'Warnings (ALL)', 'name': 'warn', 'type': 'str', 'value': '?', 'default': '?', 'readonly': True}
             ]},
             { 'title': 'Warnings (Total)', 'name': 'warn_sum', 'type': 'str', 'value': '?', 'default': '?', 'readonly': True},
-            { 'title': 'Raw Minimums', 'name': 'raw_nmin', 'type': 'str', 'value': '?', 'default': '?', 'readonly': True},
-            { 'title': 'Raw Maximums', 'name': 'raw_nmax', 'type': 'str', 'value': '?', 'default': '?', 'readonly': True},
-            { 'title': 'Raw Number\nof Mins+Maxs', 'name': 'raw_n_all', 'type': 'str', 'value': '?', 'default': '?', 'readonly': True},
-            { 'title': 'Final Number\nof Cycles', 'name': 'n_cycles', 'type': 'str', 'value': '?', 'default': '?', 'readonly': True}
+        ]},
+        {'title': 'Output', 'name': 'out_grp', 'type': 'group', 'children': [
+                { 'title': 'Raw Minimums', 'name': 'raw_nmin', 'type': 'str', 'value': '?', 'default': '?', 'readonly': True},
+                { 'title': 'Raw Maximums', 'name': 'raw_nmax', 'type': 'str', 'value': '?', 'default': '?', 'readonly': True},
+                { 'title': 'Raw Number\nof Mins+Maxs', 'name': 'raw_n_all', 'type': 'str', 'value': '?', 'default': '?', 'readonly': True},
+                { 'title': 'Final Number\nof Cycles', 'name': 'n_cycles', 'type': 'str', 'value': '?', 'default': '?', 'readonly': True}
         ]},
         {'name': 'Plot', 'type': 'action'}]
 
@@ -64,10 +66,10 @@ class detectPeaksTSNode_v2(NodeWithCtrlWidget):
         self.CW().param('check_grp', 'MAX_grp', 'warn').setValue('?')
         self.CW().param('check_grp', 'ALL_grp', 'warn').setValue('?')
         self.CW().param('check_grp', 'warn_sum').setValue('?')
-        self.CW().param('check_grp', 'raw_nmin').setValue('?')
-        self.CW().param('check_grp', 'raw_nmax').setValue('?')
-        self.CW().param('check_grp', 'raw_n_all').setValue('?')
-        self.CW().param('check_grp', 'n_cycles').setValue('?')
+        self.CW().param('out_grp', 'raw_nmin').setValue('?')
+        self.CW().param('out_grp', 'raw_nmax').setValue('?')
+        self.CW().param('out_grp', 'raw_n_all').setValue('?')
+        self.CW().param('out_grp', 'n_cycles').setValue('?')
         self.CW().param('Peak Detection Params', 'order').setValue('?')
         if df is None:
             return {'raw': None, 'peaks': None}
@@ -97,10 +99,10 @@ class detectPeaksTSNode_v2(NodeWithCtrlWidget):
             self.CW().param('check_grp', 'MAX_grp', 'warn').setValue(n_warn_max)
             self.CW().param('check_grp', 'ALL_grp', 'warn').setValue(n_warn_all)
             self.CW().param('check_grp', 'warn_sum').setValue(n_warn_min + n_warn_max + n_warn_all)
-            self.CW().param('check_grp', 'raw_nmin').setValue(extra['raw_nmin'])
-            self.CW().param('check_grp', 'raw_nmax').setValue(extra['raw_nmax'])
-            self.CW().param('check_grp', 'raw_n_all').setValue(len(raw.index))
-            self.CW().param('check_grp', 'n_cycles').setValue(len(peaks.index))
+            self.CW().param('out_grp', 'raw_nmin').setValue(extra['raw_nmin'])
+            self.CW().param('out_grp', 'raw_nmax').setValue(extra['raw_nmax'])
+            if raw is not None:   self.CW().param('out_grp', 'raw_n_all').setValue(len(raw.index))
+            if peaks is not None: self.CW().param('out_grp', 'n_cycles').setValue(len(peaks.index))
 
             
         return {'raw': raw, 'peaks': peaks}
@@ -138,10 +140,10 @@ class detectPeaksTSNode_v2CtrlWidget(NodeCtrlWidget):
         self.disconnect_valueChanged2upd(self.param('check_grp', 'MAX_grp', 'warn'))
         self.disconnect_valueChanged2upd(self.param('check_grp', 'ALL_grp', 'warn'))
         self.disconnect_valueChanged2upd(self.param('check_grp', 'warn_sum'))
-        self.disconnect_valueChanged2upd(self.param('check_grp', 'raw_nmin'))
-        self.disconnect_valueChanged2upd(self.param('check_grp', 'raw_nmax'))
-        self.disconnect_valueChanged2upd(self.param('check_grp', 'n_cycles'))
-        self.disconnect_valueChanged2upd(self.param('check_grp', 'raw_n_all'))
+        self.disconnect_valueChanged2upd(self.param('out_grp', 'raw_nmin'))
+        self.disconnect_valueChanged2upd(self.param('out_grp', 'raw_nmax'))
+        self.disconnect_valueChanged2upd(self.param('out_grp', 'n_cycles'))
+        self.disconnect_valueChanged2upd(self.param('out_grp', 'raw_n_all'))
         
         self.param('Plot').sigActivated.connect(self._parent.plot)
 
