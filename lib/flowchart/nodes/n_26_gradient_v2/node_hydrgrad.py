@@ -40,9 +40,15 @@ class hydraulicGradientNode(Node):
 
         self._ctrlWidget = hydraulicGradientNodeCtrlWidget(self)
 
+        self._coords_id = None
         
     def process(self, coord, data):
         self._checkInputs()
+
+        if id(coord) != self._coords_id:
+            logger.debug('clearing HydrGradientNode (coord table) on_process()')
+            self._coords_id = id(coord)
+            self.ctrlWidget().clear()
 
         self.ctrlWidget().on_coords_recieved(coord)
         self.ctrlWidget().on_data_recieved(data)
