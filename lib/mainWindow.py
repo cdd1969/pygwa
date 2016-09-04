@@ -722,7 +722,7 @@ class uiData(QtCore.QObject):
             configfile.writeConfigFile(self.win.fc.saveState(), bakname)
         except Exception, e:
             if GlobalOptions.notify_on_savebak_error:
-                ErrorPopupMessagBox(self, 'Save Backup File', 'Cannot save backup file at <i>{0}</i>'.format(bakname))
+                ErrorPopupMessagBox(self.win, 'Save Backup File', 'Cannot save backup file at <i>{0}</i>'.format(bakname))
                 return
 
         self.setCurrentBakFileName(bakname)
