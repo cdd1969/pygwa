@@ -22,6 +22,7 @@
     "17": "lib/flowchart/nodes/n17_evaluate/evaluate.node",
     "18": "lib/flowchart/nodes/n18_diffusivity_ferris/ferris_diffusivity.node",
     "19": "lib/flowchart/nodes/n_19_generatecurve/generatecurve.node",
+    "19_": "lib/flowchart/nodes/n_19_generatecurve_v2/generatecurve_v2.node",
     "20": "lib/flowchart/nodes/n_20_fourierfit/fourierfit.node",
     "21": "lib/flowchart/nodes/n_21_join_columns/joincol.node",
     "22": "lib/flowchart/nodes/n_22_add/add.node",
