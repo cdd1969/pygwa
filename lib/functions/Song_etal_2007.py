@@ -17,7 +17,7 @@ from math import sqrt
 import numpy as np
 
 
-def h(order=3, t=[], A=0., omega=0., phi=0., D=0., x=0., n_e=0.35, K=10e-4):
+def h(t=[], A=0., omega=0., phi=0., order=3, D=0., x=0., n_e=0.35, K=10e-4):
     ''' Calculate groundwater amplitude `h(x, t)` based on equation of Song et al 2007
 
             Following boundary conditions are introduced:
@@ -26,13 +26,19 @@ def h(order=3, t=[], A=0., omega=0., phi=0., D=0., x=0., n_e=0.35, K=10e-4):
                 2) h(x=inf) = 0
     Args:
     -----
+        t (float|np.array(float)) [s]:
+            Time elapsed from reference point in [s]. Can be numpy array with floats
+        A (float) [m]:
+            Amplitude of a tidal oscillation
+        omega (float) [rad/s]:
+            Angular velocity
+        phi (float) [rad]:
+            Initial phase shift
         order (int (1,2,3)):
             the order of the solution. Can be 1, 2 or 3. The 3rd order solution gives
             the most accurate results
         x (float) [m]:
             Distance from shoreline/river in cross-shore direction
-        t (float|np.array(float)) [s]:
-            Time elapsed from reference point in [s]. Can be numpy array with floats
         D (float) [m]:
             Mean aquifer thickness
         n_e (float) [-]:
@@ -40,13 +46,6 @@ def h(order=3, t=[], A=0., omega=0., phi=0., D=0., x=0., n_e=0.35, K=10e-4):
         K (float) [m/s]:
             Hydraulic conductivity of the aquifer
         
-        A (float) [m]:
-            Amplitude of a tidal oscillation
-        omega (float) [rad/s]:
-            Angular velocity
-        phi (float) [rad]:
-            Initial phase shift
-
     Return:
     ------
         h (float|np.array(float)) [m]:
@@ -61,7 +60,7 @@ def h(order=3, t=[], A=0., omega=0., phi=0., D=0., x=0., n_e=0.35, K=10e-4):
     
     # non-dimensional variables
     X = x / L           # (eq.10a)
-    T = t / omega       # (eq.10b)
+    T = t * omega       # (eq.10b)
     #H = h / D_inf       # (eq.10c)
 
     Lambda = 1./sqrt(2.)  # dimensionless wave number for the primary signal (eq.21)
