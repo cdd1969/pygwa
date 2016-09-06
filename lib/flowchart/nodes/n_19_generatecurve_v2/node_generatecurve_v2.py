@@ -65,9 +65,11 @@ class genCurveNode_v2(Node):
             #print '\t > doing the calculations'
             if kwargs['eq'] == 'tide':
                 df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], F=kwargs['F'], label=kwargs['label'], equation=kwargs['eq'])
+            
             elif kwargs['eq'] == 'ferris':
                 df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], F=kwargs['F'], label=kwargs['label'], equation=kwargs['eq'],
                     D=kwargs['ferris']['D'], x=kwargs['x'])
+            
             elif kwargs['eq'] == 'xia':
                 df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], F=kwargs['F'], label=kwargs['label'], equation=kwargs['eq'],
                     x=kwargs['x'],
@@ -75,9 +77,13 @@ class genCurveNode_v2(Node):
                     L=kwargs['xia']['L'], K1=kwargs['xia']['K1'], b1=kwargs['xia']['b1'],
                     K=kwargs['xia']['K'], b=kwargs['xia']['b'],
                     K_cap=kwargs['xia']['K_cap'], b_cap=kwargs['xia']['b_cap'])
+            
             elif kwargs['eq'] == 'song':
-                #df = generate_tide()
-                pass
+                df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], F=kwargs['F'], label=kwargs['label'], equation=kwargs['eq'],
+                    x=kwargs['x'],
+                    order=kwargs['song']['order'], b=kwargs['song']['b'], n_e=kwargs['song']['n_e'],
+                    kf=kwargs['song']['K'],
+                    b2msl=kwargs['song']['b2msl'])
             else:
                 df = None
 
@@ -138,6 +144,11 @@ class genCurveNodeCtrlWidget(QtWidgets.QWidget):
             self.sb_xia_b_aq,
             self.sb_xia_a_aq,
             self.sb_xia_ne_aq,
+
+            self.cb_song_order,
+            self.sb_song_kf,
+            self.sb_song_b,
+            self.sb_song_ne,
         ]
 
 
@@ -157,6 +168,7 @@ class genCurveNodeCtrlWidget(QtWidgets.QWidget):
         self.sb_xia_kf_roof.setOpts(value=1.e-7, **opts)
         self.sb_xia_kf_cap.setOpts(value=1.e-9, **opts)
         self.sb_xia_kf_aq.setOpts(value=5.e-4, **opts)
+        self.sb_song_kf.setOpts(value=5.e-4, **opts)
         self.sb_xia_a_aq.setOpts(value=1.e-8, **opts)
         
         self.sb_xia_Ss.setOpts(**opts)
@@ -197,6 +209,13 @@ class genCurveNodeCtrlWidget(QtWidgets.QWidget):
         self.sb_xia_b_aq.valueChanged.connect(self.nodeUpdateRequred)
         self.sb_xia_a_aq.valueChanged.connect(self.nodeUpdateRequred)
         self.sb_xia_ne_aq.valueChanged.connect(self.nodeUpdateRequred)
+
+
+        self.cb_song_order.currentIndexChanged.connect(self.nodeUpdateRequred)
+        self.sb_song_kf.valueChanged.connect(self.nodeUpdateRequred)
+        self.sb_song_b.valueChanged.connect(self.nodeUpdateRequred)
+        self.sb_song_ne.valueChanged.connect(self.nodeUpdateRequred)
+        #self.sb_song_b_to_msl.valueChanged.connect(self.nodeUpdateRequred)
         # --------------------------------------------------------------------
     
     def on_update_disconnect(self):
@@ -381,4 +400,12 @@ class genCurveNodeCtrlWidget(QtWidgets.QWidget):
         kwargs['xia']['K_cap']  = self.sb_xia_kf_cap.value()
         kwargs['xia']['b_cap']  = self.sb_xia_b_cap.value()
         kwargs['xia']['L']      = self.sb_xia_L_roof.value() if not self.cb_xia_inf_L.isChecked() else float('inf')
+
+        # --------  Song ------
+        kwargs['song'] = {}
+        kwargs['song']['order'] = int(self.cb_song_order.currentText())
+        kwargs['song']['K']     = self.sb_song_kf.value()
+        kwargs['song']['b']     = self.sb_song_b.value()
+        kwargs['song']['n_e']   = self.sb_song_ne.value()
+        kwargs['song']['b2msl']   = self.sb_song_b_to_msl.value()
         return kwargs
