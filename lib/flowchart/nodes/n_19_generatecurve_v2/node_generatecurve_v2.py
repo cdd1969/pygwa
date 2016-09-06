@@ -12,7 +12,7 @@ from pyqtgraph import functions as fn
 from lib.common.state_saver_loader import SaveWidgetState, RestoreWidgetState
 import logging
 logger = logging.getLogger(__name__)
-
+#import datetime
 
 beta = 4.8e-10
 rho = 1000.
@@ -28,22 +28,41 @@ class genCurveNode_v2(Node):
         super(genCurveNode_v2, self).__init__(name, terminals=terms)
         self.graphicsItem().setBrush(fn.mkBrush(250, 250, 150, 150))
         self._ctrlWidget = genCurveNodeCtrlWidget(self)
-
         self._tides_id = None
 
+
     def process(self, tides):
+        #print datetime.datetime.now(), "\t>>> update called",
         df = None
 
-        if id(tides) != self._tides_id:
+        if id(tides) != self._tides_id or tides is None:
             logger.debug('clearing genCurveNodeCtrlWidget_v2 (Tide Components Section) on_process()')
             #print 'setting tides components'
             self._tides_id = id(tides)
-            self.ctrlWidget().clearTideComponents()
-            self.ctrlWidget().on_tides_received(tides)
+            if hasattr(self, '_ctrlWidget'):
+                self._ctrlWidget.clearTideComponents()
+        
+            if tides is None:
+                #print '\t > returning None'
+                return {'sig': None}
+            
+            self._ctrlWidget.on_tides_received(tides)
 
 
-        kwargs = self.ctrlWidget().prepareInputArguments()
+        kwargs = self._ctrlWidget.prepareInputArguments()
+        # now prepare the amplitudes
+        kwargs['tides'] = {}
+        for i in xrange(len(tides)):
+            if not np.isnan(tides.iloc[i][kwargs['df_A']]) and np.isnan(tides.iloc[i][kwargs['df_omega']]):
+                continue  #skipping 0-frequency amplitude
+            kwargs['tides'][str(i)] = {}
+            kwargs['tides'][str(i)]['A']     = tides.iloc[i][kwargs['df_A']]
+            kwargs['tides'][str(i)]['omega'] = tides.iloc[i][kwargs['df_omega']]
+            kwargs['tides'][str(i)]['phi']   = tides.iloc[i][kwargs['df_phi']]
+
+        # finally do the calculations
         with BusyCursor():
+            #print '\t > doing the calculations'
             if kwargs['eq'] == 'tide':
                 df = generate_tide(kwargs['t0'], kwargs['dt'], kwargs['tend'], components=kwargs['tides'], W=kwargs['W'], F=kwargs['F'], label=kwargs['label'], equation=kwargs['eq'])
             elif kwargs['eq'] == 'ferris':
@@ -72,14 +91,14 @@ class genCurveNode_v2(Node):
         """overwriting stadart Node method to extend it with saving ctrlWidget state"""
         state = Node.saveState(self)
         # sacing additionaly state of the control widget
-        state['crtlWidget'] = self.ctrlWidget().saveState()
+        state['crtlWidget'] = self._ctrlWidget.saveState()
         return state
         
     def restoreState(self, state):
         """overwriting stadart Node method to extend it with restoring ctrlWidget state"""
         Node.restoreState(self, state)
         # additionally restore state of the control widget
-        self.ctrlWidget().restoreState(state['crtlWidget'])
+        self._ctrlWidget.restoreState(state['crtlWidget'])
 
 
 
@@ -157,7 +176,7 @@ class genCurveNodeCtrlWidget(QtWidgets.QWidget):
         self.sb_main_const.valueChanged.connect(self.nodeUpdateRequred)
         self.cb_eq.currentIndexChanged.connect(self.nodeUpdateRequred)
         self.sb_x.valueChanged.connect(self.nodeUpdateRequred)
-        self.le_label.textChanged.connect(self.nodeUpdateRequred)
+        self.le_label.editingFinished.connect(self.nodeUpdateRequred)
         self.dt_start.dateTimeChanged.connect(self.nodeUpdateRequred)
         self.dt_end.dateTimeChanged.connect(self.nodeUpdateRequred)
         self.sb_timestep.valueChanged.connect(self.nodeUpdateRequred)
@@ -179,6 +198,30 @@ class genCurveNodeCtrlWidget(QtWidgets.QWidget):
         self.sb_xia_a_aq.valueChanged.connect(self.nodeUpdateRequred)
         self.sb_xia_ne_aq.valueChanged.connect(self.nodeUpdateRequred)
         # --------------------------------------------------------------------
+    
+    def on_update_disconnect(self):
+        '''
+            We disconnect these signals to prevent recursion during the `process()`,
+            when the new data forces to change values in widgets
+
+            See also `on_update_connect()`
+        '''
+        self.sb_main_const.valueChanged.disconnect(self.nodeUpdateRequred)
+        self.cb_tides_A.currentIndexChanged.disconnect(self.nodeUpdateRequred)
+        self.cb_tides_omega.currentIndexChanged.disconnect(self.nodeUpdateRequred)
+        self.cb_tides_phi.currentIndexChanged.disconnect(self.nodeUpdateRequred)
+    
+    def on_update_connect(self):
+        '''
+            We connect these signals during the `process()` after
+            the new data in terminal `tides` has changed values in widgets
+
+            See also `on_update_disconnect()`
+        '''
+        self.sb_main_const.valueChanged.connect(self.nodeUpdateRequred)
+        self.cb_tides_A.currentIndexChanged.connect(self.nodeUpdateRequred)
+        self.cb_tides_omega.currentIndexChanged.connect(self.nodeUpdateRequred)
+        self.cb_tides_phi.currentIndexChanged.connect(self.nodeUpdateRequred)
 
     def saveState(self):
         STATE = {}
@@ -205,11 +248,13 @@ class genCurveNodeCtrlWidget(QtWidgets.QWidget):
 
             See method `on_tides_received()`
         '''
+        self.on_update_disconnect()  # disconnect valueChanged signal to prevent new updates
         self.cb_tides_A.clear()
         self.cb_tides_omega.clear()
         self.cb_tides_phi.clear()
         self.le_n_tides.setText('')
         self.sb_main_const.setValue(0.0)
+        self.on_update_connect()  # reconnect valueChanged signal
 
     def on_tides_received(self, tides):
         '''
@@ -220,6 +265,8 @@ class genCurveNodeCtrlWidget(QtWidgets.QWidget):
                 tides (pd.DataFrame):
                     Specially designed dataframe. See docs
         '''
+        self.on_update_disconnect()  # disconnect valueChanged signal to prevent new updates
+
         self.le_n_tides.setText(str(len(tides)-1))
         
         colnames = [col for col in tides.columns if isNumpyNumeric(tides[col].dtype)]
@@ -233,6 +280,7 @@ class genCurveNodeCtrlWidget(QtWidgets.QWidget):
 
         W = tides[self.cb_tides_A.currentText()][0]  # 1st value from column `A`
         self.sb_main_const.setValue(W)
+        self.on_update_connect()  # reconnect valueChanged signal
 
     @QtCore.pyqtSlot(int)
     def on_cb_eq_currentIndexChanged(self, index):
@@ -247,7 +295,7 @@ class genCurveNodeCtrlWidget(QtWidgets.QWidget):
         elif index in [1, 3]:
             # ferris, song
             self.sb_x.setMinimum(0.0)
-        elif index in [2,]:
+        elif index in [2, ]:
             # xia
             self.sb_x.setMinimum(max( (-10000.0, -self.sb_xia_L_roof.value()) ))
 
@@ -306,9 +354,9 @@ class genCurveNodeCtrlWidget(QtWidgets.QWidget):
         kwargs['W']     = self.sb_main_const.value()
         kwargs['F']     = self.sb_main_factor.value()
 
-        kwargs['t0']    = np.datetime64(self.dt_start.dateTime().toString() + 'Z')  # zulu time
+        kwargs['t0']    = np.datetime64(self.dt_start.dateTime().toPyDateTime())  # + 'Z')  # zulu time
         kwargs['dt']    = np.timedelta64(self.sb_timestep.value(), 's')
-        kwargs['tend']  = np.datetime64(self.dt_end.dateTime().toString + 'Z')  # zulu time
+        kwargs['tend']  = np.datetime64(self.dt_end.dateTime().toPyDateTime())  # + 'Z')  # zulu time
         kwargs['label'] = self.le_label.text()
         
         kwargs['df_A']     = self.cb_tides_A.currentText()

@@ -124,6 +124,9 @@
        <property name="suffix">
         <string> m</string>
        </property>
+       <property name="decimals">
+        <number>3</number>
+       </property>
        <property name="minimum">
         <double>-99.000000000000000</double>
        </property>
@@ -400,7 +403,7 @@
         </property>
         <property name="dateTime">
          <datetime>
-          <hour>22</hour>
+          <hour>21</hour>
           <minute>0</minute>
           <second>0</second>
           <year>2000</year>
@@ -602,8 +605,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>625</width>
-        <height>717</height>
+        <width>255</width>
+        <height>46</height>
        </rect>
       </property>
       <attribute name="label">
@@ -665,8 +668,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>625</width>
-        <height>717</height>
+        <width>221</width>
+        <height>51</height>
        </rect>
       </property>
       <attribute name="label">
@@ -1593,8 +1596,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>625</width>
-        <height>717</height>
+        <width>100</width>
+        <height>30</height>
        </rect>
       </property>
       <attribute name="label">
