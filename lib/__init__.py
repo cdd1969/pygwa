@@ -21,6 +21,7 @@ BASEDIR = os.path.dirname(sys.argv[0])
 def projectPath(*relative_path):
     return os.path.join(BASEDIR, *relative_path)
 
+
 def version_info():
     V = OrderedDict()
     V['pygwa'] = PROJECTMETA.__version__
@@ -36,9 +37,8 @@ def version_info():
     V['openpyxl'] = openpyxl_ver
     return V
 
+
 if __name__ == '__main__':
-
-
     print("Qt version:", QT_VERSION_STR)
     print("SIP version:", SIP_VERSION_STR)
     print("PyQt version:", PYQT_VERSION_STR)
