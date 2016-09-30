@@ -125,16 +125,16 @@ class interpolateDfNode(NodeWithCtrlWidget):
 
             df[cn].plot(ax=ax, marker='x', color='b')
 
-            criterion = df.index.isin(np.where(df[cn].isnull())[0])  # where values are not NaN
-            x = df[criterion].index
-            y = df[cni][criterion].values
-            plt.scatter(x=x, y=y, marker='o', color='r', label='interpolated', s=100)
-            plt.legend(loc='best')
+            criteria = df.index.isin(np.where(df[cn].isnull())[0])  # where values are not NaN
+            x = df[criteria].index
+            y = df[cni][criteria].values
+            ax.scatter(x=x, y=y, marker='o', color='r', label='interpolated', s=100)
+            ax.legend(loc='best')
 
 
-            ax2 = plt.subplot(212)
+            #ax2 = plt.subplot(212)
             df[cni].plot(ax=ax2, marker='x', color='g')
-            plt.legend(loc='best')
+            ax2.legend(loc='best')
 
             fig.show()
         except Exception, err:

@@ -44,6 +44,7 @@ class QuickViewNode(Node):
         '''
 
         if id(In) != self._id and self._pandasDataModel is not None:
+            logger.debug('clearing QuickView on_process()')
             self.clearModels()
         if In is not None:
             if isinstance(In, pd.Series):

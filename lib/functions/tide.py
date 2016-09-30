@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from ferris1951 import h as ferris1951curve
 from xia2007 import h as xia2007curve
-
+from Song_etal_2007 import h as song2007curve
 
 
 
@@ -79,8 +79,10 @@ def generate_tide(t0, dt, tend, components={}, label='GenCurve', equation='tide'
     for name, opts in components.iteritems():
         if equation == 'tide':
             gen_sig += canalCurve(T_sec, opts['A'], opts['omega'], opts['phi'])
+        
         elif equation == 'ferris':
             gen_sig += ferris1951curve(t=T_sec, A=opts['A'], omega=opts['omega'], phi=opts['phi'], D=kwargs['D'], x=kwargs['x'])
+        
         elif equation == 'xia':
             gen_sig += xia2007curve(t=T_sec, x=kwargs['x'],
                 A=opts['A'], omega=opts['omega'], phi0=opts['phi'],
@@ -88,6 +90,19 @@ def generate_tide(t0, dt, tend, components={}, label='GenCurve', equation='tide'
                 L=kwargs['L'], K1=kwargs['K1'], b1=kwargs['b1'],
                 K=kwargs['K'], b=kwargs['b'],
                 K_cap=kwargs['K_cap'], b_cap=kwargs['b_cap'])
+        
+        elif equation == 'song':
+            gen_sig += song2007curve(t=T_sec, A=opts['A'], omega=opts['omega'], phi=opts['phi'], order=kwargs['order'], D=kwargs['b'], x=kwargs['x'], n_e=kwargs['n_e'], K=kwargs['kf'])
+            '''
+            Now we have to subract distance from the aquifer base, since the solution of Song et al 2007
+            is not with respect to the MSL rather then with respect to the aquifer base
+
+            b2msl (float) [m]:
+               Distance b' from the bottom of the aquifer (impermeable aquifer base) to the Mean Sea Level. Upward positive.
+               Example: if the aquifer base lies 40 meters below MSL => b2msl=40m
+            '''
+            gen_sig += -kwargs['b2msl']  #subtract one value from all elements of the array
+
         else:
             return None
     H = gen_sig*F + W
