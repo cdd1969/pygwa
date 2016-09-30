@@ -1,0 +1,41 @@
+pos: (0.0, 0.0)
+connects: [(u'Read XLS.0', 'output', u'Quick View.0', 'In')]
+terminals:
+    dataOut:
+        multi: False
+        io: 'out'
+        renamable: False
+        multiable: False
+        removable: False
+        optional: False
+    dataIn:
+        multi: False
+        io: 'in'
+        renamable: False
+        multiable: False
+        removable: False
+        optional: False
+bypass: False
+inputNode:
+    terminals:
+        dataIn:
+            multi: False
+            io: 'out'
+            renamable: False
+            multiable: False
+            removable: False
+            optional: False
+    pos: (-150.0, 0.0)
+    bypass: False
+nodes: [{'state': {'crtlWidget': {'expanded': True, 'name': 'params', 'strictNaming': False, 'default': None, 'enabled': True, 'title': None, 'renamable': False, 'value': None, 'visible': True, 'readonly': False, 'removable': False, 'type': 'group', 'children': OrderedDict([('Select File', {'expanded': True, 'name': 'Select File', 'strictNaming': False, 'default': None, 'enabled': True, 'title': None, 'renamable': False, 'value': '/home/nck/prj/master_thesis/code/examples/data/test_data.xlsx', 'visible': True, 'readonly': False, 'removable': False, 'type': 'action'}), ('Parameters', {'expanded': True, 'name': 'Parameters', 'strictNaming': False, 'default': None, 'enabled': True, 'title': None, 'renamable': False, 'value': None, 'visible': True, 'readonly': False, 'removable': False, 'type': 'group', 'children': OrderedDict([('sheetname', {'expanded': True, 'name': 'sheetname', 'strictNaming': False, 'default': 0, 'enabled': True, 'title': None, 'renamable': False, 'value': 0, 'visible': True, 'readonly': False, 'tip': '<string, int, mixed list of strings/ints, or None, default 0>\nStrings are used for sheet names, Integers are used in zero-indexed sheet positions.\nLists of strings/integers are used to request multiple sheets.\nSpecify `None` to get all sheets.\nstr|int -> DataFrame is returned. list|None -> Dict of DataFrames is returned, with \nkeys representing sheets.\nAvailable Cases\n - Defaults to 0 -> 1st sheet as a DataFrame\n - 1 -> 2nd sheet as a DataFrame\n - "Sheet1" -> 1st sheet as a DataFrame\n - [0,1,"Sheet5"] -> 1st, 2nd & 5th sheet as a dictionary of DataFrames\n - None -> All sheets as a dictionary of DataFrames', 'removable': False, 'type': 'str'}), ('header', {'expanded': True, 'name': 'header', 'strictNaming': False, 'default': 0, 'enabled': True, 'title': None, 'renamable': False, 'value': 0, 'visible': True, 'readonly': False, 'tip': '<int, list of ints, default 0>\nRow (0-indexed) to use for the column labels of the parsed DataFrame. If a list of \nintegers is passed those row positions will be combined into a MultiIndex', 'removable': False, 'type': 'str'}), ('skiprows', {'expanded': True, 'name': 'skiprows', 'strictNaming': False, 'default': None, 'enabled': True, 'title': None, 'renamable': False, 'value': u'', 'visible': True, 'readonly': False, 'tip': '<list-like or integer, default None>\nRows to skip at the beginning (0-indexed)', 'removable': False, 'type': 'str'}), ('skip_footer', {'expanded': True, 'name': 'skip_footer', 'strictNaming': False, 'default': 0, 'enabled': True, 'title': None, 'renamable': False, 'value': 0, 'visible': True, 'readonly': False, 'tip': '< int, default 0>\nRows at the end to skip (0-indexed)', 'removable': False, 'type': 'str'}), ('index_col', {'expanded': True, 'name': 'index_col', 'strictNaming': False, 'default': None, 'enabled': True, 'title': None, 'renamable': False, 'value': u'', 'visible': True, 'readonly': False, 'tip': '<int, list of ints, default None>\nColumn (0-indexed) to use as the row labels of the DataFrame. Pass None if there is \nno such column. If a list is passed, those columns will be combined into a\nMultiIndex', 'removable': False, 'type': 'str'}), ('converters', {'expanded': False, 'name': 'converters', 'strictNaming': False, 'default': None, 'enabled': True, 'title': None, 'renamable': False, 'value': '', 'visible': True, 'readonly': False, 'tip': '<dict, default None>\nDict of functions for converting values in certain columns. Keys can either be \nintegers or column labels, values are functions that take one input argument, the \nExcel cell content, and return the transformed content.', 'removable': False, 'type': 'text'}), ('parse_cols', {'expanded': True, 'name': 'parse_cols', 'strictNaming': False, 'default': None, 'enabled': True, 'title': None, 'renamable': False, 'value': u'', 'visible': True, 'readonly': False, 'tip': '< int or list, default None>\n - If None then parse all columns,\n - If int then indicates last column to be parsed\n - If list of ints then indicates list of column numbers to be parsed\n - If string then indicates comma separated list of column names and column ranges \n   (e.g. \xe2\x80\x9cA:E\xe2\x80\x9d or \xe2\x80\x9cA,C,E:F\xe2\x80\x9d)', 'removable': False, 'type': 'str'}), ('na_values', {'expanded': True, 'name': 'na_values', 'strictNaming': False, 'default': None, 'enabled': True, 'title': None, 'renamable': False, 'value': u'', 'visible': True, 'readonly': False, 'tip': '< list-like, default None>\n List of additional strings to recognize as NA/NaN', 'removable': False, 'type': 'str'}), ('keep_default_na', {'expanded': True, 'name': 'keep_default_na', 'strictNaming': False, 'default': True, 'enabled': True, 'title': None, 'renamable': False, 'value': True, 'visible': True, 'readonly': False, 'tip': '<bool, default True>\nIf na_values are specified and keep_default_na is False the default NaN values are \noverridden, otherwise they\xe2\x80\x99re appended to', 'removable': False, 'type': 'bool'}), ('thousands', {'expanded': True, 'name': 'thousands', 'strictNaming': False, 'default': None, 'enabled': True, 'title': None, 'renamable': False, 'value': u'', 'visible': True, 'readonly': False, 'tip': '<str, default None>\nThousands separator for parsing string columns to numeric. Note that this parameter \nis only necessary for columns stored as TEXT in Excel, any numeric columns will \nautomatically be parsed, regardless of display format.', 'removable': False, 'type': 'str'}), ('Additional parameters', {'expanded': False, 'name': 'Additional parameters', 'strictNaming': False, 'default': '#Pass here manually params. For Example:\n#{"verbose": False, "engine": None, "convert_float": True}\n{}', 'enabled': True, 'title': None, 'renamable': False, 'value': '#Pass here manually params. For Example:\n#{"verbose": False, "engine": None, "convert_float": True}\n{}', 'visible': True, 'readonly': False, 'removable': False, 'type': 'text'})])}), ('Load File', {'expanded': True, 'name': 'Load File', 'strictNaming': False, 'default': None, 'enabled': True, 'title': None, 'renamable': False, 'value': None, 'visible': True, 'readonly': False, 'removable': False, 'type': 'action'})])}, 'pos': (-131.7422362033563, -11.12910385794197), 'bypass': False}, 'pos': (-131.7422362033563, -11.12910385794197), 'class': 'Read XLS', 'name': u'Read XLS.0'}, {'state': {'pos': (58.16551311531671, -11.944158576047897), 'bypass': False}, 'pos': (58.16551311531671, -11.944158576047897), 'class': 'Quick View', 'name': u'Quick View.0'}]
+outputNode:
+    terminals:
+        dataOut:
+            multi: False
+            io: 'in'
+            renamable: False
+            multiable: False
+            removable: False
+            optional: False
+    pos: (300.0, 0.0)
+    bypass: False
